@@ -484,7 +484,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] dark:bg-[#0B0E14] text-[#111827] dark:text-[#F3F4F6] transition-colors">
-      {/* Top Navigation & Command Header with TrueTax AI Branding & Open Bills Switcher */}
+      {/* Top Navigation & Command Header with TrueTax AI Branding */}
       <Header
         invoice={currentInvoice}
         onLoadPreset={(preset) => navigate(`/dashboard/${preset.data.invoice_id}`)}

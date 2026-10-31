@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Sun, Moon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import ProfileMenu from './ProfileMenu';
 
 export default function TopBar({
@@ -9,9 +10,12 @@ export default function TopBar({
   onOpenProfile,
   onOpenSettings,
   onOpenHistory,
+  onOpenAuth,
   onLogout,
   onViewDashboard: _onViewDashboard,
 }) {
+  const { user } = useAuth();
+
   return (
     <header className="w-full bg-[#FAF8F5] dark:bg-[#0B0E14] border-b border-[#E7E2DA] dark:border-[#232B3A] shrink-0 z-20 transition-colors">
       <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between">
@@ -34,8 +38,23 @@ export default function TopBar({
           </div>
         </Link>
 
-        {/* Right: Controls (Dark mode toggle & Circular Avatar with Profile Menu) */}
+        {/* Right: Controls (Account button, Dark mode toggle & Circular Avatar with Profile Menu) */}
         <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Sign In / Merchant Account Trigger Button */}
+          <button
+            type="button"
+            onClick={onOpenAuth}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#E7E2DA] dark:border-[#232B3A] bg-white dark:bg-[#131822] text-[#0F172A] dark:text-[#E5E7EB] hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors text-xs font-semibold cursor-pointer shadow-2xs"
+            aria-label="Merchant Account Settings"
+          >
+            <div className="h-5 w-5 rounded-full bg-[#059669] dark:bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
+              {user?.full_name ? user.full_name[0].toUpperCase() : 'M'}
+            </div>
+            <span className="hidden sm:inline truncate max-w-[120px]">
+              {user ? (user.full_name || 'Account') : 'Sign In'}
+            </span>
+          </button>
+
           {/* Dark Mode Toggle */}
           <button
             type="button"
@@ -55,6 +74,7 @@ export default function TopBar({
             onOpenProfile={onOpenProfile}
             onOpenSettings={onOpenSettings}
             onOpenHistory={onOpenHistory}
+            onOpenAuth={onOpenAuth}
             onLogout={onLogout}
           />
         </div>

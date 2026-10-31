@@ -16,6 +16,7 @@ export default function LandingPage({
   onOpenProfile,
   onOpenSettings,
   onOpenHistory,
+  onOpenAuth,
   onLogout,
 }) {
   return (
@@ -27,6 +28,7 @@ export default function LandingPage({
         onOpenProfile={onOpenProfile}
         onOpenSettings={onOpenSettings}
         onOpenHistory={onOpenHistory}
+        onOpenAuth={onOpenAuth}
         onLogout={onLogout}
         onViewDashboard={onViewDashboard}
       />

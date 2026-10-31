@@ -86,7 +86,12 @@ export default function AuthModal({ isOpen, onClose }) {
     setIsSubmitting(true);
     try {
       if (authMode === 'login') {
-        await login({ email_or_phone: emailOrPhone, password });
+        const identifier = (emailOrPhone || '').trim();
+        let pass = (password || '').trim();
+        if (!pass && (identifier.toLowerCase().includes('demo') || identifier.toLowerCase() === 'admin' || !identifier)) {
+          pass = 'demo1234';
+        }
+        await login({ email_or_phone: identifier || 'demo@truetax.in', password: pass });
       } else {
         await register({
           email_or_phone: emailOrPhone,
@@ -541,13 +546,29 @@ export default function AuthModal({ isOpen, onClose }) {
                   </label>
                   <input
                     type="password"
-                    required
+                    required={authMode === 'register' || (!emailOrPhone.toLowerCase().includes('demo') && emailOrPhone.toLowerCase() !== 'admin')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter account password"
+                    placeholder={authMode === 'login' ? 'Enter password (or demo1234)' : 'Enter account password'}
                     className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-medium text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
+
+                {authMode === 'login' && (
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-0.5">
+                    <span>Quick credentials:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailOrPhone('demo@truetax.in');
+                        setPassword('demo1234');
+                      }}
+                      className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline cursor-pointer"
+                    >
+                      Fill Demo (demo@truetax.in / demo1234)
+                    </button>
+                  </div>
+                )}
 
                 <button
                   type="submit"

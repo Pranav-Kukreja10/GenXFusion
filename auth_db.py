@@ -15,7 +15,21 @@ from typing import Optional, Dict, Any, List
 from pathlib import Path
 from gst_validator import validate_gstin, INDIAN_STATES
 
-DB_PATH = Path("data") / "truetax.db" if (Path("data") / "truetax.db").exists() else Path("data") / "parchisetu.db"
+def get_db_path() -> Path:
+    for candidate in [
+        Path("data") / "truetax.db",
+        Path("../data") / "truetax.db",
+        Path("backend/data") / "truetax.db",
+        Path("data") / "parchisetu.db",
+        Path("../data") / "parchisetu.db",
+        Path("backend/data") / "parchisetu.db",
+    ]:
+        if candidate.exists():
+            return candidate
+    return Path("data") / "truetax.db"
+
+
+DB_PATH = get_db_path()
 JWT_SECRET = os.getenv("JWT_SECRET", "truetax_fintech_production_secret_key_2026")
 JWT_ALGORITHM = "HS256"
 DEFAULT_EXPIRY_SECONDS = 30 * 24 * 3600  # 30 days
@@ -23,8 +37,9 @@ DEFAULT_EXPIRY_SECONDS = 30 * 24 * 3600  # 30 days
 
 def get_db_connection() -> sqlite3.Connection:
     """Returns a connection to SQLite with row factory configured."""
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(DB_PATH))
+    actual_path = get_db_path()
+    actual_path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(actual_path))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
@@ -108,7 +123,10 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         actual_sig = _b64url_decode(sig_b64)
 
         if not hmac.compare_digest(expected_sig, actual_sig):
-            return None
+            # Check backward compatibility with previous secret
+            legacy_sig = hmac.new("parchisetu_fintech_production_secret_key_2026".encode("utf-8"), signing_input, hashlib.sha256).digest()
+            if not hmac.compare_digest(legacy_sig, actual_sig):
+                return None
 
         payload = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
         if payload.get("exp", 0) < time.time():
@@ -418,6 +436,10 @@ def get_demo_login_response() -> Dict[str, Any]:
         cursor = conn.cursor()
         cursor.execute("SELECT id, email_or_phone FROM users WHERE email_or_phone IN ('demo@truetax.in', 'demo@parchisetu.in');")
         row = cursor.fetchone()
+        if not row:
+            _seed_demo_account(cursor, conn)
+            cursor.execute("SELECT id, email_or_phone FROM users WHERE email_or_phone IN ('demo@truetax.in', 'demo@parchisetu.in');")
+            row = cursor.fetchone()
         if not row:
             raise RuntimeError("Demo account could not be initialized.")
         user_id = row["id"]

@@ -13,15 +13,18 @@ import {
   maskGstin,
   getInitials,
 } from '../utils/profileStorage';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProfileMenu({
   onOpenProfile,
   onOpenSettings,
   onOpenHistory,
+  onOpenAuth,
   onLogout,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [profile, setProfile] = useState(loadProfile());
+  const { user, activeGstin, logout: authLogout } = useAuth();
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
 
@@ -61,8 +64,11 @@ export default function ProfileMenu({
     };
   }, [isOpen]);
 
-  const initials = getInitials(profile.fullName);
-  const maskedGstin = maskGstin(profile.gstin);
+  const displayName = user?.full_name || profile.fullName;
+  const displayBusiness = activeGstin?.trade_name || user?.default_business_name || profile.businessName;
+  const displayGstin = activeGstin?.gstin ? maskGstin(activeGstin.gstin) : maskGstin(profile.gstin);
+  const initials = getInitials(displayName);
+
 
   const handleItemClick = (callback) => {
     setIsOpen(false);
@@ -101,10 +107,10 @@ export default function ProfileMenu({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-extrabold text-slate-900 dark:text-white truncate">
-                  {profile.fullName}
+                  {displayName}
                 </p>
                 <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 truncate">
-                  {profile.businessName}
+                  {displayBusiness}
                 </p>
               </div>
             </div>
@@ -115,7 +121,7 @@ export default function ProfileMenu({
                 <Hash className="h-3 w-3" /> GSTIN:
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-zinc-700">
-                {maskedGstin}
+                {displayGstin}
               </span>
             </div>
           </div>
@@ -125,7 +131,7 @@ export default function ProfileMenu({
             <button
               type="button"
               role="menuitem"
-              onClick={() => handleItemClick(onOpenProfile)}
+              onClick={() => handleItemClick(onOpenAuth || onOpenProfile)}
               className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800/80 transition-colors text-left cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
@@ -138,12 +144,14 @@ export default function ProfileMenu({
             <button
               type="button"
               role="menuitem"
-              onClick={() => handleItemClick(onOpenProfile)}
+              onClick={() => handleItemClick(onOpenAuth || onOpenProfile)}
               className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800/80 transition-colors text-left cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
                 <Building className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span className="font-semibold text-slate-800 dark:text-slate-200">Business Details</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  {user ? 'Manage Branches / GSTINs' : 'Sign In / Register'}
+                </span>
               </div>
               <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
             </button>
@@ -179,11 +187,11 @@ export default function ProfileMenu({
             <button
               type="button"
               role="menuitem"
-              onClick={() => handleItemClick(onLogout)}
+              onClick={() => handleItemClick(() => { if (authLogout) authLogout(); if (onLogout) onLogout(); })}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors text-left font-semibold cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span>Logout</span>
+              <span>{user ? 'Sign Out' : 'Sign In'}</span>
             </button>
           </div>
         </div>

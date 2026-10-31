@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import ProfileModal from './ProfileModal';
 import ApiSettingsModal from './ApiSettingsModal';
+import AuthModal from './AuthModal';
 import Toast from './Toast';
 import { useBills } from '../context/BillsContext';
 import { useTheme } from '../context/ThemeContext';
@@ -23,6 +24,7 @@ export default function LandingRoute() {
 
   // Profile & Modals State
   const [profile, setProfile] = useState(loadProfile);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -180,10 +182,15 @@ export default function LandingRoute() {
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenHistory={() => setIsProfileModalOpen(true)}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
         onLogout={() => addToast('Logged out of TrueTax AI session.', 'info')}
       />
 
       {/* Global Modals & Notifications accessible from Landing Page */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}

@@ -15,7 +15,6 @@ import {
   FileCheck2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import BillSwitcher from './BillSwitcher';
 
 export default function Header({
   invoice,
@@ -89,7 +88,7 @@ export default function Header({
             </button>
           </div>
 
-          {/* Center: Active Merchant Branch Switcher + Open Bills */}
+          {/* Center: Active Merchant Branch Switcher */}
           <div className="flex items-center gap-2">
             {/* Multi-GSTIN Branch Switcher Dropdown */}
             {activeGstin && (
@@ -184,15 +183,6 @@ export default function Header({
                 <span>Quick-Fill My GSTIN</span>
               </button>
             )}
-
-            {/* Bill switcher for switching loaded invoices */}
-            <div className="hidden xl:flex items-center">
-              <BillSwitcher
-                currentInvoiceId={invoice?.invoice_id}
-                onSelectBill={onLoadPreset}
-                onAddBill={handleScanClick}
-              />
-            </div>
           </div>
 
           {/* Right: Recalculating, Theme Toggle, Account / Sign In */}
