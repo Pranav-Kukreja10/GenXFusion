@@ -17,6 +17,12 @@ export default function LandingPage({
   onOpenSettings,
   onOpenHistory,
   onLogout,
+  onTryDemo,
+  scanResult,
+  isDemo,
+  onReplayAnimation,
+  previewUrlOverride,
+  onScanConversionDone,
 }) {
   return (
     <div className="h-dvh max-h-dvh w-full overflow-hidden flex flex-col justify-between bg-[#FAF8F5] dark:bg-[#0B0E14] text-[#0F172A] dark:text-[#E5E7EB] transition-colors selection:bg-[#D1FAE5] selection:text-[#059669]">
@@ -54,6 +60,12 @@ export default function LandingPage({
             scannedItemCount={scannedItemCount}
             onViewDashboard={onViewDashboard}
             onResetScan={onResetScan}
+            onTryDemo={onTryDemo}
+            scanResult={scanResult}
+            isDemo={isDemo}
+            onReplayAnimation={onReplayAnimation}
+            previewUrlOverride={previewUrlOverride}
+            onScanConversionDone={onScanConversionDone}
           />
         </div>
       </main>
@@ -69,4 +81,3 @@ export default function LandingPage({
     </div>
   );
 }
-

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import ProfileModal from './ProfileModal';
@@ -8,6 +8,7 @@ import { useBills } from '../context/BillsContext';
 import { useTheme } from '../context/ThemeContext';
 import { loadProfile, addRecentScan } from '../utils/profileStorage';
 import { parseInvoiceApi, recalculateInvoiceApi } from '../services/api';
+import { DEMO_PRESETS } from '../utils/mockPresets';
 
 export default function LandingRoute() {
   const navigate = useNavigate();
@@ -19,7 +20,12 @@ export default function LandingRoute() {
   const [scanSuccess, setScanSuccess] = useState(false);
   const [scannedBillId, setScannedBillId] = useState(null);
   const [scannedItemCount, setScannedItemCount] = useState(4);
+  const [scanResult, setScanResult] = useState(null);
+  const [isDemoScan, setIsDemoScan] = useState(false);
+  const [previewUrlOverride, setPreviewUrlOverride] = useState(null);
   const [error, setError] = useState(null);
+
+  const demoTimersRef = useRef([]);
 
   // Profile & Modals State
   const [profile, setProfile] = useState(loadProfile);
@@ -39,6 +45,13 @@ export default function LandingRoute() {
     };
     window.addEventListener('truetax_profile_updated', handleProfileUpdate);
     return () => window.removeEventListener('truetax_profile_updated', handleProfileUpdate);
+  }, []);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      demoTimersRef.current.forEach(clearTimeout);
+    };
   }, []);
 
   // Toast Helpers with Undo Action Support
@@ -85,17 +98,23 @@ export default function LandingRoute() {
     [profile]
   );
 
-  // Handle Scan Image with 4-Step Stepper
+  // Handle Scan Image with 4-Stage Stepper
   const handleScanImage = async (fileBlob, previewDataUrl, bypassCache) => {
+    setIsDemoScan(false);
+    setPreviewUrlOverride(previewDataUrl);
+    setScanResult(null);
     setIsScanning(true);
     setScanSuccess(false);
     setError(null);
     setScannedBillId(null);
     setScanStep(1); // 1: Shadow Removal
 
-    const stepTimer1 = setTimeout(() => setScanStep(2), 250); // 2: OCR
-    const stepTimer2 = setTimeout(() => setScanStep(3), 550); // 3: HSN Matching
-    const stepTimer3 = setTimeout(() => setScanStep(4), 850); // 4: GST Audit
+    demoTimersRef.current.forEach(clearTimeout);
+    demoTimersRef.current = [
+      setTimeout(() => setScanStep(2), 700),
+      setTimeout(() => setScanStep(3), 1400),
+      setTimeout(() => setScanStep(4), 2100),
+    ];
 
     try {
       const { data, isOfflineFallback, error: apiErr } = await parseInvoiceApi(
@@ -131,36 +150,84 @@ export default function LandingRoute() {
       addBill(audited);
       logScanRecord(audited);
 
+      setScanResult(audited);
       setScannedBillId(audited.invoice_id);
       setScannedItemCount(audited.active_items?.length || 4);
-      setScanSuccess(true);
-      addToast('Bill scanned and audited successfully!', 'success', 'Scan Complete');
-      // NOTE: Do NOT auto-redirect! User sees success state and clicks "Open in Dashboard".
+      setScanStep(4);
     } catch (err) {
       setError("Couldn't read this photo. Try again with better light.");
       setScanSuccess(false);
       addToast(`Failed to scan invoice: ${err.message}`, 'error', 'Scan Error');
-    } finally {
-      clearTimeout(stepTimer1);
-      clearTimeout(stepTimer2);
-      clearTimeout(stepTimer3);
-      setIsScanning(false);
     }
   };
+
+  // Called when <ScanConversion /> finishes Stage 4 pakka seal
+  const handleScanConversionDone = useCallback(() => {
+    setIsScanning(false);
+    setScanSuccess(true);
+    addToast('Bill scanned and audited successfully!', 'success', 'Pakka Invoice Sealed');
+  }, [addToast]);
+
+  // "Try a demo bill" button handler
+  const handleTryDemo = useCallback(() => {
+    const demoSample = DEMO_PRESETS[0].data; // Sharma Kirana Store with mismatch & struck item
+    setIsDemoScan(true);
+    setError(null);
+    setScanSuccess(false);
+    setScanResult(demoSample);
+    setPreviewUrlOverride(demoSample.raw_image_base64);
+    setScannedBillId(demoSample.invoice_id);
+    setScannedItemCount(demoSample.active_items?.length || 4);
+    addBill(demoSample);
+    logScanRecord(demoSample);
+
+    setIsScanning(true);
+    setScanStep(1);
+
+    demoTimersRef.current.forEach(clearTimeout);
+    demoTimersRef.current = [
+      setTimeout(() => setScanStep(2), 700),
+      setTimeout(() => setScanStep(3), 1400),
+      setTimeout(() => setScanStep(4), 2100),
+    ];
+  }, [addBill, logScanRecord]);
+
+  // Replay animation for presentations
+  const handleReplayAnimation = useCallback(() => {
+    setScanSuccess(false);
+    setIsScanning(true);
+    setScanStep(1);
+
+    demoTimersRef.current.forEach(clearTimeout);
+    demoTimersRef.current = [
+      setTimeout(() => setScanStep(2), 700),
+      setTimeout(() => setScanStep(3), 1400),
+      setTimeout(() => setScanStep(4), 2100),
+    ];
+  }, []);
 
   const handleResetScan = () => {
     setError(null);
     setScanSuccess(false);
     setScannedBillId(null);
+    setScanResult(null);
+    setPreviewUrlOverride(null);
   };
 
+  // Dashboard handoff with View Transitions API support
   const handleNavigateToDashboard = () => {
-    if (scannedBillId) {
-      navigate(`/dashboard/${scannedBillId}`);
-    } else if (latestBillId) {
-      navigate(`/dashboard/${latestBillId}`);
+    const targetUrl = scannedBillId
+      ? `/dashboard/${scannedBillId}`
+      : latestBillId
+      ? `/dashboard/${latestBillId}`
+      : '/dashboard';
+
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      document.startViewTransition(() => {
+        navigate(targetUrl);
+      });
     } else {
-      navigate('/dashboard');
+      navigate(targetUrl);
     }
   };
 
@@ -181,6 +248,12 @@ export default function LandingRoute() {
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenHistory={() => setIsProfileModalOpen(true)}
         onLogout={() => addToast('Logged out of TrueTax AI session.', 'info')}
+        onTryDemo={handleTryDemo}
+        scanResult={scanResult}
+        isDemo={isDemoScan}
+        onReplayAnimation={handleReplayAnimation}
+        previewUrlOverride={previewUrlOverride}
+        onScanConversionDone={handleScanConversionDone}
       />
 
       {/* Global Modals & Notifications accessible from Landing Page */}
@@ -197,4 +270,3 @@ export default function LandingRoute() {
     </>
   );
 }
-
