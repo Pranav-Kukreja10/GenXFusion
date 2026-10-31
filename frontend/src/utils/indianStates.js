@@ -72,3 +72,4 @@ export const GST_SLAB_OPTIONS = [
   { value: 18, label: '18% (Standard High)' },
   { value: 28, label: '28% (Luxury / De-merit)' },
 ];
+
