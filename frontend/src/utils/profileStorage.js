@@ -4,12 +4,12 @@
  */
 
 export const DEFAULT_PROFILE = {
-  fullName: 'Rajesh Sharma',
-  businessName: 'Sharma Kirana & General Store',
-  gstin: '03AABCU9603R1ZM',
-  businessCategory: 'Grocery',
-  phone: '+91 98765 43210',
-  email: 'rajesh.sharma@sharmakiranastore.in',
+  fullName: '',
+  businessName: '',
+  gstin: '',
+  businessCategory: 'General Store',
+  phone: '',
+  email: '',
   billLanguage: 'Auto-detect',
 };
 
@@ -71,12 +71,21 @@ export function getInitials(name) {
 
 export function loadProfile() {
   try {
-    const raw = localStorage.getItem('truetax_profile');
+    const raw = localStorage.getItem('truetax_profile') || localStorage.getItem('parchisetu_profile');
     if (!raw) {
-      localStorage.setItem('truetax_profile', JSON.stringify(DEFAULT_PROFILE));
       return DEFAULT_PROFILE;
     }
-    return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    if (
+      parsed.fullName === 'Rajesh Sharma' ||
+      parsed.businessName === 'Sharma Kirana & General Store' ||
+      parsed.email === 'rajesh.sharma@sharmakiranastore.in'
+    ) {
+      localStorage.removeItem('truetax_profile');
+      localStorage.removeItem('parchisetu_profile');
+      return DEFAULT_PROFILE;
+    }
+    return { ...DEFAULT_PROFILE, ...parsed };
   } catch (err) {
     console.warn('Error reading profile from localStorage:', err);
     return DEFAULT_PROFILE;

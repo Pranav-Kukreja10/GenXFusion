@@ -147,9 +147,14 @@ export function AuthProvider({ children }) {
     localStorage.setItem(SIGNED_OUT_KEY, '1');
     localStorage.removeItem(ACTIVE_GSTIN_STORAGE_KEY);
     localStorage.removeItem(LEGACY_GSTIN_STORAGE_KEY);
+    localStorage.removeItem('truetax_profile');
+    localStorage.removeItem('parchisetu_profile');
     setUser(null);
     setMerchantGstins([]);
     setActiveGstin(null);
+    try {
+      window.dispatchEvent(new Event('truetax_profile_updated'));
+    } catch (_) {}
   }, []);
 
   // Switch Active GSTIN branch

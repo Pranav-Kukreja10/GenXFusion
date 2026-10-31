@@ -111,7 +111,7 @@ export default function ProfileModal({ isOpen, onClose, onSaved }) {
               required
               value={formData.fullName}
               onChange={(e) => handleChange('fullName', e.target.value)}
-              placeholder="e.g. Rajesh Sharma"
+              placeholder="e.g. Sandeep Goyal"
               className="w-full bg-[#FAF8F5] dark:bg-zinc-800/80 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
             />
           </div>
@@ -126,7 +126,7 @@ export default function ProfileModal({ isOpen, onClose, onSaved }) {
               required
               value={formData.businessName}
               onChange={(e) => handleChange('businessName', e.target.value)}
-              placeholder="e.g. Sharma Kirana & General Store"
+              placeholder="e.g. TrueTax Enterprises"
               className="w-full bg-[#FAF8F5] dark:bg-zinc-800/80 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
             />
           </div>
