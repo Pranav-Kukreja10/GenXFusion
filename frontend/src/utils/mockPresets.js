@@ -75,7 +75,7 @@ export const DEMO_PRESETS = [
       invoice_id: 'INV-2026-2260',
       merchant_name: 'Sharma Kirana & General Store',
       buyer_name: 'Sharma Kirana & General Store',
-      buyer_gstin: '07AAAAA0000A1Z5',
+      buyer_gstin: '07AAAAA0000A1Z4',
       pos: '07',
       buyer_state_code: '07',
       detected_sector: 'GROCERY',

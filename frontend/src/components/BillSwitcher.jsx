@@ -18,12 +18,12 @@ export default function BillSwitcher({ currentInvoiceId }) {
 
   return (
     <div
-      className="flex items-center gap-1.5 bg-[#F3EFEA] dark:bg-zinc-800/80 p-1 rounded-xl border border-[#E7E2DA] dark:border-zinc-700/60 text-xs"
+      className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs"
       role="tablist"
       aria-label="Open Invoices"
     >
-      <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1 shrink-0">
-        <Receipt className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+      <span className="text-[10px] uppercase font-medium text-zinc-500 dark:text-zinc-400 px-2 flex items-center gap-1 shrink-0">
+        <Receipt className="h-3 w-3 text-zinc-400" />
         <span className="hidden xl:inline">Open Bills:</span>
       </span>
 
@@ -42,19 +42,19 @@ export default function BillSwitcher({ currentInvoiceId }) {
               role="tab"
               aria-selected={isActive}
               onClick={() => handleSelectTab(bill.invoice_id)}
-              className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 text-xs ${
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer shrink-0 text-xs ${
                 isActive
-                  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs font-extrabold ring-1 ring-emerald-500/30'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-zinc-900/50'
+                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-xs'
+                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-white/50 dark:hover:bg-zinc-900/50'
               }`}
               title={`${bill.invoice_id} (${bill.merchant_name || 'Store'}): ${
                 isAudited ? 'All checks passed' : `${totals.issueCount} issue needs review`
               }`}
             >
-              {/* Status dot: green = audited / amber = needs review */}
+              {/* Status dot: muted emerald = audited / red = needs review */}
               <span
-                className={`h-2 w-2 rounded-full shrink-0 ${
-                  isAudited ? 'bg-emerald-500' : 'bg-amber-500'
+                className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                  isAudited ? 'bg-emerald-600' : 'bg-red-500'
                 }`}
               />
 
@@ -63,8 +63,8 @@ export default function BillSwitcher({ currentInvoiceId }) {
               <span
                 className={`text-[9px] px-1 py-0.2 rounded font-mono ${
                   isActive
-                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold'
-                    : 'bg-black/5 dark:bg-white/5 text-slate-500'
+                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                    : 'bg-black/5 dark:bg-white/5 text-zinc-400'
                 }`}
               >
                 {sectorTag.slice(0, 4)}
@@ -77,11 +77,11 @@ export default function BillSwitcher({ currentInvoiceId }) {
         <button
           type="button"
           onClick={handleAddBill}
-          className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-zinc-900 transition-colors cursor-pointer shrink-0"
+          className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-white dark:hover:bg-zinc-900 transition-colors cursor-pointer shrink-0"
           title="Add a bill / scan new receipt (navigates to scan page)"
           aria-label="Scan New Bill (+)"
         >
-          <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+          <Plus className="h-3.5 w-3.5" />
         </button>
       </div>
     </div>

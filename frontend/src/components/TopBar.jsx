@@ -17,37 +17,40 @@ export default function TopBar({
   const { user } = useAuth();
 
   return (
-    <header className="w-full bg-[#FAF8F5] dark:bg-[#0B0E14] border-b border-[#E7E2DA] dark:border-[#232B3A] shrink-0 z-20 transition-colors">
-      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between">
-        {/* Left: Brand Lockup (Links to '/') */}
+    <header className="sticky top-0 z-40 h-14 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 px-4 md:px-8 shrink-0 transition-colors">
+      <div className="max-w-6xl h-full mx-auto w-full flex items-center justify-between">
+        {/* Left: High-Contrast Monochrome Brand Lockup */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 sm:gap-3 group cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
+          className="flex items-center gap-2.5 group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-100 rounded-lg p-0.5"
           aria-label="TrueTax AI Home"
         >
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#059669] dark:bg-emerald-600 flex items-center justify-center text-white shadow-sm ring-2 ring-emerald-500/20 shrink-0 group-hover:bg-[#047857] transition-colors">
-            <ShieldCheck className="h-5 w-5 stroke-[2.3]" />
+          <div className="h-8 w-8 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105 active:scale-95">
+            <ShieldCheck className="h-4.5 w-4.5 stroke-[2.2]" />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-[clamp(1rem,1.5vw,1.15rem)] tracking-tight text-[#0F172A] dark:text-[#E5E7EB]">
-              TrueTax <span className="text-[#059669] dark:text-emerald-400">AI</span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+              TrueTax
+            </span>
+            <span className="text-xs font-mono font-medium text-zinc-500 dark:text-zinc-400">
+              AI
             </span>
           </div>
         </Link>
 
-        {/* Right: Controls (Account button, Dark mode toggle & Circular Avatar with Profile Menu) */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Right: Controls (Uniform compact controls) */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Sign In / Merchant Account Trigger Button */}
           <button
             type="button"
             onClick={onOpenAuth}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#E7E2DA] dark:border-[#232B3A] bg-white dark:bg-[#131822] text-[#0F172A] dark:text-[#E5E7EB] hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors text-xs font-semibold cursor-pointer shadow-2xs"
+            className="h-8 px-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-750 transition-all duration-200 text-xs font-medium cursor-pointer shadow-xs inline-flex items-center gap-2 active:scale-[0.98]"
             aria-label="Merchant Account Settings"
           >
-            <div className="h-5 w-5 rounded-full bg-[#059669] dark:bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
+            <div className="h-4 w-4 rounded-full bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 flex items-center justify-center text-[10px] font-bold">
               {user?.full_name ? user.full_name[0].toUpperCase() : 'M'}
             </div>
-            <span className="hidden sm:inline truncate max-w-[120px]">
+            <span className="truncate max-w-[120px]">
               {user ? (user.full_name || 'Account') : 'Sign In'}
             </span>
           </button>
@@ -57,12 +60,12 @@ export default function TopBar({
             type="button"
             onClick={onToggleDarkMode}
             aria-label="Toggle dark mode"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#E7E2DA] dark:border-[#232B3A] bg-white dark:bg-[#131822] text-[#64748B] dark:text-[#94A3B8] hover:text-[#059669] dark:hover:text-emerald-400 flex items-center justify-center transition-colors duration-150 active:scale-95 shadow-xs cursor-pointer"
+            className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-750 flex items-center justify-center transition-all duration-200 active:scale-[0.98] shadow-xs cursor-pointer"
           >
             {darkMode ? (
-              <Sun className="h-4 w-4 text-amber-400" />
+              <Sun className="h-3.5 w-3.5 text-zinc-200" />
             ) : (
-              <Moon className="h-4 w-4" />
+              <Moon className="h-3.5 w-3.5 text-zinc-700" />
             )}
           </button>
 

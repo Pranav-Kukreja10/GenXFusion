@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Server, CheckCircle2, AlertCircle, RefreshCw, RotateCcw } from 'lucide-react';
+import { X, Server, RefreshCw, RotateCcw } from 'lucide-react';
 import { getApiBaseUrl, setApiBaseUrl, testConnection, DEFAULT_API_BASE } from '../services/api';
 
 export default function ApiSettingsModal({
@@ -41,31 +41,31 @@ export default function ApiSettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#12151C] rounded-xl shadow-2xl max-w-md w-full border border-[#E5E0D8] dark:border-zinc-800 overflow-hidden transition-colors">
+    <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl max-w-md w-full border border-zinc-200 dark:border-zinc-800 overflow-hidden transition-colors">
         
         {/* Header */}
-        <div className="p-4 bg-slate-900 dark:bg-zinc-950 text-white flex items-center justify-between border-b border-slate-800">
+        <div className="px-5 py-3.5 bg-zinc-900 text-white flex items-center justify-between border-b border-zinc-800">
           <div className="flex items-center gap-2">
-            <Server className="h-5 w-5 text-emerald-400" />
-            <h3 className="text-sm font-bold tracking-tight">
-              Backend API Configuration
+            <Server className="h-4 w-4 text-zinc-400" />
+            <h3 className="text-sm font-semibold tracking-tight text-zinc-100">
+              Server Connection
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Form Body */}
         <div className="p-5 space-y-4 text-xs">
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-              FastAPI Base URL (`VITE_API_BASE_URL`):
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              Server Address
             </label>
             <input
               type="text"
@@ -75,40 +75,40 @@ export default function ApiSettingsModal({
                 setTestResult(null);
               }}
               placeholder="http://localhost:8000/api/v1"
-              className="w-full bg-[#FAF8F5] dark:bg-zinc-850 dark:bg-zinc-800/80 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg px-3 py-2 font-mono text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
+              className="w-full h-9 bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 font-mono text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-300 transition-all"
             />
-            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-              Default: <code className="font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded">{DEFAULT_API_BASE}</code>
+            <p className="mt-1 text-[11px] text-zinc-400">
+              Defaults to `http://localhost:8000/api/v1` for local Python Vision Engine.
             </p>
           </div>
 
-          {/* Test Status Banner */}
+          {/* Test Status Feedback */}
           {testResult && (
             <div
-              className={`p-3 rounded-lg border flex items-start gap-2 ${
+              className={`p-3 rounded-lg border text-xs flex items-start gap-2 ${
                 testResult.success
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-                  : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+                  ? 'bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
+                  : 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900 text-red-700 dark:text-red-300'
               }`}
             >
               {testResult.success ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1 shrink-0" />
               ) : (
-                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1 shrink-0" />
               )}
-              <span className="text-[11px] leading-tight">{testResult.message}</span>
+              <span className="font-medium leading-relaxed">{testResult.message}</span>
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-2">
+          {/* Buttons */}
+          <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white font-medium"
+              className="inline-flex items-center gap-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 text-xs font-medium cursor-pointer transition-colors"
             >
               <RotateCcw className="h-3 w-3" />
-              <span>Reset</span>
+              <span>Reset Default</span>
             </button>
 
             <div className="flex items-center gap-2">
@@ -116,18 +116,22 @@ export default function ApiSettingsModal({
                 type="button"
                 onClick={handleTest}
                 disabled={testing}
-                className="bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1.5"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-medium transition-all shadow-xs active:scale-[0.98] cursor-pointer"
               >
-                {testing && <RefreshCw className="h-3 w-3 animate-spin" />}
-                <span>Test</span>
+                {testing ? (
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Server className="h-3.5 w-3.5 text-zinc-400" />
+                )}
+                <span>Test Server</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleSave}
-                className="bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg font-bold shadow-xs transition-colors"
+                className="px-4 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 text-xs font-medium rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
               >
-                Save & Apply
+                Save
               </button>
             </div>
           </div>

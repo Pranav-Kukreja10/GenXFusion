@@ -7,18 +7,14 @@ import {
   Maximize2,
   Minimize2,
   Download,
-  Sliders,
-  Smartphone,
-  UploadCloud,
   AlertCircle,
   Eye,
-  Move,
 } from 'lucide-react';
 
 export default function VisualInspector({
   invoice,
   hoveredRowIndex = null,
-  onScanImage,
+  onScanImage: _onScanImage,
   isScanning = false,
   onCloseDrawer: _onCloseDrawer = null,
 }) {
@@ -34,8 +30,6 @@ export default function VisualInspector({
   const [imageError, setImageError] = useState(false);
 
   const containerRef = useRef(null);
-  const cameraInputRef = useRef(null);
-  const fileInputRef = useRef(null);
 
   // Images resolution with fallback support
   const rawImage =
@@ -103,82 +97,36 @@ export default function VisualInspector({
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
-  // Download receipt image
   const handleDownloadImage = () => {
-    const targetSrc = currentImageSrc || rawImage;
-    if (!targetSrc) return;
+    if (!currentImageSrc) return;
     const a = document.createElement('a');
-    a.href = targetSrc;
-    a.download = `receipt-${invoice?.invoice_id || 'INV-2026'}-${viewMode}.png`;
-    document.body.appendChild(a);
+    a.href = currentImageSrc;
+    a.download = `receipt-${invoice?.invoice_id || 'scan'}-${viewMode}.jpg`;
     a.click();
-    document.body.removeChild(a);
   };
-
-  // Re-capture handlers
-  const handleFilePicked = (e) => {
-    const file = e.target.files?.[0];
-    if (file && onScanImage) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        onScanImage(file, reader.result, true);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Row indicator height overlay
-  const totalItems = invoice?.active_items?.length || 1;
-  const overlayTopPercent =
-    hoveredRowIndex !== null
-      ? Math.min(Math.max(16 + (hoveredRowIndex / totalItems) * 68, 12), 85)
-      : null;
 
   return (
     <div
       ref={containerRef}
-      className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden flex flex-col transition-colors ${
-        isFullscreen ? 'p-4 bg-slate-950 dark:bg-black fixed inset-0 z-50 rounded-none' : ''
+      className={`bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col transition-all duration-200 ${
+        isFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''
       }`}
       role="region"
-      aria-label="Receipt Image Viewer"
+      aria-label="Physical Bill Receipt Photo"
     >
-      {/* Hidden inputs for Re-capture */}
-      <input
-        type="file"
-        ref={cameraInputRef}
-        onChange={handleFilePicked}
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-      />
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFilePicked}
-        accept="image/*"
-        className="hidden"
-      />
-
-      {/* Top Header Strip: Mode Selector & Action Icons */}
-      <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <div className="h-6 w-6 rounded-md bg-emerald-600 text-white flex items-center justify-center">
-            <Eye className="h-3.5 w-3.5" />
-          </div>
-          <span className="text-xs font-bold text-slate-900 dark:text-white">
-            Receipt Image
+      {/* 1. Header Toolbar Strip with Glassmorphism */}
+      <div className="px-4 sm:px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex items-center justify-between gap-2">
+        {/* Title */}
+        <div className="flex items-center gap-2">
+          <Eye className="h-4 w-4 text-zinc-500 shrink-0" />
+          <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+            Receipt Photo
           </span>
-          {hoveredRowIndex !== null && (
-            <span className="text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.5 rounded">
-              Row #{hoveredRowIndex + 1}
-            </span>
-          )}
         </div>
 
-        {/* View Mode Segmented Controls: Raw Photo | Shadow-Removed | Split */}
+        {/* View Mode Segmented Pill Bar */}
         <div
-          className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800 p-0.5 rounded-lg text-[10px] font-semibold"
+          className="flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800 p-0.5 rounded-lg text-xs font-medium"
           role="tablist"
           aria-label="Image view mode"
         >
@@ -187,48 +135,48 @@ export default function VisualInspector({
             role="tab"
             aria-selected={viewMode === 'raw'}
             onClick={() => setViewMode('raw')}
-            className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+            className={`px-2 py-1 rounded-md transition-all cursor-pointer text-[11px] ${
               viewMode === 'raw'
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-xs font-medium'
+                : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
             }`}
           >
-            Raw Photo
+            Original
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={viewMode === 'enhanced'}
             onClick={() => setViewMode('enhanced')}
-            className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+            className={`px-2 py-1 rounded-md transition-all cursor-pointer text-[11px] ${
               viewMode === 'enhanced'
-                ? 'bg-emerald-700 text-white shadow-2xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs font-medium'
+                : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
             }`}
           >
-            Shadow-Removed
+            Cleaned
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={viewMode === 'split'}
             onClick={() => setViewMode('split')}
-            className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+            className={`px-2 py-1 rounded-md transition-all cursor-pointer text-[11px] ${
               viewMode === 'split'
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-xs font-medium'
+                : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
             }`}
           >
-            Split View
+            Compare
           </button>
         </div>
 
         {/* Image Tools: Rotate 90, Zoom In, Out, Reset, Fullscreen, Download */}
-        <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+        <div className="flex items-center gap-0.5 text-zinc-500 dark:text-zinc-400">
           <button
             type="button"
             onClick={handleRotate90}
-            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             title="Rotate 90° clockwise"
             aria-label="Rotate image 90 degrees"
           >
@@ -237,7 +185,7 @@ export default function VisualInspector({
           <button
             type="button"
             onClick={handleZoomIn}
-            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             title="Zoom In"
             aria-label="Zoom In"
           >
@@ -246,7 +194,7 @@ export default function VisualInspector({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             title="Zoom Out"
             aria-label="Zoom Out"
           >
@@ -256,7 +204,7 @@ export default function VisualInspector({
             <button
               type="button"
               onClick={handleResetZoom}
-              className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer text-emerald-600 font-bold"
+              className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer text-zinc-900 dark:text-zinc-100 font-semibold"
               title="Reset Zoom & Rotation"
               aria-label="Reset Zoom and Rotation"
             >
@@ -266,7 +214,7 @@ export default function VisualInspector({
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             aria-label="Toggle Fullscreen"
           >
@@ -275,7 +223,7 @@ export default function VisualInspector({
           <button
             type="button"
             onClick={handleDownloadImage}
-            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             title="Download Image"
             aria-label="Download Image"
           >
@@ -284,9 +232,9 @@ export default function VisualInspector({
         </div>
       </div>
 
-      {/* Main Image Viewport Area */}
+      {/* Main Image Stage */}
       <div
-        className={`relative min-h-[380px] max-h-[580px] bg-slate-950 flex items-center justify-center overflow-hidden select-none border-b border-slate-200 dark:border-slate-800 ${
+        className={`relative min-h-[380px] max-h-[560px] bg-zinc-900/5 dark:bg-zinc-950 flex items-center justify-center overflow-hidden select-none ${
           zoomLevel > 1 ? 'cursor-grab active:cursor-grabbing' : ''
         }`}
         onMouseDown={handleMouseDown}
@@ -296,176 +244,110 @@ export default function VisualInspector({
       >
         {/* Loading Indicator */}
         {(isScanning || !imageLoaded) && currentImageSrc && !imageError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 z-20 space-y-3">
-            <div className="h-8 w-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-            <span className="text-xs font-mono text-emerald-400">Loading receipt preview...</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 dark:bg-zinc-900/80 backdrop-blur-xs z-20 space-y-2">
+            <div className="h-6 w-6 rounded-full border-2 border-zinc-900 dark:border-zinc-100 border-t-transparent animate-spin" />
+            <span className="text-xs font-mono text-zinc-600 dark:text-zinc-400">Loading preview...</span>
           </div>
         )}
 
         {/* Error Fallback State */}
         {(imageError || !currentImageSrc) && (
           <div className="p-6 text-center space-y-3 max-w-sm">
-            <div className="h-12 w-12 rounded-2xl bg-red-950/60 border border-red-800/80 text-red-400 flex items-center justify-center mx-auto shadow-inner">
-              <AlertCircle className="h-6 w-6" />
+            <div className="h-10 w-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center justify-center mx-auto border border-zinc-200 dark:border-zinc-700">
+              <AlertCircle className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-white">Receipt Image Unavailable</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Receipt Image Unavailable</p>
+              <p className="text-xs text-zinc-400 mt-1">
                 Upload or capture a bill photo to view side-by-side with audited line items.
               </p>
-            </div>
-            <div className="flex items-center justify-center gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                disabled={isScanning}
-                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
-              >
-                <Smartphone className="h-3.5 w-3.5" />
-                <span>Re-capture</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isScanning}
-                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border border-slate-700 cursor-pointer"
-              >
-                <UploadCloud className="h-3.5 w-3.5 text-slate-400" />
-                <span>Browse</span>
-              </button>
             </div>
           </div>
         )}
 
-        {/* Image Display Modes */}
-        {!imageError && currentImageSrc && (
-          <>
-            {/* RAW or Shadow-Removed Standard View */}
-            {viewMode !== 'split' && (
-              <div
-                className="w-full h-full p-2 flex items-center justify-center transition-transform duration-75 ease-out"
+        {/* View Mode: Split Comparison */}
+        {currentImageSrc && !imageError && viewMode === 'split' && (
+          <div className="relative w-full h-full min-h-[380px] flex items-center justify-center overflow-hidden">
+            {/* Base Enhanced Image */}
+            <img
+              src={enhancedImage}
+              alt="Enhanced shadow removed bill"
+              className="absolute max-w-full max-h-[540px] object-contain transition-transform duration-100"
+              style={{
+                transform: `scale(${zoomLevel}) rotate(${rotation}deg) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
+              }}
+            />
+
+            {/* Clipped Raw Image on Left */}
+            <div
+              className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center"
+              style={{ clipPath: `inset(0 ${100 - splitSliderPos}% 0 0)` }}
+            >
+              <img
+                src={rawImage}
+                alt="Raw handwritten bill"
+                className="max-w-full max-h-[540px] object-contain"
                 style={{
-                  transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px) rotate(${rotation}deg)`,
+                  transform: `scale(${zoomLevel}) rotate(${rotation}deg) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
                 }}
-              >
-                <img
-                  src={currentImageSrc}
-                  alt={viewMode === 'raw' ? 'Raw Receipt' : 'Shadow-Removed Receipt'}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageError(true)}
-                  className="max-h-[520px] w-auto max-w-full object-contain rounded shadow-lg pointer-events-none"
-                />
+              />
+            </div>
 
-                {/* Filter Label Badge */}
-                <div className="absolute top-3 left-3 pointer-events-none">
-                  {viewMode === 'raw' ? (
-                    <span className="bg-slate-900/90 text-amber-300 text-[10px] font-mono px-2 py-0.5 rounded border border-amber-500/40 shadow-xs">
-                      RAW CAMERA PHOTO
-                    </span>
-                  ) : (
-                    <span className="bg-emerald-950/90 text-emerald-300 text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/40 shadow-xs">
-                      SHADOW-REMOVED
-                    </span>
-                  )}
-                </div>
+            {/* Split Divider Handle */}
+            <div
+              className="absolute top-0 bottom-0 w-0.5 bg-zinc-900 dark:bg-zinc-100 z-10 pointer-events-none"
+              style={{ left: `${splitSliderPos}%` }}
+            >
+              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-6 w-6 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-md text-[10px] font-mono">
+                ↔
               </div>
-            )}
+            </div>
 
-            {/* SPLIT SLIDER VIEW */}
-            {viewMode === 'split' && (
-              <div
-                className="relative w-full h-[460px] select-none overflow-hidden flex items-center justify-center bg-black"
-                style={{
-                  transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px) rotate(${rotation}deg)`,
-                }}
-              >
-                {/* Background Raw Image */}
-                <img
-                  src={rawImage || enhancedImage}
-                  alt="Raw"
-                  className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                />
+            {/* Split Slider Range */}
+            <input
+              type="range"
+              min="5"
+              max="95"
+              value={splitSliderPos}
+              onChange={(e) => setSplitSliderPos(Number(e.target.value))}
+              className="absolute inset-x-4 bottom-3 z-20 opacity-40 hover:opacity-100 transition-opacity cursor-ew-resize accent-zinc-900 dark:accent-zinc-100"
+              aria-label="Split slider between raw and enhanced photo"
+            />
+          </div>
+        )}
 
-                {/* Foreground Shadow-Removed Image Clipped by Slider */}
-                <div
-                  className="absolute inset-0 overflow-hidden"
-                  style={{ width: `${splitSliderPos}%` }}
-                >
-                  <img
-                    src={enhancedImage || rawImage}
-                    alt="Enhanced"
-                    className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                    style={{ width: '100%', maxWidth: 'none' }}
-                  />
-                  <div className="absolute top-3 left-3 bg-emerald-950/95 text-emerald-300 text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/50">
-                    SHADOW-REMOVED
-                  </div>
-                </div>
+        {/* View Mode: Single Image (Enhanced or Raw) */}
+        {currentImageSrc && !imageError && viewMode !== 'split' && (
+          <img
+            src={currentImageSrc}
+            alt={viewMode === 'raw' ? 'Original paper receipt' : 'Cleaned receipt photo'}
+            onLoad={() => {
+              setImageLoaded(true);
+              setImageError(false);
+            }}
+            onError={() => {
+              setImageLoaded(true);
+              setImageError(true);
+            }}
+            className="max-w-full max-h-[540px] object-contain transition-transform duration-100"
+            style={{
+              transform: `scale(${zoomLevel}) rotate(${rotation}deg) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
+            }}
+          />
+        )}
 
-                <div className="absolute top-3 right-3 bg-slate-900/95 text-amber-300 text-[10px] font-mono px-2 py-0.5 rounded border border-amber-500/50">
-                  RAW PHOTO
-                </div>
-
-                {/* Vertical Divider Line with handle */}
-                <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-white cursor-ew-resize flex items-center justify-center shadow-2xl z-20"
-                  style={{ left: `${splitSliderPos}%` }}
-                >
-                  <div className="w-6 h-6 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-800 text-[10px]">
-                    <Sliders className="h-3.5 w-3.5" />
-                  </div>
-                </div>
-
-                {/* Hidden slider range */}
-                <input
-                  type="range"
-                  min="5"
-                  max="95"
-                  value={splitSliderPos}
-                  onChange={(e) => setSplitSliderPos(Number(e.target.value))}
-                  className="absolute inset-0 opacity-0 cursor-ew-resize w-full h-full z-30"
-                  aria-label="Split preview comparison slider"
-                />
-              </div>
-            )}
-
-            {/* Table Row Hover Highlight Overlay */}
-            {hoveredRowIndex !== null && overlayTopPercent !== null && (
-              <div
-                className="absolute left-6 right-6 border-2 border-emerald-400 bg-emerald-400/20 rounded pointer-events-none transition-all duration-200 z-10 flex items-center justify-between px-3 py-1 shadow-md"
-                style={{
-                  top: `${overlayTopPercent}%`,
-                  height: '42px',
-                }}
-              >
-                <span className="text-[10px] font-mono font-bold text-white bg-slate-900/90 px-1.5 py-0.5 rounded shadow">
-                  Row #{hoveredRowIndex + 1}
-                </span>
-                <span className="text-[10px] font-mono text-emerald-200 bg-emerald-950/80 px-1.5 py-0.5 rounded">
-                  Active Line
-                </span>
-              </div>
-            )}
-          </>
+        {/* Hovered Row Sync Callout */}
+        {hoveredRowIndex !== null && (
+          <div className="absolute bottom-3 left-3 z-20 bg-zinc-900/90 backdrop-blur-xs text-white text-[11px] font-mono px-2.5 py-1 rounded-md border border-zinc-700 shadow-xs">
+            Viewing Line Item #{hoveredRowIndex + 1}
+          </div>
         )}
       </div>
 
-      {/* Footer Instructions */}
-      <div className="p-2.5 bg-slate-50 dark:bg-slate-900/40 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          <Move className="h-3 w-3 text-slate-400" />
-          <span>Pan: drag when zoomed • Click Rotate to orient</span>
-        </div>
-        <div className="flex items-center gap-2 font-mono text-[10px]">
-          {rotation > 0 && (
-            <span className="text-slate-600 dark:text-slate-300 font-bold">
-              {rotation}°
-            </span>
-          )}
-          <span className="text-emerald-700 dark:text-emerald-400 font-bold">
-            {Math.round(zoomLevel * 100)}% Zoom
-          </span>
-        </div>
+      {/* Footer Info Strip */}
+      <div className="px-4 py-2 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 flex items-center justify-between text-xs font-mono text-zinc-400">
+        <span>Zoom: {Math.round(zoomLevel * 100)}%</span>
+        <span>Enhanced Photo</span>
       </div>
     </div>
   );

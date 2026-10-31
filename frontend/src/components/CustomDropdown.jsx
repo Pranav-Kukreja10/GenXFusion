@@ -3,7 +3,8 @@ import { ChevronDown, Check, Search } from 'lucide-react';
 
 /**
  * Custom accessible dropdown component replacing native OS <select>.
- * Supports keyboard navigation, search filtering, custom icons, and mobile-friendly touch targets (min 42px).
+ * High-contrast monochrome design system with keyboard navigation, search filtering,
+ * and ergonomic touch targets.
  */
 export default function CustomDropdown({
   value,
@@ -104,9 +105,10 @@ export default function CustomDropdown({
         );
         break;
       case 'Enter':
+      case ' ':
         e.preventDefault();
         if (highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
-          onChange(filteredOptions[highlightedIndex].value);
+          onChange && onChange(filteredOptions[highlightedIndex].value);
           setIsOpen(false);
         }
         break;
@@ -122,15 +124,10 @@ export default function CustomDropdown({
     }
   };
 
-  const handleSelect = (optValue) => {
-    onChange(optValue);
-    setIsOpen(false);
-  };
-
   return (
     <div
       ref={dropdownRef}
-      className={`relative inline-block text-left ${className}`}
+      className={`relative inline-block w-full text-left ${className}`}
       onKeyDown={handleKeyDown}
     >
       {/* Trigger Button */}
@@ -141,98 +138,102 @@ export default function CustomDropdown({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label={ariaLabel}
-        className={`w-full min-h-[42px] px-3 py-2 bg-white dark:bg-zinc-800 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg flex items-center justify-between gap-2 text-[15px] font-medium text-slate-900 dark:text-slate-100 shadow-2xs hover:border-slate-400 dark:hover:border-zinc-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${buttonClassName}`}
+        className={`w-full ${buttonClassName?.includes('h-') ? '' : 'h-9'} ${buttonClassName?.includes('px-') ? '' : 'px-3'} rounded-lg bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-zinc-100 flex items-center justify-between gap-1.5 transition-all duration-150 focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${buttonClassName}`}
       >
-        <div className="flex items-center gap-2 truncate text-left flex-1 min-w-0">
-          {icon && <span className="text-slate-500 dark:text-slate-400 shrink-0">{icon}</span>}
-          {selectedOption ? (
-            <span className="truncate">{selectedOption.label}</span>
-          ) : (
-            <span className="text-slate-400 dark:text-slate-500 truncate">{placeholder}</span>
-          )}
+        <div className="flex items-center gap-1.5 min-w-0 truncate">
+          {icon && <span className="shrink-0 text-zinc-400">{icon}</span>}
+          <span className={`truncate font-medium ${selectedOption ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400'}`}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
         </div>
         <ChevronDown
-          className={`h-4 w-4 text-slate-400 transition-transform duration-150 shrink-0 ${
+          className={`h-3.5 w-3.5 text-zinc-400 shrink-0 transition-transform duration-150 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu with Subtle Backdrop Blur */}
       {isOpen && (
         <div
+          className={`absolute left-0 top-full mt-1.5 z-50 w-full min-w-[200px] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl p-1.5 space-y-1 animate-fadeIn ${menuClassName}`}
           role="listbox"
-          className={`absolute left-0 right-0 z-50 mt-1 max-h-64 overflow-y-auto bg-white dark:bg-[#181D27] border border-slate-200 dark:border-zinc-700 rounded-xl shadow-xl py-1.5 focus:outline-hidden animate-in fade-in zoom-in-95 duration-150 ${menuClassName}`}
-          style={{ minWidth: '100%' }}
         >
-          {/* Optional Search Filter */}
           {searchable && (
-            <div className="sticky top-0 z-10 px-2 py-1.5 bg-white dark:bg-[#181D27] border-b border-slate-100 dark:border-zinc-800">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <div className="p-1 border-b border-zinc-100 dark:border-zinc-800">
+              <div className="relative flex items-center">
+                <Search className="absolute left-2.5 h-3.5 w-3.5 text-zinc-400 pointer-events-none" />
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Type to filter..."
-                  className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-md text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setHighlightedIndex(0);
+                  }}
+                  placeholder="Filter..."
+                  className="w-full h-8 pl-8 pr-2 text-xs rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 outline-none focus:border-zinc-900 dark:focus:border-zinc-300 transition-colors"
                 />
               </div>
             </div>
           )}
 
-          {/* Options List */}
-          {filteredOptions.length === 0 ? (
-            <div className="px-3 py-3 text-xs text-slate-400 dark:text-slate-500 text-center">
-              No matching options
-            </div>
-          ) : (
-            filteredOptions.map((opt, idx) => {
-              const isSelected = String(opt.value).toLowerCase() === String(value).toLowerCase();
-              const isHighlighted = idx === highlightedIndex;
+          <div className="max-h-56 overflow-y-auto space-y-0.5">
+            {filteredOptions.length === 0 ? (
+              <div className="px-3 py-2 text-xs text-zinc-400 text-center">
+                No matching options
+              </div>
+            ) : (
+              filteredOptions.map((opt, idx) => {
+                const isSelected = selectedOption && String(selectedOption.value) === String(opt.value);
+                const isHighlighted = idx === highlightedIndex;
 
-              return (
-                <div
-                  key={`${opt.value}-${idx}`}
-                  role="option"
-                  aria-selected={isSelected}
-                  onClick={() => handleSelect(opt.value)}
-                  onMouseEnter={() => setHighlightedIndex(idx)}
-                  className={`px-3 py-2 text-[14px] flex items-center justify-between gap-2 cursor-pointer transition-colors duration-150 min-h-[38px] ${
-                    isSelected
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 font-semibold'
-                      : isHighlighted
-                      ? 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white'
-                      : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-zinc-800/50'
-                  }`}
-                >
-                  <div className="flex flex-col truncate">
-                    <span className="truncate">{opt.label}</span>
-                    {opt.subtitle && (
-                      <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
-                        {opt.subtitle}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {opt.badge && (
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 font-bold">
-                        {opt.badge}
-                      </span>
-                    )}
-                    {isSelected && (
-                      <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 stroke-[2.5]" />
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
+                return (
+                  <button
+                    key={String(opt.value) + idx}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      onChange && onChange(opt.value);
+                      setIsOpen(false);
+                    }}
+                    onMouseEnter={() => setHighlightedIndex(idx)}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-medium'
+                        : isHighlighted
+                        ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
+                        : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/60'
+                    }`}
+                  >
+                    <div className="min-w-0 pr-2">
+                      <div className="truncate font-medium">{opt.label}</div>
+                      {opt.subtitle && (
+                        <div className={`text-[10px] truncate ${isSelected ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-400'}`}>
+                          {opt.subtitle}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {opt.badge && (
+                        <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${
+                          isSelected
+                            ? 'bg-zinc-800 text-zinc-100 border-zinc-700 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-300'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
+                        }`}>
+                          {opt.badge}
+                        </span>
+                      )}
+                      {isSelected && <Check className="h-3.5 w-3.5 shrink-0 ml-1" />}
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
-

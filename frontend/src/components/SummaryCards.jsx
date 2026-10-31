@@ -24,7 +24,7 @@ function CountUpNumber({ value, prefix = '₹', decimals = 2 }) {
       return;
     }
 
-    const duration = 450; // ms
+    const duration = 400; // ms
     const startTime = performance.now();
     let animId;
 
@@ -69,170 +69,150 @@ export default function SummaryCards({ invoice }) {
 
   return (
     <div
-      className="flex overflow-x-auto gap-3.5 pb-2 pt-0.5 no-scrollbar snap-x snap-mandatory lg:grid lg:grid-cols-4 lg:gap-4 lg:overflow-visible"
+      className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
       role="region"
       aria-label="Invoice Financial Summary Cards"
     >
       {/* =================================================================== */}
-      {/* 4. Final Invoice Total (HERO CARD)                                  */}
-      {/* Mobile: FIRST (order-1), Desktop: 4th (lg:order-4)                  */}
-      {/* =================================================================== */}
-      <div
-        className="order-1 lg:order-4 shrink-0 w-[280px] sm:w-[320px] lg:w-auto snap-start bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-2xl p-4 sm:p-5 shadow-md hover:shadow-lg transition-all text-white flex flex-col justify-between relative overflow-hidden group focus-within:ring-2 focus-within:ring-emerald-400"
-        tabIndex={0}
-        aria-label={`Final Payable Total: ₹${totals.finalInvoiceTotal.toFixed(2)}`}
-      >
-        <div className="flex items-center justify-between z-10">
-          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-100">
-            Final Invoice Total
-          </span>
-          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-xs">
-            Payable
-          </span>
-        </div>
-
-        <div className="my-2 z-10">
-          <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums tracking-tight text-white">
-            <CountUpNumber value={totals.finalInvoiceTotal} />
-          </div>
-        </div>
-
-        {/* Comparison Chip: Handwritten vs Final Payable */}
-        <div className="flex items-center gap-2 z-10 pt-1">
-          {totals.underBilledDiff !== 0 ? (
-            <span
-              className={`inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-2xs ${
-                totals.underBilledDiff > 0
-                  ? 'bg-amber-400 text-amber-950'
-                  : 'bg-emerald-200 text-emerald-950'
-              }`}
-            >
-              {totals.underBilledDiff > 0 ? (
-                <>
-                  <TrendingUp className="h-3 w-3" />
-                  <span>₹{totals.underBilledDiff.toFixed(2)} under-billed</span>
-                </>
-              ) : (
-                <>
-                  <TrendingDown className="h-3 w-3" />
-                  <span>₹{Math.abs(totals.underBilledDiff).toFixed(2)} over-billed</span>
-                </>
-              )}
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-100 border border-emerald-400/30">
-              <CheckCircle2 className="h-3 w-3" /> Matches Paper Total
-            </span>
-          )}
-        </div>
-
-        {/* Decorative background glow */}
-        <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
-      </div>
-
-      {/* =================================================================== */}
       {/* 1. Handwritten Total (As Written)                                   */}
-      {/* Mobile: 2nd (order-2), Desktop: 1st (lg:order-1)                   */}
       {/* =================================================================== */}
       <div
-        className="order-2 lg:order-1 shrink-0 w-[260px] sm:w-[280px] lg:w-auto snap-start bg-white dark:bg-[#131822] border border-[#E7E2DA] dark:border-[#232B3A] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between focus-within:ring-2 focus-within:ring-emerald-600"
+        className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700"
         tabIndex={0}
         aria-label={`Handwritten paper total: ₹${totals.handwrittenTotal.toFixed(2)}`}
       >
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Handwritten Total
+          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            Original Bill Total
           </span>
-          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400">
+          <span className="text-[11px] font-mono text-zinc-400 dark:text-zinc-500">
             As Written
           </span>
         </div>
 
-        <div className="my-2">
-          <div className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 font-mono tabular-nums">
+        <div className="my-3">
+          <div className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
             <CountUpNumber value={totals.handwrittenTotal} />
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-          <FileText className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-          <span className="truncate">Raw paper total on receipt</span>
+        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+          <FileText className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+          <span className="truncate">Total on paper receipt</span>
         </div>
       </div>
 
       {/* =================================================================== */}
       {/* 2. Taxable Value                                                    */}
-      {/* Mobile: 3rd (order-3), Desktop: 2nd (lg:order-2)                   */}
       {/* =================================================================== */}
       <div
-        className="order-3 lg:order-2 shrink-0 w-[260px] sm:w-[280px] lg:w-auto snap-start bg-white dark:bg-[#131822] border border-[#E7E2DA] dark:border-[#232B3A] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between focus-within:ring-2 focus-within:ring-emerald-600"
+        className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700"
         tabIndex={0}
         aria-label={`Taxable Value: ₹${totals.taxableValue.toFixed(2)}`}
       >
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Taxable Value
+          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            Subtotal (Before Tax)
           </span>
           {totals.mathSavings !== 0 ? (
-            <span
-              className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                totals.mathSavings > 0
-                  ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
-                  : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
-              }`}
-            >
+            <span className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
               {totals.mathSavings > 0
-                ? `Saved ₹${Math.abs(totals.mathSavings).toFixed(2)}`
-                : `Fixed ₹${Math.abs(totals.mathSavings).toFixed(2)}`}
+                ? `Diff -₹${Math.abs(totals.mathSavings).toFixed(2)}`
+                : `Diff +₹${Math.abs(totals.mathSavings).toFixed(2)}`}
             </span>
           ) : (
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
-              Audited
+            <span className="text-[11px] font-mono text-zinc-400 dark:text-zinc-500">
+              Verified
             </span>
           )}
         </div>
 
-        <div className="my-2">
-          <div className="text-2xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
+        <div className="my-3">
+          <div className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
             <CountUpNumber value={totals.taxableValue} />
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-          <Calculator className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span className="truncate">Pre-tax audited base</span>
+        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+          <Calculator className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+          <span className="truncate">Audited items subtotal</span>
         </div>
       </div>
 
       {/* =================================================================== */}
       {/* 3. GST Collected (CGST + SGST)                                      */}
-      {/* Mobile: 4th (order-4), Desktop: 3rd (lg:order-3)                   */}
       {/* =================================================================== */}
       <div
-        className="order-4 lg:order-3 shrink-0 w-[260px] sm:w-[280px] lg:w-auto snap-start bg-white dark:bg-[#131822] border border-[#E7E2DA] dark:border-[#232B3A] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between focus-within:ring-2 focus-within:ring-emerald-600"
+        className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700"
         tabIndex={0}
         aria-label={`GST Collected: ₹${totals.gstCollected.toFixed(2)}`}
       >
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            GST Collected
+          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            Tax (GST)
           </span>
-          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
-            CGST + SGST
+          <span className="text-[11px] font-mono text-zinc-400 dark:text-zinc-500">
+            {totals.isInterState ? 'IGST' : 'CGST + SGST'}
           </span>
         </div>
 
-        <div className="my-2">
-          <div className="text-2xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
+        <div className="my-3">
+          <div className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
             <CountUpNumber value={totals.gstCollected} />
           </div>
         </div>
 
-        <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-          <Percent className="h-3 w-3 text-emerald-600 shrink-0" />
-          <span className="truncate">
-            CGST: ₹{totals.cgstTotal.toFixed(2)} • SGST: ₹{totals.sgstTotal.toFixed(2)}
+        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+          <Percent className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+          <span className="truncate">Total GST calculated</span>
+        </div>
+      </div>
+
+      {/* =================================================================== */}
+      {/* 4. Final Invoice Total (Inverted High-Contrast Obsidian Card)       */}
+      {/* =================================================================== */}
+      <div
+        className="bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-2xl p-5 shadow-sm flex flex-col justify-between transition-all duration-200"
+        tabIndex={0}
+        aria-label={`Final Payable Total: ₹${totals.finalInvoiceTotal.toFixed(2)}`}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium text-zinc-400 dark:text-zinc-600">
+            Total Invoice Amount
           </span>
+          <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-white/10 dark:bg-zinc-900/10 text-zinc-200 dark:text-zinc-800">
+            Final Total
+          </span>
+        </div>
+
+        <div className="my-3">
+          <div className="text-xl sm:text-2xl font-semibold font-mono tabular-nums tracking-tight">
+            <CountUpNumber value={totals.finalInvoiceTotal} />
+          </div>
+        </div>
+
+        {/* Comparison Line: Handwritten vs Final Payable */}
+        <div className="flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500 font-mono">
+          {totals.underBilledDiff !== 0 ? (
+            <span className="inline-flex items-center gap-1 tabular-nums">
+              {totals.underBilledDiff > 0 ? (
+                <>
+                  <TrendingUp className="h-3 w-3" />
+                  <span>₹{totals.underBilledDiff.toFixed(2)} diff vs paper</span>
+                </>
+              ) : (
+                <>
+                  <TrendingDown className="h-3 w-3" />
+                  <span>₹{Math.abs(totals.underBilledDiff).toFixed(2)} diff vs paper</span>
+                </>
+              )}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-zinc-300 dark:text-zinc-700">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 dark:text-emerald-600" />
+              <span>Matches Paper Total</span>
+            </span>
+          )}
         </div>
       </div>
     </div>

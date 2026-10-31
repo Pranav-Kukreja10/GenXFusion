@@ -483,7 +483,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8F5] dark:bg-[#0B0E14] text-[#111827] dark:text-[#F3F4F6] transition-colors">
+    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors pt-14 pb-28 sm:pb-24">
       {/* Top Navigation & Command Header with TrueTax AI Branding */}
       <Header
         invoice={currentInvoice}
@@ -503,7 +503,7 @@ export default function DashboardPage() {
 
       {/* Main Workspace: Full Split-Screen Audit Dashboard */}
       <main className="flex-1 w-full flex flex-col justify-start">
-        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-5 space-y-4 transition-all duration-500 animate-fadeIn">
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-6 transition-all duration-500 animate-fadeIn">
           {/* 1. Live Summary KPI Cards */}
           <SummaryCards invoice={currentInvoice} />
 
@@ -530,9 +530,9 @@ export default function DashboardPage() {
           />
 
           {/* 4. Split-Screen Workspace: Visual Inspector + Ledger Table */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* Left Column (about 35%): Visual Inspector */}
-            <div className="hidden lg:block lg:col-span-5 sticky top-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column: Visual Inspector */}
+            <div className="hidden lg:block lg:col-span-4 sticky top-20">
               <VisualInspector
                 invoice={currentInvoice}
                 hoveredRowIndex={hoveredRowIndex}
@@ -541,8 +541,8 @@ export default function DashboardPage() {
               />
             </div>
 
-            {/* Right Column (about 65%): Interactive Line-Item GST Ledger Table */}
-            <div className="col-span-1 lg:col-span-7">
+            {/* Right Column: Interactive Line-Item GST Ledger Table */}
+            <div className="col-span-1 lg:col-span-8">
               <LedgerTable
                 invoice={currentInvoice}
                 onItemChange={handleItemChange}
@@ -564,7 +564,7 @@ export default function DashboardPage() {
       <button
         type="button"
         onClick={() => setIsMobileDrawerOpen(true)}
-        className="lg:hidden fixed bottom-20 right-4 z-40 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-full px-4 py-3 shadow-xl flex items-center gap-2 text-xs font-black cursor-pointer border border-emerald-400/40"
+        className="lg:hidden fixed bottom-20 right-4 z-40 bg-zinc-900 hover:bg-zinc-800 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 active:scale-95 rounded-full px-4 py-2.5 shadow-lg flex items-center gap-2 text-xs font-medium cursor-pointer border border-zinc-700 dark:border-zinc-300 transition-all duration-150"
         aria-label="Open Visual Inspector Receipt Drawer"
       >
         <Eye className="h-4 w-4" />
@@ -574,28 +574,28 @@ export default function DashboardPage() {
       {/* Mobile Slide-Up Drawer for Visual Inspector */}
       {isMobileDrawerOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-end animate-fadeIn"
+          className="lg:hidden fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-xs flex flex-col justify-end animate-fadeIn"
           role="dialog"
           aria-modal="true"
           aria-label="Visual Inspector Drawer"
         >
-          <div className="bg-white dark:bg-[#131822] rounded-t-3xl max-h-[90vh] overflow-y-auto p-4 border-t border-[#E7E2DA] dark:border-zinc-800 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E7E2DA] dark:border-zinc-800">
+          <div className="bg-white dark:bg-zinc-900 rounded-t-2xl max-h-[90vh] overflow-y-auto p-4 border-t border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                <div className="h-7 w-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 flex items-center justify-center">
                   <Eye className="h-4 w-4" />
                 </div>
-                <span className="font-extrabold text-sm text-slate-900 dark:text-white">
-                  Visual Inspector (OpenCV CLAHE)
+                <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">
+                  Receipt Photo Viewer
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMobileDrawerOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
                 aria-label="Close drawer"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
             <VisualInspector
@@ -617,13 +617,6 @@ export default function DashboardPage() {
         onGenerateInvoice={() => setIsPakkaModalOpen(true)}
         isRecalculating={isRecalculating}
       />
-
-      {/* Footer */}
-      <footer className="border-t border-[#E5E0D8] dark:border-zinc-800/80 bg-white dark:bg-[#12151C] py-3 px-4 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
-        <p>
-          <strong>TrueTax AI</strong> • Problem #25 Vernacular OCR to GST Tax Invoice • ClearTax &amp; Razorpay FinTech Architecture
-        </p>
-      </footer>
 
       {/* Toast Notification Container */}
       <Toast toasts={toasts} onDismiss={dismissToast} />

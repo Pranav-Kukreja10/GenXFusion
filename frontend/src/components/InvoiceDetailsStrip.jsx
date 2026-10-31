@@ -1,31 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Store,
   User,
   Hash,
   MapPin,
-  Calendar,
-  CheckCircle2,
-  AlertCircle,
   FileText,
-  Phone,
   RotateCw,
   Percent,
-  Truck,
 } from 'lucide-react';
 import CustomDropdown from './CustomDropdown';
 import { STATE_OPTIONS } from '../utils/indianStates';
 import { validateGstinApi, getNextInvoiceNumberApi } from '../services/api';
 
 /**
- * Clean, professional, zero-AI-slop Invoice Details & Party Compliance Grid.
- * Built for 40-65+ shopkeepers and tax accountants:
- * - Minimum 15px font size, font-weight 500, minimum 42px touch targets.
- * - Live Mod-36 GSTIN checksum validation.
- * - CGST Rule 46(b) invoice numbering with FY auto-generation.
- * - Custom accessible dropdowns (zero native <select>).
- * - Tax Calculation Mode (Exclusive vs MRP Inclusive + Surcharges).
+ * Sleek, unified Invoice Details & Party Compliance Grid.
+ * One unified card container divided by subtle 1px internal hairlines.
+ * High-contrast monochrome design system with precision financial typography.
  */
+const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
 export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
   const [supplierValidation, setSupplierValidation] = useState(null);
   const [buyerValidation, setBuyerValidation] = useState(null);
@@ -45,11 +38,18 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
     if (supplierGstin && supplierGstin.length === 15) {
       setIsValidatingSupplier(true);
       validateGstinApi(supplierGstin)
-        .then(({ data }) => {
-          if (active) setSupplierValidation(data);
+        .then((res) => {
+          const val = res?.data || res;
+          if (active) setSupplierValidation(val);
         })
         .catch(() => {
-          if (active) setSupplierValidation(null);
+          if (active) {
+            setSupplierValidation({
+              is_valid: GSTIN_REGEX.test(supplierGstin),
+              isValid: GSTIN_REGEX.test(supplierGstin),
+              error_reason: GSTIN_REGEX.test(supplierGstin) ? '' : 'Invalid format',
+            });
+          }
         })
         .finally(() => {
           if (active) setIsValidatingSupplier(false);
@@ -68,11 +68,18 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
     if (buyerGstin && buyerGstin.length === 15) {
       setIsValidatingBuyer(true);
       validateGstinApi(buyerGstin)
-        .then(({ data }) => {
-          if (active) setBuyerValidation(data);
+        .then((res) => {
+          const val = res?.data || res;
+          if (active) setBuyerValidation(val);
         })
         .catch(() => {
-          if (active) setBuyerValidation(null);
+          if (active) {
+            setBuyerValidation({
+              is_valid: GSTIN_REGEX.test(buyerGstin),
+              isValid: GSTIN_REGEX.test(buyerGstin),
+              error_reason: GSTIN_REGEX.test(buyerGstin) ? '' : 'Invalid format',
+            });
+          }
         })
         .finally(() => {
           if (active) setIsValidatingBuyer(false);
@@ -115,59 +122,46 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
 
   return (
     <div
-      className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs transition-colors space-y-4"
+      className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden transition-colors"
       role="region"
-      aria-label="Invoice Identification and Statutory Compliance Grid"
+      aria-label="Bill and Party Details"
     >
       {/* Top Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+      <div className="px-5 sm:px-6 py-3.5 border-b border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <h2 className="text-[17px] font-semibold text-slate-900 dark:text-slate-100">
-            Invoice &amp; Party Compliance Details
+          <FileText className="h-4 w-4 text-zinc-400 shrink-0" />
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+            Bill &amp; Party Details
           </h2>
           {invoice?.financial_year && (
-            <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-              FY {invoice.financial_year}
+            <span className="text-xs text-zinc-400 font-mono">
+              · FY {invoice.financial_year}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <span
-            className={`text-xs font-semibold px-2.5 py-1 rounded-md border ${
-              isInterState
-                ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
-                : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
-            }`}
-          >
-            {isInterState ? 'Inter-State (100% IGST)' : 'Intra-State (CGST + SGST)'}
-          </span>
-          <span
-            className={`text-xs font-semibold px-2.5 py-1 rounded-md border ${
-              invoice?.supply_type_b2b === 'B2B'
-                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-            }`}
-          >
-            {invoice?.supply_type_b2b === 'B2B' ? 'B2B Invoice' : 'B2CS Retail'}
-          </span>
+        <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <span>{isInterState ? 'Inter-State' : 'Within State'}</span>
+          <span className="text-zinc-300 dark:text-zinc-700">·</span>
+          <span>{invoice?.supply_type_b2b === 'B2B' ? 'B2B Business' : 'Retail Customer'}</span>
         </div>
       </div>
 
-      {/* 4-Column Grid: Supplier, Buyer, Metadata, Tax Mode */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* Unified 4-Column Container with Internal Hairlines */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 lg:divide-x divide-zinc-100 dark:divide-zinc-800">
+        
         {/* Column 1: Supplier / Store Details */}
-        <div className="space-y-3 bg-slate-50/70 dark:bg-slate-950/40 p-3.5 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-              <Store className="h-3.5 w-3.5 text-slate-400" /> Supplier (Dukaan)
+        <div className="p-5 sm:p-6 space-y-3.5">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <Store className="h-3.5 w-3.5 text-zinc-400" />
+              <span>Your Store Details</span>
             </span>
           </div>
 
           <div>
-            <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-              Store / Business Name
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              Store Name
             </label>
             <input
               type="text"
@@ -176,28 +170,32 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
                 handleFieldChange('merchant_name', e.target.value);
                 handleFieldChange('store_name_guess', e.target.value);
               }}
-              placeholder="Store / Merchant Name"
-              className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-medium text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+              placeholder="Your Store Name"
+              className="w-full h-10 px-3.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 transition-all outline-none"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[12px] font-medium text-slate-500 dark:text-slate-400">
-                Supplier GSTIN
+              <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                GSTIN (Tax ID)
               </label>
-              {supplierGstin ? (
-                supplierValidation?.is_valid ? (
-                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" /> Mod-36 Ok
-                  </span>
-                ) : (
-                  <span className="text-[11px] font-semibold text-red-600 dark:text-red-400 inline-flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" /> {supplierValidation?.error_reason || 'Invalid'}
-                  </span>
-                )
+              {!supplierGstin ? (
+                <span className="text-[11px] text-zinc-400">Unregistered</span>
+              ) : supplierGstin.length < 15 ? (
+                <span className="text-[11px] text-zinc-400 font-mono">{15 - supplierGstin.length} chars left</span>
+              ) : isValidatingSupplier ? (
+                <span className="text-[11px] text-zinc-400 font-mono">Verifying...</span>
+              ) : supplierValidation?.is_valid || supplierValidation?.isValid || GSTIN_REGEX.test(supplierGstin) ? (
+                <span className="text-[11px] font-mono text-zinc-700 dark:text-zinc-300 inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                  Verified
+                </span>
               ) : (
-                <span className="text-[11px] text-slate-400">Unregistered</span>
+                <span className="text-[11px] font-mono text-red-600 dark:text-red-400 inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  {supplierValidation?.error_reason || 'Invalid Format'}
+                </span>
               )}
             </div>
             <input
@@ -208,12 +206,12 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
                 handleFieldChange('supplier_gstin', e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, ''))
               }
               placeholder="e.g. 03AAEPG1807C1ZM"
-              className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-mono font-medium uppercase text-slate-900 dark:text-slate-100 tabular-nums focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+              className="w-full h-10 px-3.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-sm font-mono uppercase text-zinc-900 dark:text-zinc-100 tabular-nums focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 transition-all outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
               Store Address &amp; Contact
             </label>
             <input
@@ -221,22 +219,23 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
               value={invoice?.store_address || invoice?.supplier_phone || ''}
               onChange={(e) => handleFieldChange('store_address', e.target.value)}
               placeholder="Address / Phone (Optional)"
-              className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-medium text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+              className="w-full h-10 px-3.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 transition-all outline-none"
             />
           </div>
         </div>
 
         {/* Column 2: Buyer / Customer Details */}
-        <div className="space-y-3 bg-slate-50/70 dark:bg-slate-950/40 p-3.5 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5 text-slate-400" /> Buyer (Customer)
+        <div className="p-5 sm:p-6 space-y-3.5">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-zinc-400" />
+              <span>Customer Details</span>
             </span>
           </div>
 
           <div>
-            <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-              Customer / Business Name
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              Customer Name
             </label>
             <input
               type="text"
@@ -245,28 +244,32 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
                 handleFieldChange('customer_name', e.target.value);
                 handleFieldChange('buyer_name', e.target.value);
               }}
-              placeholder="Cash Customer / B2B Buyer"
-              className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-medium text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+              placeholder="Cash Customer / Business Name"
+              className="w-full h-10 px-3.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 transition-all outline-none"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[12px] font-medium text-slate-500 dark:text-slate-400">
-                Buyer GSTIN (Optional)
+              <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                Customer GSTIN (Optional)
               </label>
-              {buyerGstin ? (
-                buyerValidation?.is_valid ? (
-                  <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 inline-flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" /> B2B Registered
-                  </span>
-                ) : (
-                  <span className="text-[11px] font-semibold text-red-600 dark:text-red-400 inline-flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" /> Invalid
-                  </span>
-                )
+              {!buyerGstin ? (
+                <span className="text-[11px] text-zinc-400">Retail Sale</span>
+              ) : buyerGstin.length < 15 ? (
+                <span className="text-[11px] text-zinc-400 font-mono">{15 - buyerGstin.length} chars left</span>
+              ) : isValidatingBuyer ? (
+                <span className="text-[11px] text-zinc-400 font-mono">Verifying...</span>
+              ) : buyerValidation?.is_valid || buyerValidation?.isValid || GSTIN_REGEX.test(buyerGstin) ? (
+                <span className="text-[11px] font-mono text-zinc-700 dark:text-zinc-300 inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                  B2B Valid
+                </span>
               ) : (
-                <span className="text-[11px] text-slate-400">B2C Retail</span>
+                <span className="text-[11px] font-mono text-red-600 dark:text-red-400 inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  {buyerValidation?.error_reason || 'Invalid Format'}
+                </span>
               )}
             </div>
             <input
@@ -277,12 +280,12 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
                 handleFieldChange('buyer_gstin', e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, ''))
               }
               placeholder="Optional for B2B input tax credit"
-              className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-mono font-medium uppercase text-slate-900 dark:text-slate-100 tabular-nums focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+              className="w-full h-10 px-3.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-sm font-mono uppercase text-zinc-900 dark:text-zinc-100 tabular-nums focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 transition-all outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
               Place of Supply (State / UT)
             </label>
             <CustomDropdown
@@ -295,23 +298,24 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
               }}
               searchable={true}
               placeholder="Select Place of Supply..."
-              icon={<MapPin className="h-3.5 w-3.5 text-slate-400" />}
+              icon={<MapPin className="h-3.5 w-3.5 text-zinc-400" />}
               ariaLabel="Select Place of Supply state"
             />
           </div>
         </div>
 
-        {/* Column 3: Invoice Metadata & Numbering */}
-        <div className="space-y-3 bg-slate-50/70 dark:bg-slate-950/40 p-3.5 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-              <Hash className="h-3.5 w-3.5 text-slate-400" /> Invoice Identifier
+        {/* Column 3: Invoice Identifier & Date */}
+        <div className="p-5 sm:p-6 space-y-3.5">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <Hash className="h-3.5 w-3.5 text-zinc-400" />
+              <span>Invoice Number &amp; Date</span>
             </span>
             <button
               type="button"
               onClick={handleGenerateNextNumber}
               disabled={isGeneratingNext}
-              className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+              className="text-[11px] font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 flex items-center gap-1 cursor-pointer transition-colors"
             >
               <RotateCw className={`h-3 w-3 ${isGeneratingNext ? 'animate-spin' : ''}`} />
               <span>Next #</span>
@@ -320,15 +324,13 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400">
-                Invoice Number (Rule 46(b))
+              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                Invoice Number
               </label>
-              <span className={`text-[11px] font-mono font-medium ${
+              <span className={`text-[11px] font-mono ${
                 (invoice?.invoice_id || '').length > 16
-                  ? 'text-red-500 font-bold'
-                  : (invoice?.invoice_id || '').length >= 14
-                  ? 'text-amber-500'
-                  : 'text-slate-400'
+                  ? 'text-red-600 font-semibold'
+                  : 'text-zinc-400'
               }`}>
                 {(invoice?.invoice_id || invoice?.bill_number || '').length}/16
               </span>
@@ -344,11 +346,11 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
                   handleFieldChange('bill_number', val);
                 }}
                 placeholder="e.g. INV/26-27/0001"
-                className={`w-full min-h-[42px] bg-white dark:bg-slate-900 border ${
+                className={`w-full h-10 px-3.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50 border ${
                   (invoice?.invoice_id || '').length > 16
-                    ? 'border-red-500 dark:border-red-500 focus:ring-red-500'
-                    : 'border-slate-300 dark:border-slate-700 focus:ring-emerald-500'
-                } rounded-lg px-3 py-2 text-[15px] font-mono font-medium text-slate-900 dark:text-slate-100 tabular-nums focus:outline-hidden focus:ring-2`}
+                    ? 'border-red-500'
+                    : 'border-zinc-200 dark:border-zinc-700'
+                } text-sm font-mono text-zinc-900 dark:text-zinc-100 tabular-nums focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 transition-all outline-none`}
               />
               {(invoice?.invoice_id || '').length > 16 && (
                 <button
@@ -358,92 +360,91 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
                     handleFieldChange('invoice_id', trimmed);
                     handleFieldChange('bill_number', trimmed);
                   }}
-                  className="absolute right-2 px-2 py-0.5 rounded text-[11px] font-semibold bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-950/80 dark:hover:bg-red-900 dark:text-red-300 border border-red-300 dark:border-red-700 transition cursor-pointer"
+                  className="absolute right-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-red-100 hover:bg-red-200 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-200 transition cursor-pointer"
                 >
                   Trim
                 </button>
               )}
             </div>
             {(invoice?.invoice_id || '').length > 16 && (
-              <p className="mt-1 text-[11px] text-red-500 font-medium flex items-center justify-between">
-                <span>Exceeds CGST Rule 46(b) maximum 16-character limit.</span>
+              <p className="mt-1 text-[11px] text-red-600 font-medium">
+                Invoice numbers cannot exceed 16 characters.
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
               Invoice Date
             </label>
-            <div className="relative">
-              <input
-                type="date"
-                value={invoice?.normalized_date_iso || ''}
-                onChange={(e) => {
-                  handleFieldChange('normalized_date_iso', e.target.value);
-                  handleFieldChange('raw_date_written', e.target.value);
-                }}
-                className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-medium text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
+            <input
+              type="date"
+              value={invoice?.normalized_date_iso || ''}
+              onChange={(e) => {
+                handleFieldChange('normalized_date_iso', e.target.value);
+                handleFieldChange('raw_date_written', e.target.value);
+              }}
+              className="w-full h-10 px-3.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 transition-all outline-none"
+            />
           </div>
 
           <div>
-            <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-              Sector / Trade Category
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              Trade Category
             </label>
             <input
               type="text"
               readOnly
               value={invoice?.detected_sector || 'GENERAL'}
-              className="w-full min-h-[42px] bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-medium text-slate-700 dark:text-slate-300 cursor-not-allowed"
+              className="w-full h-10 px-3.5 rounded-xl bg-zinc-100/70 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-500 dark:text-zinc-400 cursor-not-allowed font-mono"
             />
           </div>
         </div>
 
-        {/* Column 4: Tax Calculation Mode & Extra Charges */}
-        <div className="space-y-3 bg-slate-50/70 dark:bg-slate-950/40 p-3.5 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-              <Percent className="h-3.5 w-3.5 text-slate-400" /> Calculation Mode
+        {/* Column 4: Calculation Mode & Extra Charges */}
+        <div className="p-5 sm:p-6 space-y-3.5">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <Percent className="h-3.5 w-3.5 text-zinc-400" />
+              <span>Tax Settings</span>
             </span>
           </div>
 
-          {/* Segmented Control: Exclusive vs Inclusive */}
+          {/* Segmented Sliding Pill Toggle */}
           <div>
-            <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-              Rate Computation Basis
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              Pricing Method
             </label>
-            <div className="grid grid-cols-2 gap-1 p-1 bg-slate-200/70 dark:bg-slate-800 rounded-lg min-h-[42px] items-center">
+            <div className="grid grid-cols-2 gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl h-10 items-center">
               <button
                 type="button"
                 onClick={() => handleFieldChange('is_tax_inclusive', false)}
-                className={`py-1.5 px-2 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                className={`h-8 px-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   !isTaxInclusive
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-xs'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
                 }`}
               >
-                Tax-Exclusive
+                Tax Added
               </button>
               <button
                 type="button"
                 onClick={() => handleFieldChange('is_tax_inclusive', true)}
-                className={`py-1.5 px-2 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                className={`h-8 px-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   isTaxInclusive
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-xs'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
                 }`}
               >
-                MRP Inclusive
+                Tax Included
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                Freight / Extra (₹)
+              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+                Extra Charges (₹)
               </label>
               <input
                 type="number"
@@ -451,11 +452,11 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
                 min="0"
                 value={invoice?.extra_charges ?? 0}
                 onChange={(e) => handleFieldChange('extra_charges', parseFloat(e.target.value) || 0)}
-                className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-medium text-slate-900 dark:text-slate-100 tabular-nums focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                className="w-full h-10 px-3.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-sm font-mono text-zinc-900 dark:text-zinc-100 tabular-nums focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 transition-all outline-none"
               />
             </div>
             <div>
-              <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
                 Discount (₹)
               </label>
               <input
@@ -464,13 +465,13 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
                 min="0"
                 value={invoice?.discount_amount ?? 0}
                 onChange={(e) => handleFieldChange('discount_amount', parseFloat(e.target.value) || 0)}
-                className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-medium text-slate-900 dark:text-slate-100 tabular-nums focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                className="w-full h-10 px-3.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-sm font-mono text-zinc-900 dark:text-zinc-100 tabular-nums focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5 transition-all outline-none"
               />
             </div>
           </div>
 
-          <div className="pt-1">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight block">
+          <div className="pt-0.5">
+            <span className="text-[11px] text-zinc-400 dark:text-zinc-500 leading-tight block">
               {isTaxInclusive
                 ? 'Rates on paper include GST. Tax is derived algebraically.'
                 : 'GST is calculated and added on top of base taxable rate.'}

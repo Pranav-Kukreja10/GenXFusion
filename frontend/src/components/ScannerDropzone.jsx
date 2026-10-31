@@ -219,11 +219,11 @@ export default function ScannerDropzone({
                   onClick={() => setViewMode('enhanced')}
                   className={`px-2 py-0.5 rounded font-semibold transition-colors cursor-pointer ${
                     viewMode === 'enhanced'
-                      ? 'bg-emerald-700 text-white shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400'
+                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400'
                   }`}
                 >
-                  OpenCV CLAHE
+                  Cleaned
                 </button>
                 <button
                   type="button"
@@ -263,14 +263,14 @@ export default function ScannerDropzone({
                   {enhancedImage ? (
                     <img
                       src={enhancedImage}
-                      alt="OpenCV CLAHE"
+                      alt="Cleaned receipt"
                       className="max-h-[400px] w-auto object-contain rounded"
                     />
                   ) : (
                     <p className="text-xs text-slate-500">No enhanced image</p>
                   )}
-                  <div className="absolute top-2 left-2 bg-emerald-950/90 text-emerald-300 text-[9px] font-mono px-2 py-0.5 rounded border border-emerald-700/50">
-                    OPENCV CLAHE ENHANCED
+                  <div className="absolute top-2 left-2 bg-zinc-900/90 text-zinc-100 text-[9px] font-mono px-2 py-0.5 rounded border border-zinc-700/50">
+                    CLEANED PHOTO
                   </div>
                 </div>
               )}
@@ -292,11 +292,11 @@ export default function ScannerDropzone({
                       className="absolute inset-0 w-full h-full object-contain pointer-events-none"
                       style={{ width: '100%', maxWidth: 'none' }}
                     />
-                    <div className="absolute top-2 left-2 bg-emerald-900/90 text-emerald-200 text-[9px] font-mono px-1.5 py-0.5 rounded">
-                      CLAHE
+                    <div className="absolute top-2 left-2 bg-zinc-900/90 text-zinc-100 text-[9px] font-mono px-1.5 py-0.5 rounded border border-zinc-700/50">
+                      CLEANED
                     </div>
                   </div>
-                  <div className="absolute top-2 right-2 bg-slate-900/90 text-amber-300 text-[9px] font-mono px-1.5 py-0.5 rounded">
+                  <div className="absolute top-2 right-2 bg-zinc-900/90 text-zinc-300 text-[9px] font-mono px-1.5 py-0.5 rounded border border-zinc-700/50">
                     RAW
                   </div>
                   <div

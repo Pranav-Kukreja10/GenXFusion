@@ -12,43 +12,43 @@ import {
 const STEPS = [
   {
     id: 1,
-    title: 'Shadow Removal',
-    subtitle: 'OpenCV CLAHE',
+    title: 'Enhance Image',
+    subtitle: 'Clarity & contrast',
     icon: Layers,
-    description: 'Leveling illumination & removing harsh camera shadows',
+    description: 'Leveling lighting and removing camera shadows',
   },
   {
     id: 2,
-    title: 'OCR',
-    subtitle: 'Vernacular Vision',
+    title: 'Read Items',
+    subtitle: 'Line-by-line',
     icon: FileSearch,
-    description: 'Extracting Hindi/English vernacular handwritten lines',
+    description: 'Reading items, units, and handwritten prices',
   },
   {
     id: 3,
-    title: 'HSN Matching',
-    subtitle: 'PyTorch Vectors',
+    title: 'Tax Categories',
+    subtitle: 'Code matching',
     icon: FileCheck,
-    description: 'Sub-2.5ms cosine vector ranking across 6 sectors',
+    description: 'Assigning proper item categories and standard tax rates',
   },
   {
     id: 4,
-    title: 'GST Audit',
-    subtitle: 'Math & Tax Engine',
+    title: 'Audit & Math',
+    subtitle: 'Verified ledger',
     icon: Calculator,
-    description: 'Auditing shopkeeper totals & dynamic ₹1k GST rules',
+    description: 'Checking arithmetic accuracy and calculating GST',
   },
 ];
 
 export default function ScanStepper({ currentStep = 1, failedStep = null }) {
   return (
-    <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 sm:p-5 space-y-4 animate-fadeIn transition-colors">
-      <div className="flex items-center justify-between pb-2 border-b border-emerald-200/60 dark:border-emerald-800/40 text-xs">
-        <span className="font-extrabold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-          <FileCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 animate-spin" />
-          <span>Processing Kacha Bill Pipeline</span>
+    <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 space-y-4 animate-fadeIn transition-colors shadow-xs">
+      <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800 text-xs">
+        <span className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+          <FileCheck className="h-4 w-4 text-zinc-900 dark:text-zinc-100" />
+          <span>Processing Paper Bill</span>
         </span>
-        <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-400">
+        <span className="text-xs font-mono font-medium text-zinc-500 dark:text-zinc-400 tabular-nums">
           Step {Math.min(currentStep, 4)} of 4
         </span>
       </div>
@@ -64,9 +64,9 @@ export default function ScanStepper({ currentStep = 1, failedStep = null }) {
           return (
             <div
               key={step.id}
-              className={`flex sm:flex-col items-center sm:text-center gap-3 sm:gap-2 p-2.5 rounded-xl transition-all ${
+              className={`flex sm:flex-col items-center sm:text-center gap-3 sm:gap-2 p-3 rounded-xl transition-all ${
                 isActive
-                  ? 'bg-white dark:bg-zinc-800 shadow-sm border border-emerald-300 dark:border-emerald-600'
+                  ? 'bg-zinc-50 dark:bg-zinc-800/80 shadow-xs border border-zinc-300 dark:border-zinc-700'
                   : 'bg-transparent'
               }`}
             >
@@ -74,20 +74,20 @@ export default function ScanStepper({ currentStep = 1, failedStep = null }) {
               <div
                 className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-all ${
                   isDone
-                    ? 'bg-emerald-600 text-white shadow-xs'
+                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
                     : isActive
-                    ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-600'
+                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-2 border-zinc-900 dark:border-zinc-100'
                     : isFailed
                     ? 'bg-red-600 text-white'
-                    : 'bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-600'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600'
                 }`}
               >
                 {isDone ? (
-                  <CheckCircle2 className="h-5 w-5" />
+                  <CheckCircle2 className="h-4 w-4" />
                 ) : isActive ? (
-                  <RefreshCw className="h-4 w-4 animate-spin text-emerald-700 dark:text-emerald-300" />
+                  <RefreshCw className="h-4 w-4 animate-spin text-zinc-900 dark:text-zinc-100" />
                 ) : isFailed ? (
-                  <AlertCircle className="h-5 w-5" />
+                  <AlertCircle className="h-4 w-4" />
                 ) : (
                   <StepIcon className="h-4 w-4" />
                 )}
@@ -96,19 +96,19 @@ export default function ScanStepper({ currentStep = 1, failedStep = null }) {
               {/* Step Labels */}
               <div className="min-w-0 flex-1 sm:flex-initial">
                 <p
-                  className={`text-xs font-bold leading-tight ${
+                  className={`text-xs font-semibold leading-tight ${
                     isActive
-                      ? 'text-emerald-900 dark:text-white'
+                      ? 'text-zinc-900 dark:text-zinc-100'
                       : isDone
-                      ? 'text-emerald-800 dark:text-emerald-300'
+                      ? 'text-zinc-800 dark:text-zinc-200'
                       : isFailed
                       ? 'text-red-600'
-                      : 'text-slate-500 dark:text-slate-400'
+                      : 'text-zinc-500 dark:text-zinc-400'
                   }`}
                 >
                   {step.title}
                 </p>
-                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
                   {step.subtitle}
                 </p>
               </div>
@@ -118,15 +118,15 @@ export default function ScanStepper({ currentStep = 1, failedStep = null }) {
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-emerald-200/50 dark:bg-emerald-900/40 h-1.5 rounded-full overflow-hidden">
+      <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
         <div
-          className="bg-emerald-600 dark:bg-emerald-400 h-full transition-all duration-300 rounded-full"
+          className="bg-zinc-900 dark:bg-zinc-100 h-full transition-all duration-300 rounded-full"
           style={{ width: `${(Math.min(currentStep, 4) / 4) * 100}%` }}
         />
       </div>
 
       {/* Active Step Description */}
-      <p className="text-[11px] text-center text-emerald-800 dark:text-emerald-300 font-medium">
+      <p className="text-xs text-center text-zinc-600 dark:text-zinc-400 font-medium">
         {STEPS[Math.min(currentStep - 1, 3)]?.description}
       </p>
     </div>

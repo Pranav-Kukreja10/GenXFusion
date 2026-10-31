@@ -47,19 +47,21 @@ export default function PakkaInvoiceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-slate-300 overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-zinc-200 overflow-hidden">
         
         {/* Modal Action Header (Hidden in Print) */}
-        <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between no-print">
-          <div className="flex items-center gap-2">
-            <FileCheck className="h-5 w-5 text-emerald-400" />
+        <div className="p-4 bg-zinc-900 text-white flex items-center justify-between no-print border-b border-zinc-800">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-zinc-800 text-white flex items-center justify-center">
+              <FileCheck className="h-4 w-4" />
+            </div>
             <div>
-              <h3 className="text-sm font-bold tracking-tight">
-                Official Indian GST Tax Invoice
+              <h3 className="text-sm font-semibold tracking-tight text-zinc-100">
+                GST Tax Invoice
               </h3>
-              <p className="text-[11px] text-slate-400">
-                Rule 46 CGST Rules, 2017 • Print-ready A4 layout
+              <p className="text-[11px] text-zinc-400">
+                Print-ready standard tax invoice
               </p>
             </div>
           </div>
@@ -69,17 +71,17 @@ export default function PakkaInvoiceModal({
               <button
                 type="button"
                 onClick={onExportGstr1}
-                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-all"
+                className="inline-flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer"
               >
-                <Download className="h-3.5 w-3.5 text-emerald-400" />
-                <span>Download GSTR-1 JSON</span>
+                <Download className="h-3.5 w-3.5 text-zinc-400" />
+                <span>Export GSTR-1</span>
               </button>
             )}
 
             <button
               type="button"
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs transition-all active:scale-95"
+              className="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-white text-zinc-900 px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-xs transition-all active:scale-[0.98] cursor-pointer"
             >
               <Printer className="h-3.5 w-3.5" />
               <span>Print Invoice</span>
@@ -88,7 +90,8 @@ export default function PakkaInvoiceModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+              aria-label="Close modal"
             >
               <X className="h-5 w-5" />
             </button>
@@ -96,28 +99,27 @@ export default function PakkaInvoiceModal({
         </div>
 
         {/* Printable Invoice Body */}
-        <div className="p-6 sm:p-8 flex-1 overflow-y-auto bg-white text-black" id="printable-pakka-invoice">
-          
+        <div className="p-6 sm:p-8 flex-1 overflow-y-auto bg-white text-zinc-900" id="printable-pakka-invoice">
           {/* Main Border Box */}
-          <div className="border-2 border-black p-4 sm:p-6 space-y-4 text-xs font-sans">
+          <div className="border border-zinc-900 p-4 sm:p-6 space-y-4 text-xs font-sans">
             
             {/* Top Title Banner */}
-            <div className="text-center border-b-2 border-black pb-3">
-              <h1 className="text-xl sm:text-2xl font-black uppercase tracking-wider text-black">
+            <div className="text-center border-b border-zinc-900 pb-3">
+              <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-wider text-zinc-900">
                 TAX INVOICE
               </h1>
-              <p className="text-[10px] uppercase font-bold text-slate-700">
+              <p className="text-[10px] uppercase font-medium text-zinc-500">
                 (ISSUED UNDER SECTION 31 OF THE CENTRAL GOODS AND SERVICES TAX ACT, 2017)
               </p>
             </div>
 
             {/* Merchant / Supplier Header */}
-            <div className="grid grid-cols-2 gap-4 border-b border-black pb-3">
+            <div className="grid grid-cols-2 gap-4 border-b border-zinc-900 pb-3">
               <div>
-                <h2 className="text-base font-extrabold uppercase text-black">
+                <h2 className="text-base font-bold uppercase text-zinc-900">
                   {invoice.merchant_name || 'SHARMA KIRANA & GENERAL STORE'}
                 </h2>
-                <p className="text-[11px] text-slate-800 mt-0.5">
+                <p className="text-[11px] text-zinc-600 mt-0.5">
                   Main Market, Clock Tower Road, Ludhiana, Punjab
                 </p>
                 <p className="text-[11px] font-mono mt-1">
@@ -131,7 +133,7 @@ export default function PakkaInvoiceModal({
               <div className="text-right space-y-1 font-mono text-[11px]">
                 <p>
                   <strong>Invoice No:</strong>{' '}
-                  <span className="font-bold text-xs">{invoice.invoice_id || 'INV-2026-8841'}</span>
+                  <span className="font-semibold text-xs">{invoice.invoice_id || 'INV-2026-8841'}</span>
                 </p>
                 <p>
                   <strong>Invoice Date:</strong>{' '}
@@ -147,94 +149,94 @@ export default function PakkaInvoiceModal({
             </div>
 
             {/* Bill To / Bahi-Khata Buyer Section */}
-            <div className="border-b border-black pb-3 grid grid-cols-2 gap-4 text-[11px]">
+            <div className="border-b border-zinc-900 pb-3 grid grid-cols-2 gap-4 text-[11px]">
               <div>
-                <p className="font-bold uppercase text-slate-800">Details of Receiver (Billed To):</p>
-                <p className="font-semibold text-black">Walk-in Retail Consumer (Cash/UPI)</p>
-                <p className="text-slate-700">Market Counter Supply</p>
+                <p className="font-semibold uppercase text-zinc-500 text-[10px]">Details of Receiver (Billed To):</p>
+                <p className="font-medium text-zinc-900">Walk-in Retail Consumer (Cash/UPI)</p>
+                <p className="text-zinc-600">Market Counter Supply</p>
                 <p className="font-mono"><strong>State:</strong> Punjab (03)</p>
               </div>
 
               <div className="text-right">
-                <p className="font-bold uppercase text-slate-800">Original Kacha Slip Reference:</p>
-                <p className="font-mono text-slate-700">Vernacular Receipt Date: {invoice.raw_date_written || '31/10/26'}</p>
-                <p className="font-mono text-emerald-800 font-semibold">Audited via TrueTax Deterministic Engine</p>
+                <p className="font-semibold uppercase text-zinc-500 text-[10px]">Original Slip Reference:</p>
+                <p className="font-mono text-zinc-600">Vernacular Receipt Date: {invoice.raw_date_written || '31/10/26'}</p>
+                <p className="font-mono text-zinc-800 font-medium">Audited via TrueTax Vision Engine</p>
               </div>
             </div>
 
             {/* Itemized Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse border border-black text-[11px]">
+              <table className="w-full text-left border-collapse border border-zinc-900 text-[11px]">
                 <thead>
-                  <tr className="bg-slate-100 border-b border-black font-bold uppercase text-[10px]">
-                    <th className="border-r border-black p-1.5 text-center w-8">#</th>
-                    <th className="border-r border-black p-1.5">Description of Goods</th>
-                    <th className="border-r border-black p-1.5 text-center w-16">HSN/SAC</th>
-                    <th className="border-r border-black p-1.5 text-right w-14">Qty</th>
-                    <th className="border-r border-black p-1.5 text-center w-12">UQC</th>
-                    <th className="border-r border-black p-1.5 text-right w-16">Rate (₹)</th>
-                    <th className="border-r border-black p-1.5 text-right w-18">Taxable (₹)</th>
-                    <th className="border-r border-black p-1.5 text-right w-16">CGST</th>
-                    <th className="border-r border-black p-1.5 text-right w-16">SGST</th>
+                  <tr className="bg-zinc-50 border-b border-zinc-900 font-semibold uppercase text-[10px]">
+                    <th className="border-r border-zinc-900 p-1.5 text-center w-8">#</th>
+                    <th className="border-r border-zinc-900 p-1.5">Description of Goods</th>
+                    <th className="border-r border-zinc-900 p-1.5 text-center w-16">HSN/SAC</th>
+                    <th className="border-r border-zinc-900 p-1.5 text-right w-14">Qty</th>
+                    <th className="border-r border-zinc-900 p-1.5 text-center w-12">UQC</th>
+                    <th className="border-r border-zinc-900 p-1.5 text-right w-16">Rate (₹)</th>
+                    <th className="border-r border-zinc-900 p-1.5 text-right w-18">Taxable (₹)</th>
+                    <th className="border-r border-zinc-900 p-1.5 text-right w-16">CGST</th>
+                    <th className="border-r border-zinc-900 p-1.5 text-right w-16">SGST</th>
                     <th className="p-1.5 text-right w-20">Total (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {activeItems.map((item, idx) => (
-                    <tr key={idx} className="border-b border-slate-300">
-                      <td className="border-r border-black p-1.5 text-center font-mono">{idx + 1}</td>
-                      <td className="border-r border-black p-1.5 font-medium">
+                    <tr key={idx} className="border-b border-zinc-200">
+                      <td className="border-r border-zinc-900 p-1.5 text-center font-mono">{idx + 1}</td>
+                      <td className="border-r border-zinc-900 p-1.5 font-medium">
                         <div>{item.product_name_normalized}</div>
                         {item.tax_rule_note && (
-                          <span className="text-[9px] text-amber-900 font-sans block">
+                          <span className="text-[9px] text-zinc-500 font-sans block">
                             * {item.tax_rule_note}
                           </span>
                         )}
                       </td>
-                      <td className="border-r border-black p-1.5 text-center font-mono font-bold">
+                      <td className="border-r border-zinc-900 p-1.5 text-center font-mono font-medium">
                         {item.hsn_code || '9999'}
                       </td>
-                      <td className="border-r border-black p-1.5 text-right font-mono font-bold">
+                      <td className="border-r border-zinc-900 p-1.5 text-right font-mono">
                         {item.quantity}
                       </td>
-                      <td className="border-r border-black p-1.5 text-center font-mono">
+                      <td className="border-r border-zinc-900 p-1.5 text-center font-mono">
                         {item.unit_uqc || 'PCS'}
                       </td>
-                      <td className="border-r border-black p-1.5 text-right font-mono">
+                      <td className="border-r border-zinc-900 p-1.5 text-right font-mono">
                         {item.unit_price?.toFixed(2)}
                       </td>
-                      <td className="border-r border-black p-1.5 text-right font-mono font-bold">
+                      <td className="border-r border-zinc-900 p-1.5 text-right font-mono font-medium">
                         {item.audited_line_total?.toFixed(2)}
                       </td>
-                      <td className="border-r border-black p-1.5 text-right font-mono">
+                      <td className="border-r border-zinc-900 p-1.5 text-right font-mono">
                         <div>₹{item.cgst_amount?.toFixed(2)}</div>
-                        <span className="text-[9px] text-slate-500">({item.cgst_rate || (item.gst_rate / 2)}%)</span>
+                        <span className="text-[9px] text-zinc-400">({item.cgst_rate || (item.gst_rate / 2)}%)</span>
                       </td>
-                      <td className="border-r border-black p-1.5 text-right font-mono">
+                      <td className="border-r border-zinc-900 p-1.5 text-right font-mono">
                         <div>₹{item.sgst_amount?.toFixed(2)}</div>
-                        <span className="text-[9px] text-slate-500">({item.sgst_rate || (item.gst_rate / 2)}%)</span>
+                        <span className="text-[9px] text-zinc-400">({item.sgst_rate || (item.gst_rate / 2)}%)</span>
                       </td>
-                      <td className="p-1.5 text-right font-mono font-bold">
+                      <td className="p-1.5 text-right font-mono font-medium">
                         {item.final_line_total_with_gst?.toFixed(2)}
                       </td>
                     </tr>
                   ))}
 
                   {/* Totals Row */}
-                  <tr className="border-t-2 border-black font-bold bg-slate-50">
-                    <td colSpan={6} className="border-r border-black p-1.5 text-right uppercase">
+                  <tr className="border-t-2 border-zinc-900 font-semibold bg-zinc-50">
+                    <td colSpan={6} className="border-r border-zinc-900 p-1.5 text-right uppercase">
                       Grand Totals:
                     </td>
-                    <td className="border-r border-black p-1.5 text-right font-mono">
+                    <td className="border-r border-zinc-900 p-1.5 text-right font-mono">
                       ₹{summary.audited_taxable_subtotal?.toFixed(2)}
                     </td>
-                    <td className="border-r border-black p-1.5 text-right font-mono">
+                    <td className="border-r border-zinc-900 p-1.5 text-right font-mono">
                       ₹{summary.total_cgst?.toFixed(2)}
                     </td>
-                    <td className="border-r border-black p-1.5 text-right font-mono">
+                    <td className="border-r border-zinc-900 p-1.5 text-right font-mono">
                       ₹{summary.total_sgst?.toFixed(2)}
                     </td>
-                    <td className="p-1.5 text-right font-mono text-xs">
+                    <td className="p-1.5 text-right font-mono text-xs font-bold">
                       ₹{summary.final_gst_payable_total?.toFixed(2)}
                     </td>
                   </tr>
@@ -243,38 +245,38 @@ export default function PakkaInvoiceModal({
             </div>
 
             {/* Total Amount in Words */}
-            <div className="border border-black p-2.5 bg-slate-50 text-[11px]">
+            <div className="border border-zinc-900 p-2.5 bg-zinc-50 text-[11px]">
               <strong>Total Invoice Amount in Words:</strong>{' '}
-              <span className="italic font-bold">
+              <span className="italic font-medium">
                 {numberToIndianRupees(summary.final_gst_payable_total)}
               </span>
             </div>
 
             {/* HSN Tax Summary Table Box */}
-            <div className="border border-black p-2 text-[10px]">
-              <p className="font-bold uppercase mb-1">HSN/SAC Tax Liability Summary:</p>
-              <table className="w-full text-left border-collapse border border-slate-400">
+            <div className="border border-zinc-900 p-2 text-[10px]">
+              <p className="font-semibold uppercase mb-1">HSN/SAC Tax Liability Summary:</p>
+              <table className="w-full text-left border-collapse border border-zinc-300">
                 <thead>
-                  <tr className="bg-slate-100 border-b border-slate-400 font-bold uppercase">
-                    <th className="p-1 border-r border-slate-400">HSN/SAC</th>
-                    <th className="p-1 border-r border-slate-400 text-right">Taxable Value</th>
-                    <th className="p-1 border-r border-slate-400 text-right">CGST Rate</th>
-                    <th className="p-1 border-r border-slate-400 text-right">CGST Amount</th>
-                    <th className="p-1 border-r border-slate-400 text-right">SGST Rate</th>
-                    <th className="p-1 border-r border-slate-400 text-right">SGST Amount</th>
+                  <tr className="bg-zinc-50 border-b border-zinc-300 font-semibold uppercase">
+                    <th className="p-1 border-r border-zinc-300">HSN/SAC</th>
+                    <th className="p-1 border-r border-zinc-300 text-right">Taxable Value</th>
+                    <th className="p-1 border-r border-zinc-300 text-right">CGST Rate</th>
+                    <th className="p-1 border-r border-zinc-300 text-right">CGST Amount</th>
+                    <th className="p-1 border-r border-zinc-300 text-right">SGST Rate</th>
+                    <th className="p-1 border-r border-zinc-300 text-right">SGST Amount</th>
                     <th className="p-1 text-right">Total Tax Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {hsnSummaryList.map((row, idx) => (
-                    <tr key={idx} className="border-b border-slate-200 font-mono">
-                      <td className="p-1 border-r border-slate-400 font-bold">{row.hsn}</td>
-                      <td className="p-1 border-r border-slate-400 text-right">₹{row.txval.toFixed(2)}</td>
-                      <td className="p-1 border-r border-slate-400 text-right">{row.cgst_rate}%</td>
-                      <td className="p-1 border-r border-slate-400 text-right">₹{row.cgst_amt.toFixed(2)}</td>
-                      <td className="p-1 border-r border-slate-400 text-right">{row.sgst_rate}%</td>
-                      <td className="p-1 border-r border-slate-400 text-right">₹{row.sgst_amt.toFixed(2)}</td>
-                      <td className="p-1 text-right font-bold">₹{row.total_tax.toFixed(2)}</td>
+                    <tr key={idx} className="border-b border-zinc-200 font-mono">
+                      <td className="p-1 border-r border-zinc-300 font-medium">{row.hsn}</td>
+                      <td className="p-1 border-r border-zinc-300 text-right">₹{row.txval.toFixed(2)}</td>
+                      <td className="p-1 border-r border-zinc-300 text-right">{row.cgst_rate}%</td>
+                      <td className="p-1 border-r border-zinc-300 text-right">₹{row.cgst_amt.toFixed(2)}</td>
+                      <td className="p-1 border-r border-zinc-300 text-right">{row.sgst_rate}%</td>
+                      <td className="p-1 border-r border-zinc-300 text-right">₹{row.sgst_amt.toFixed(2)}</td>
+                      <td className="p-1 text-right font-medium">₹{row.total_tax.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -282,37 +284,37 @@ export default function PakkaInvoiceModal({
             </div>
 
             {/* Bottom Footer: UPI QR Code, Terms & Signatory */}
-            <div className="grid grid-cols-3 gap-4 pt-2 border-t border-black text-[10px]">
+            <div className="grid grid-cols-3 gap-4 pt-2 border-t border-zinc-900 text-[10px]">
               {/* UPI QR Payment Box */}
-              <div className="border border-slate-300 p-2 rounded flex items-center gap-2">
-                <div className="h-16 w-16 bg-slate-100 border border-slate-400 flex items-center justify-center shrink-0">
-                  <QrCode className="h-12 w-12 text-slate-800" />
+              <div className="border border-zinc-200 p-2 rounded-lg flex items-center gap-2">
+                <div className="h-14 w-14 bg-zinc-100 border border-zinc-300 flex items-center justify-center shrink-0 rounded">
+                  <QrCode className="h-10 w-10 text-zinc-800" />
                 </div>
                 <div>
-                  <p className="font-bold text-black uppercase">Scan to Pay UPI</p>
-                  <p className="text-slate-600 font-mono text-[9px]">sharma.store@upi</p>
-                  <p className="text-emerald-800 font-bold font-mono">
+                  <p className="font-semibold text-zinc-900 uppercase">Scan to Pay UPI</p>
+                  <p className="text-zinc-500 font-mono text-[9px]">sharma.store@upi</p>
+                  <p className="text-zinc-900 font-semibold font-mono">
                     ₹{summary.final_gst_payable_total?.toFixed(2)}
                   </p>
                 </div>
               </div>
 
               {/* Declarations */}
-              <div className="text-[9px] text-slate-600 leading-tight">
-                <p className="font-bold text-black mb-0.5">Declaration:</p>
+              <div className="text-[9px] text-zinc-500 leading-tight">
+                <p className="font-semibold text-zinc-800 mb-0.5">Declaration:</p>
                 <p>
                   We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
                 </p>
-                <p className="mt-1 text-emerald-800 font-semibold">
-                  Audited & Validated by TrueTax AI Vision Engine.
+                <p className="mt-1 text-zinc-600 font-mono">
+                  Audited &amp; Validated by TrueTax AI Vision Engine.
                 </p>
               </div>
 
               {/* Authorized Signatory */}
               <div className="text-right flex flex-col justify-between">
-                <p className="font-bold uppercase text-black">For {invoice.merchant_name || 'SHARMA KIRANA'}</p>
+                <p className="font-semibold uppercase text-zinc-800">For {invoice.merchant_name || 'SHARMA KIRANA'}</p>
                 <div className="pt-8">
-                  <div className="border-t border-black inline-block pt-1 px-4 text-center font-bold">
+                  <div className="border-t border-zinc-900 inline-block pt-1 px-4 text-center font-medium">
                     Authorised Signatory
                   </div>
                 </div>
@@ -326,4 +328,3 @@ export default function PakkaInvoiceModal({
     </div>
   );
 }
-

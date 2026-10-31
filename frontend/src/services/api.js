@@ -248,9 +248,11 @@ export async function searchHsnApi(query) {
  */
 export async function validateGstinApi(gstin) {
   if (!gstin || gstin.trim().length === 0) {
-    return { is_valid: false, error_reason: 'GSTIN is empty' };
+    return { is_valid: false, isValid: false, error_reason: 'GSTIN is empty' };
   }
-  const clean = gstin.trim().toUpperCase();
+  const clean = gstin.trim().toUpperCase().replace(/[^0-9A-Z]/g, '');
+  const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+  const isValidFormat = clean.length === 15 && gstinRegex.test(clean);
   const base = getApiBaseUrl();
 
   try {
@@ -261,21 +263,32 @@ export async function validateGstinApi(gstin) {
     });
     clearTimeout(id);
     if (res.ok) {
-      return await res.json();
+      const data = await res.json();
+      const valid = Boolean(data.is_valid ?? isValidFormat);
+      const output = {
+        ...data,
+        is_valid: valid,
+        isValid: valid,
+        checksum_valid: data.checksum_valid ?? isValidFormat,
+        state_code: data.state_code || clean.slice(0, 2),
+      };
+      output.data = output;
+      return output;
     }
   } catch {
     // Fallback to basic regex if backend offline
   }
 
-  const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-  const isValidFormat = clean.length === 15 && gstinRegex.test(clean);
-  return {
+  const output = {
     is_valid: isValidFormat,
+    isValid: isValidFormat,
     checksum_valid: isValidFormat,
     state_code: clean.slice(0, 2),
     entity_type: clean[5] || 'P',
     error_reason: isValidFormat ? '' : 'Invalid GSTIN format or length',
   };
+  output.data = output;
+  return output;
 }
 
 /**
