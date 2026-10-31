@@ -1,110 +1,139 @@
-hsn_code,sector,description,hinglish_aliases,base_gst_rate,has_price_threshold,threshold_amount,above_threshold_gst_rate
-1101,GROCERY,Wheat Flour / Atta Packaged,atta chakki gehun pisa aashirvaad flour maida suji sooji,5.0,False,0,5.0
-1101,GROCERY,Wheat Flour / Atta Loose Khulla,khulla atta loose gehun desi chakki,0.0,False,0,0.0
-1006,GROCERY,Basmati Rice Packaged,chawal rice basmati daawat india gate biryani rice,5.0,False,0,5.0
-1006,GROCERY,Loose Rice Khulla,khulla chawal loose rice mota chawal sona masoori loose,0.0,False,0,0.0
-0713,GROCERY,Pulses & Lentils Packaged (Dal),dal toor arhar moong urad chana dal masoor dal rajma chole,5.0,False,0,5.0
-0713,GROCERY,Loose Pulses Khulla,khulla dal loose rajma chana arhar moong dal,0.0,False,0,0.0
-1512,GROCERY,Edible Sunflower / Cooking Oil,tel oil sunflower tel refined tel cooking oil cooking teyl,5.0,False,0,5.0
-1514,GROCERY,Mustard Oil / Sarson Tel,sarson tel mustard oil kachi ghani fortune dhara,5.0,False,0,5.0
-0405,GROCERY,Desi Ghee / Butter,ghee butter desi ghee amul ghee patanjali makhan butter,12.0,False,0,12.0
-1701,GROCERY,Cane Sugar / Chini,chini sugar sakkar khand bhoora mithi,5.0,False,0,5.0
-0902,GROCERY,Tea Leaves / Chai Patti,chai tea chai patti taj mahal red label wagh bakri,5.0,False,0,5.0
-0901,GROCERY,Coffee Beans / Ground Coffee,coffee nescafe bru filter coffee,5.0,False,0,5.0
-2501,GROCERY,Edible Salt / Tata Namak,namak salt tata salt sendha namak kala namak,0.0,False,0,0.0
-0910,GROCERY,Spices & Condiments (Masale),masala haldi mirch jeera dhaniya powder garam masala hing laung elaichi,5.0,False,0,5.0
-1905,GROCERY,Biscuits & Cookies (Parle/Britannia),biscuit parle g bourbon tiger mariegold rusk toast khari,18.0,False,0,18.0
-1905,GROCERY,Bread & Bakery Items,bread pav bun rusk sliced bread,0.0,False,0,0.0
-2106,GROCERY,Namkeen & Savouries,namkeen bhujia haldiram bikaji sev mixture chivda,12.0,False,0,12.0
-0401,GROCERY,Fresh Milk,doodh milk amul doodh mother dairy packet,0.0,False,0,0.0
-0403,GROCERY,Curd / Dahi / Chaas,dahi curd lassi chaas buttermilk yogurt,0.0,False,0,0.0
-0406,GROCERY,Paneer Packaged,paneer cottage cheese amul paneer,5.0,False,0,5.0
-2103,GROCERY,Tomato Ketchup & Sauces,sauce ketchup kisan maggi tomato sauce schezwan,12.0,False,0,12.0
-1902,GROCERY,Noodles & Pasta (Maggi),maggi noodles pasta macaroni instant noodles,18.0,False,0,18.0
-3401,GROCERY,Bath Soap / Toilet Soap,sabun soap lux dettol lifebuoy dove bath soap,18.0,False,0,18.0
-3402,GROCERY,Detergent Powder / Bar,detergent surf excel rin ghari ariel washing powder nirma,18.0,False,0,18.0
-3305,GROCERY,Hair Oil & Shampoo,shampoo hair oil clinic plus sunsilk dabur amla parachute oil,18.0,False,0,18.0
-3306,GROCERY,Toothpaste & Toothbrush,toothpaste colgate pepsodent brush danta kanti,18.0,False,0,18.0
-4818,GROCERY,Toilet Paper & Tissues,tissue toilet paper napkins kitchen roll,18.0,False,0,18.0
-9619,GROCERY,Sanitary Napkins,sanitary pads whisper stayfree napkins,0.0,False,0,0.0
-0801,GROCERY,Dry Fruits / Badam / Kaju,kaju badam cashew almond kismis akhrot pista,12.0,False,0,12.0
-2009,GROCERY,Packaged Fruit Juices (Real/Tropicana),juice real tropicana frooti maaza mango drink,12.0,False,0,12.0
-2201,GROCERY,Packaged Drinking Water (Bisleri),pani paani bottle bisleri kinley aquafina water bottle,18.0,False,0,18.0
-2202,GROCERY,Aerated Cold Drinks (Coke/Pepsi),cold drink soft drink thums up coca cola sprite fanta mirinda,28.0,False,0,28.0
-6204,TEXTILES,Women Suits Ensembles & Lehnga,lehnga lehenga suit salwar kameez anarkali partywear suit ladies suit,5.0,True,1000,12.0
-6204,TEXTILES,Women Kurti & Tunics,kurti tunic tops ladies kurti printed kurti,5.0,True,1000,12.0
-5208,TEXTILES,Unstitched Cotton Fabric / Thaan,than thaan kapda cotton fabric unstitched sut kapda poplin,5.0,False,0,5.0
-5209,TEXTILES,Heavy Cotton Fabric / Denim Fabric,denim kapda jeans cloth jean fabric heavy cotton canvas,5.0,False,0,5.0
-5407,TEXTILES,Synthetic Polyester Fabric / Astar,astar lining astar kapda polyester crepe falls patti,5.0,False,0,5.0
-5007,TEXTILES,Pure Silk Fabric / Resham Thaan,reshami kapda silk fabric raw silk brocade than,5.0,False,0,5.0
-5212,TEXTILES,Cotton Dupatta & Stoles,dupatta chunni odhni stole gamcha cotton gamcha,5.0,False,0,5.0
-6203,TEXTILES,Men Readymade Shirts,shirt formal shirt casual shirt check shirt half shirt,5.0,True,1000,12.0
-6203,TEXTILES,Men Trousers / Formal Pants,pant formal pant trouser khaki pant chonos,5.0,True,1000,12.0
-6203,TEXTILES,Men Jeans Denim Pants,jeans jean denim pant slim fit jeans rough jeans,5.0,True,1000,12.0
-6203,TEXTILES,Men Kurta Pyjama Sets,kurta pyjama pajama kurta set sherwani bandhgala,5.0,True,1000,12.0
-6109,TEXTILES,T-Shirts Knitted / Polo,tshirt t shirt polo neck round neck jersey knitted tee,5.0,True,1000,12.0
-6211,TEXTILES,Tracksuits & Athletic Wear,track pant lowers track suit gym suit night suit,5.0,True,1000,12.0
-6204,TEXTILES,Sarees Silk & Synthetic,saree sadi banarasi saree kanjivaram georgette chiffon saree,5.0,True,1000,12.0
-6302,TEXTILES,Bed Sheets & Pillow Covers,bedsheet chadar takiya cover pillow cover bedcover linen,5.0,True,1000,12.0
-6302,TEXTILES,Towels Bath & Hand Towels,towel tauliya bath towel hand towel gamcha,5.0,True,1000,12.0
-6303,TEXTILES,Window Curtains & Drapes,curtain parda drapes window parda door curtain,5.0,True,1000,12.0
-6301,TEXTILES,Blankets & Quilts (Kambal/Razai),kambal blanket razai quilt dohars fleece blanket,5.0,True,1000,12.0
-6115,TEXTILES,Socks & Stockings,socks moje jurab cotton socks ankle socks,5.0,False,0,5.0
-6212,TEXTILES,Brassieres & Innerwear,bra panty innerwear banyan underwear jockey undergarments,5.0,True,1000,12.0
-8539,ELECTRONICS,LED Lamps & Electric Bulbs,led bulb led lamp bulb light zero watt 9w syska philips,18.0,False,0,18.0
-8539,ELECTRONICS,Tubelights & Batten Lights,tubelight batten light t5 t8 led tube flourescent,18.0,False,0,18.0
-8544,ELECTRONICS,Insulated Electric Copper Wire & Cable,wire taar taar bundle cable havells polycab copper wire 1.5mm 2.5mm,18.0,False,0,18.0
-8536,ELECTRONICS,Electrical Switches & Sockets,switch socket modular switch board anchor roma plug top,18.0,False,0,18.0
-8536,ELECTRONICS,MCB & Circuit Breakers,mcb miniature circuit breaker isolator fuse cutout switchgear,18.0,False,0,18.0
-8414,ELECTRONICS,Ceiling Fans & Table Fans,fan pankha ceiling fan table fan exhaust fan orient crompton usha,18.0,False,0,18.0
-8516,ELECTRONICS,Electric Immersion Rod & Water Geyser,geyser rod immersion rod water heater water kettle room heater,18.0,False,0,18.0
-8516,ELECTRONICS,Electric Iron / Press,iron press istiri clothes press bajaj iron dry iron,18.0,False,0,18.0
-8504,ELECTRONICS,Mobile Charger & Power Adapters,charger adapter mobile charger usb cable fast charger type c cable,18.0,False,0,18.0
-8506,ELECTRONICS,Primary Dry Cell Batteries,battery cell torch cell duracell everyday aa aaa battery,18.0,False,0,18.0
-8507,ELECTRONICS,Inverter Battery / Lead Acid,inverter battery luminous exide car battery storage battery,28.0,False,0,28.0
-8504,ELECTRONICS,Inverter & UPS Machines,inverter ups stabilizer microtek luminous home ups,18.0,False,0,18.0
-8518,ELECTRONICS,Speakers & Headphones Earphones,speaker bluetooth speaker earphone headphone airpods mic boAt,18.0,False,0,18.0
-8528,ELECTRONICS,LED Television / Smart TV,tv television led tv smart tv screen 32 inch 43 inch,18.0,False,0,18.0
-8418,ELECTRONICS,Refrigerators & Freezers,fridge refrigerator single door double door whirlpool lg,18.0,False,0,18.0
-8450,ELECTRONICS,Washing Machines,washing machine kapde dhone ki machine semi auto fully auto,18.0,False,0,18.0
-8415,ELECTRONICS,Air Conditioners (AC),ac air conditioner split ac inverter ac 1.5 ton 1 ton,28.0,False,0,28.0
-8523,ELECTRONICS,Pen Drives & Memory Cards,pen drive memory card sd card usb drive sandisk 64gb,18.0,False,0,18.0
-8517,ELECTRONICS,Mobile Smartphones,mobile phone smartphone handset 5g phone display,18.0,False,0,18.0
-2523,HARDWARE,Portland Cement / Bori,cement bori katta ultratech acc ambuja grey cement white cement,28.0,False,0,28.0
-7214,HARDWARE,TMT Steel Bars / Sariya,sariya tmt bar iron rod latha tata tiscon kamdhenu construction rod,18.0,False,0,18.0
-3208,HARDWARE,Paints & Primers Enamel,paint asian paints nerolac berger primer enamel distemper wall paint,18.0,False,0,18.0
-3214,HARDWARE,Wall Putty & POP,putty wall putty pop plaster of paris birla white jk putty,18.0,False,0,18.0
-3917,HARDWARE,PVC Pipes & Fittings,pvc pipe cpvc pipe fitting elbow socket tee conduit supreme astral,18.0,False,0,18.0
-7318,HARDWARE,Screws Bolts Nuts & Washers,screw bolt nut kabla washer keel nail hardware screw,18.0,False,0,18.0
-8301,HARDWARE,Padlocks & Door Locks (Taala),tala lock door lock padlock godrej cylinder mortise handle,18.0,False,0,18.0
-8302,HARDWARE,Door Hinges & Tower Bolts (Kabza/Chitkani),kabza hinges chitkani tower bolt door handle stopper aldrops,18.0,False,0,18.0
-4407,HARDWARE,Wood & Sawn Timber (Lakkad),timber wood lakkad lakdi sona timber plank teak sagwan beam saal kham new khan,18.0,False,0,18.0
-4412,HARDWARE,Plywood & Timber Boards,plywood board sunmica ply waterproof ply marine ply blockboard sona timber,18.0,False,0,18.0
-9403,HARDWARE,Furniture Sofas Chairs Tables Bed,furniture sofa chair table bed almirah wardrobe stool cabinet dining set,18.0,False,0,18.0
-3102,GROCERY,Fertilizers Urea Khad (Bora/Bori),urea khad sona fertilizer sona urea iffo dapa kisan khad,5.0,False,0,5.0
-8205,HARDWARE,Hand Tools (Hammer/Pliers/Pana),hathodi hammer plas pliers screw driver pana spanner ret,18.0,False,0,18.0
-3506,HARDWARE,Adhesives (Fevicol/Bond),fevicol araldite adhesive bond glue fevikwik wood glue,18.0,False,0,18.0
-6802,HARDWARE,Granite & Marble Slabs,granite marble pathar tiles flooring slab kota stone,18.0,False,0,18.0
-6907,HARDWARE,Ceramic Flags Paving Hearth or Wall Tiles Vitrified,tiles tile ceramic ceramics spenza kajaria somany nitco honey onyx vista plano floor tiles wall tiles vitrified marbonite slab glazed tiles sanitaryware,18.0,False,0,18.0
-6910,HARDWARE,Sanitaryware (Washbasin/Toilet),washbasin toilet seat commode urinal ceramic sink cera hindware,18.0,False,0,18.0
-8481,HARDWARE,Water Taps & Bib Cocks (Nal),nal tap water tap bib cock angle valve shower mixer jaquar,18.0,False,0,18.0
-3004,MEDICAL,Paracetamol Tablets / Pain Relief,paracetamol crocin dolo 650 calpol combiflam pain relief bukhar tablet,12.0,False,0,12.0
-3004,MEDICAL,Antibiotics Tablets / Amoxycillin,antibiotic amoxil azithromycin augmentin cipro cefixime capsule,12.0,False,0,12.0
-3004,MEDICAL,Cough Syrup & Tonics,cough syrup benadryl ascoril corex syp tonic multivitamin syrup,12.0,False,0,12.0
-3004,MEDICAL,Antacids & Gas Relief,digene gelusil pan 40 omez rablet acidity syrup eno pudin hara,12.0,False,0,12.0
-3005,MEDICAL,Bandages Gauze & Dressings,patti bandage gauze band aid dressing crepe bandage cotton roll,12.0,False,0,12.0
-3808,MEDICAL,Antiseptic Liquids (Dettol/Savlon),dettol savlon antiseptic liquid povidone betadine germicide,18.0,False,0,18.0
-9025,MEDICAL,Clinical Thermometer,thermometer fever check digital thermometer mercury thermometer,12.0,False,0,12.0
-9018,MEDICAL,BP Monitor & Diagnostic Instruments,bp machine omron blood pressure monitor syringe needle cannula,12.0,False,0,12.0
-3004,MEDICAL,Ointments & Creams (Moov/Volini),volini moov iodex itchatone betnovate skin ointment pain balm,12.0,False,0,12.0
-3004,MEDICAL,Eye & Ear Drops,eye drops ear drops ciplox itone refresh tears otic drops,12.0,False,0,12.0
-2106,MEDICAL,Ayurvedic & Herbal Medicines,chyawanprash dabur patanjali giloy ashwagandha triphala ayurvedic,12.0,False,0,12.0
-6402,FOOTWEAR_UTENSILS,Rubber & Plastic Slippers (Hawai Chappal),chappal hawai chappal paragon relaxo flite bathroom slippers flip flops,12.0,True,1000,18.0
-6403,FOOTWEAR_UTENSILS,Leather Formal Shoes,leather shoes formal shoes bada chamda joota boot derby,12.0,True,1000,18.0
-6404,FOOTWEAR_UTENSILS,Sports Shoes & Sneakers,sports shoes sneakers running shoes campus sparx bata trainers,12.0,True,1000,18.0
-6402,FOOTWEAR_UTENSILS,Sandals & Floaters,sandals floaters strap sandals ladies sandals kids sandals,12.0,True,1000,18.0
-7323,FOOTWEAR_UTENSILS,Stainless Steel Kitchen Utensils (Bartan),steel bartan thali katori glass chamach spoon plate patila bhagona steel container dabba,12.0,False,0,12.0
-7615,FOOTWEAR_UTENSILS,Aluminium Cookware / Cooker,pressure cooker cooker kadhai tawa frying pan aluminium bartan hawkins prestige,12.0,False,0,12.0
-7418,FOOTWEAR_UTENSILS,Brass & Copper Pooja Utensils,pital bartan tamba lota brass copper thali pooja bartan diya kalash,12.0,False,0,12.0
-8211,FOOTWEAR_UTENSILS,Kitchen Knives & Cutlery,chaku knife kitchen knife scissor chimta kadai ladle belan chakla,12.0,False,0,12.0
-9617,FOOTWEAR_UTENSILS,Thermos Flask & Insulated Bottles,thermos flask milton bottle insulated water bottle tiffin box hot case,18.0,False,0,18.0
+hsn_code,sector,category_description,hinglish_aliases,base_gst_rate,has_price_threshold,threshold_amount,above_threshold_gst_rate
+1101,Kirana,Wheat Flour Loose (Atta / Maida / Besan),loose atta khulla maida chana besan gehu ka atta chakki atta 0% unbranded,0.0,False,0.0,0.0
+1101,Kirana,Wheat Flour Packaged / Branded (Atta / Maida / Besan),packaged atta branded atta aashirvaad fortune shakti bhog maida packet besan packet 5kg 10kg,5.0,False,0.0,0.0
+1006,Kirana,Rice Loose (Chawal / Rice Unbranded),loose rice khulla chawal unbranded rice toota chawal sona masoori loose kolam khula,0.0,False,0.0,0.0
+1006,Kirana,Rice Packaged / Branded (Basmati / Kolam / Sona Masoori),packaged rice branded basmati daawat basmati india gate premium rice bag bori packet peti chawal,5.0,False,0.0,0.0
+0713,Kirana,Pulses & Dal Loose (Toor / Moong / Chana / Masoor / Urad),loose dal khulla dal toor dal arhar dal moong dhuli chana dal masoor dal urad dal sabut khulla daal,0.0,False,0.0,0.0
+0713,Kirana,Pulses & Dal Packaged (Tata Sampann / Branded Dal),packaged dal branded dal tata sampann packet dal toor dal packet moong packet 1kg bag bori,5.0,False,0.0,0.0
+1701,Kirana,Sugar / Chini / Shakkar,sugar chini shakkar refined sugar white sugar bura chini bag packet,5.0,False,0.0,0.0
+1701,Kirana,Jaggery / Gur / Gud,jaggery gur gud desi gud bheli organic jaggery powder shakkar gud,0.0,False,0.0,0.0
+1514,Kirana,Mustard Oil / Sarson Tel / Kachi Ghani,sarson tel mustard oil kachi ghani engine brand mustard oil pmpa tel bottle tin,5.0,False,0.0,0.0
+1512,Kirana,Refined Edible Cooking Oil / Fortune / Soyabean / Sunflower,refined oil fortune refined soyabean oil sunflower oil cooking oil edible oil pouch tin,5.0,False,0.0,0.0
+0405,Kirana,Desi Ghee / Butter / Makhan,desi ghee amul ghee verka ghee mother dairy butter amul makhan maska jar tin,12.0,False,0.0,0.0
+0406,Kirana,Paneer / Cottage Cheese / Fresh Cheese,fresh paneer dairy paneer amul paneer packet frozen paneer block chhena,5.0,False,0.0,0.0
+0902,Kirana,Tea / Chai Patti / Green Tea,tea chai patti taj mahal tata tea red label wagh bakri green tea leaf packet box,5.0,False,0.0,0.0
+0901,Kirana,Coffee / Instant Coffee / Nescafe / Bru,coffee nescafe bru gold instant coffee filter coffee pouch bottle jar,18.0,False,0.0,0.0
+0910,Kirana,Spices / Haldi / Mirch / Dhaniya / Garam Masala,haldi powder turmeric mirch powder lal mirch dhaniya coriander garam masala mdh catch everest packet,5.0,False,0.0,0.0
+0904,Kirana,Black Pepper & Whole Spices / Kali Mirch / Jeera / Laung,jeera cumin seeds kali mirch black pepper laung cloves elaichi cardamom dalchini cinnamon rai sabut masala,5.0,False,0.0,0.0
+2501,Kirana,Edible Salt / Tata Namak / Sendha Namak,salt tata namak iodized salt sendha namak kala namak rock salt packet 1kg,0.0,False,0.0,0.0
+1905,Kirana,Biscuits / Cookies / Rusk / Parle-G / Britannia,biscuits parle-g good day marie gold hide seek bourbon oreo toast rusk bakery cookies namkeen biscuit,18.0,False,0.0,0.0
+1902,Kirana,Instant Noodles / Maggi / Pasta / Macaroni,maggi noodles instant noodles yippee pasta macaroni vermicelli sevaiyan chowmein cup noodles,18.0,False,0.0,0.0
+2106,Kirana,Namkeen / Bhujia / Kurkure / Potato Chips,haldiram bhujia aloo bhujia bikaji namkeen balaji sev mixture kurkure lays chips uncle chips bingo snacks packet,12.0,False,0.0,0.0
+3401,Kirana,Toilet Bath Soap / Lux / Lifebuoy / Dettol Soap,bath soap bathing soap lux soap lifebuoy dettol soap dove pears santoor godrej cinthol bar sabun,18.0,False,0.0,0.0
+3402,Kirana,Washing Powder & Detergent / Surf / Rin / Ghari / Tide,surf detergent powder ghari surf excel rin soap tide ariel bar washing cake liquid detergent,18.0,False,0.0,0.0
+3306,Kirana,Toothpaste / Dant Manjan / Colgate / Close Up,toothpaste colgate close up pepsodent sensodyne dabur red paste dant kanti patanjali brush toothbrush,18.0,False,0.0,0.0
+3305,Kirana,Hair Oil / Shampoo / Parachute / Clinic Plus,hair oil coconut oil parachute amla oil bajaj almond shampoo sachet clinic plus sunsilk head shoulders bottle,18.0,False,0.0,0.0
+2202,Kirana,Aerated Cold Drinks / Pepsi / Coke / Thums Up / Soda,cold drink pepsi coca cola thums up sprite fanta limca mountain dew maaza slice frooti soda bottle can 200ml 500ml 1l,28.0,False,0.0,0.0
+0401,Kirana,Fresh Milk / Cow Milk / Dairy Dudh,fresh milk pouch amul doodh mother dairy packet milk toned milk full cream doodh gay ka dudh,0.0,False,0.0,0.0
+0403,Kirana,Curd / Dahi / Lassi / Chaas,fresh dahi curd amul masti dahi chaas butter milk packet pouch sweetened lassi cup,5.0,False,0.0,0.0
+2009,Kirana,Fruit Juices & Nectars / Real / Tropicana,real fruit juice tropicana mixed fruit mango juice tetra pack slice bottle apple juice,12.0,False,0.0,0.0
+1806,Kirana,Chocolates / Cadbury Dairy Milk / KitKat,cadbury dairy milk chocolate 5 star kitkat perk munch snickers candy toffee eclairs bar,18.0,False,0.0,0.0
+2103,Kirana,Sauces & Ketchup / Kisan Tomato Sauce,kisan tomato ketchup sauce schezwan sauce chilli sauce soya sauce mayonnaise dip pouch bottle,12.0,False,0.0,0.0
+0801,Kirana,Dry Fruits / Badam / Kaju / Kismis / Pista,dry fruits badam almond kaju cashew kismis raisins pista akhrot walnut magaj chironji packet,12.0,False,0.0,0.0
+3405,Kirana,Floor Cleaners & Surface Disinfectants / Lizol / Harpic,lizol floor cleaner harpic toilet cleaner colin glass cleaner odonil cherry blossom phenyl liquid bottle,18.0,False,0.0,0.0
+3605,Kirana,Matchbox & Puja Samagri / Machis / Agarbatti,machis matchbox safety matches agarbatti dhoop hawan samagri camphor kapoor rui batti diya batti packet,12.0,False,0.0,0.0
+5208,Textile,Unstitched Cotton Fabric / Kapda / Thaan / Poplin,cotton kapda fabric thaan poplin rubia voile cambric unstitched cloth than latha malmal cotton than,5.0,False,0.0,0.0
+5007,Textile,Silk Fabric & Banarasi Thaan,silk kapda banarasi fabric pure silk raw silk tussar katan crepe silk unstitched than,5.0,False,0.0,0.0
+5407,Textile,Synthetic & Polyester Fabric / Georgette / Chiffon,synthetic cloth polyester georgette chiffon crepe satin net fabric lining astar kapda than peticoat cloth,5.0,False,0.0,0.0
+5111,Textile,Woollen Fabric / Tweed / Pashmina Thaan,woollen fabric wool kapda tweed pashmina cloth coat fabric blazer cloth cashmere than,5.0,False,0.0,0.0
+5208,Textile,Cotton Saree / Chunni / Dupatta / Gamchha,cotton saree sooti sari chunni dupatta gamchha angavastram stole odhni dhoti,5.0,False,0.0,0.0
+5407,Textile,Synthetic Saree & Fancy Georgette Chunni,synthetic saree fancy saree printed saree georgette dupatta designer chunni partywear saree art silk saree,5.0,False,0.0,0.0
+5205,Textile,Cotton Yarn & Sewing Thread / Soot / Dhaga,cotton yarn soot dhaga sewing thread reel nalki embroidery thread spool anchor reel,5.0,False,0.0,0.0
+6204,Textile,Readymade Kurti / Ladies Suit / Salwar Suit,readymade kurti cotton kurti ladies suit salwar kameez plazo set anarkali kurti stitched suit dress material stitched women suit,5.0,True,1000.0,12.0
+6205,Textile,Men Readymade Shirts / Formal & Casual Shirts,men shirt formal shirt casual shirt cotton shirt half sleeve shirt full sleeve shirt gents shirt party shirt,5.0,True,1000.0,12.0
+6109,Textile,T-Shirts & Hosiery Undergarments / Baniyan / Vests,t-shirt round neck polo t-shirt baniyan innerwear vest underwear boxer hosiery kachha briefs rupa lux,5.0,True,1000.0,12.0
+6203,Textile,Men Trousers / Jeans / Pants / Pajama / Lower,men trousers jeans denim pant formal trouser cotton pant track pant pajama lower night pant gents trouser,5.0,True,1000.0,12.0
+6201,Textile,Winter Jackets / Blazers / Coats / Sweaters,jacket winter jacket blazer coat overcoat sweater cardigan pullover jerkin hoodie windcheater,5.0,True,1000.0,12.0
+6204,Textile,Wedding Lehnga / Sherwani / Heavy Partywear Suit,wedding lehnga bridal lehenga bridal gown designer sherwani heavy partywear suit dulha sherwani ghagra choli bridal set,5.0,True,1000.0,12.0
+6214,Textile,Shawls / Stoles / Mufflers / Loi,shawl woolen shawl loi muffler stole scarf kashmiri shawl lohi blanket shawl ladies stole,5.0,True,1000.0,12.0
+6304,Textile,Bedsheet / Chadar / Khes / Diwan Set,bedsheet bed cover chadar khes diwan set pillow cover takiya cover bedspread double bed single bed bedsheet,5.0,True,1000.0,12.0
+6302,Textile,Towels & Bath Linen / Tauliya / Gamchha,bath towel cotton towel tauliya face towel hand towel napkin bathing sheet gamchha,5.0,True,1000.0,12.0
+6301,Textile,Blankets & Comforters / Kambal / Rajai,blanket kambal mink blanket fleece blanket quilt rajai comforter doharr warm blanket,5.0,True,1000.0,12.0
+6115,Textile,Socks & Stockings / Juraab / Hosiery Gloves,socks cotton socks sports socks juraab stockings rumal handkerchief woollen socks ankle socks,5.0,True,1000.0,12.0
+6211,Textile,Tracksuits & Sportswear / Gymwear,tracksuit track suit gym wear sports jersey athletic kit swimming costume sports shorts sportswear set,5.0,True,1000.0,12.0
+6209,Textile,Baby Garments & Kids Apparel / Baba Suit / Frock,baby garments kids wear baba suit frock kids t-shirt shorts baby dress romper dungaree kids suit,5.0,True,1000.0,12.0
+6303,Textile,Curtains & Drapes / Parda / Net Window Screen,curtains parda door curtain window curtain jacquard blind blackout drapes screen curtain,5.0,True,1000.0,12.0
+5806,Textile,Ribbons / Laces / Gotapatti / Border / Zari,lace gota patti border zari lace ribbon embroidered border tape metallic trim golden border,5.0,False,0.0,0.0
+5705,Textile,Carpets / Rugs / Floor Dari / Mats,carpet rug floor mat dari durrie doormat prayer mat carpet runner janamaz floor carpet,12.0,False,0.0,0.0
+8539,Electronics,LED Bulbs / 9W 12W 18W Syska Philips Havells,led bulb 9w bulb 12w 18w syska bulb philips led orient crompton pin bulb holder bulb daylight warm white lamp,12.0,False,0.0,0.0
+9405,Electronics,LED Tubelight / Batten / Panel Lights / Downlight,led tubelight led batten 20w 36w ceiling downlight flat panel light floodlight surface light spotlight tube light,18.0,False,0.0,0.0
+8414,Electronics,Ceiling Fan / Table Fan / Exhaust / Air Cooler,ceiling fan pankha orient fan crompton usha exhaust fan table fan pedestal fan air cooler cooler pump motor farata fan,18.0,False,0.0,0.0
+8544,Electronics,Copper Wire Bundle / Taar / Finolex / Polycab,copper wire electric wire taar bundle 1.5 sq mm 2.5 mm 4 sq mm finolex polycab havells anchor wire flex cable coil,18.0,False,0.0,0.0
+8536,Electronics,MCB / Switch / Socket / Board / Holder / Plug,mcb modular switch socket switchboard bell push bed switch top plug lamp holder gang box anchor roma legrand,18.0,False,0.0,0.0
+8517,Electronics,Smartphone / Mobile Phone / Feature Phone,smartphone mobile phone cell phone keypad phone redmi samsung realme vivo oppo apple oneplus mobile handset 5g phone,12.0,False,0.0,0.0
+8504,Electronics,Mobile Charger / Fast Charger / Power Adapter,mobile charger phone charger fast charger type c charger adapter wall charger gan charger usb adapter 33w 65w,18.0,False,0.0,0.0
+8518,Electronics,USB Data Cable / Earphones / Neckband / TWS Buds,usb cable type c cable data cable earphone headphone neckband bluetooth earbuds tws wireless headphones speaker boat buds,18.0,False,0.0,0.0
+8507,Electronics,Inverter Tubular Battery / Luminous / Exide,inverter battery tubular battery luminous battery exide tall tubular amaron 150ah 200ah lead acid inverter battery power backup,28.0,False,0.0,0.0
+8504,Electronics,Home Inverter & UPS / Microtek / Luminous,inverter home ups solar inverter sine wave microtek inverter luminous ups hybrid inverter power converter 900va 1100va,18.0,False,0.0,0.0
+8516,Electronics,Electric Iron / Press / Immersion Rod / Geyser / Room Heater,electric iron press kapda press immersion rod water heater geyser instant geyser room heater blower kettle induction,18.0,False,0.0,0.0
+8528,Electronics,LED TV 32 / 43 / 55 Inch Smart TV,led tv smart tv android tv 32 inch tv 43 inch tv television screen display monitor lcd tv 4k google tv,18.0,False,0.0,0.0
+8509,Electronics,Mixer Grinder / Juicer / Blender / Hand Mixer,mixer grinder mixie juicer blender grinder jar bajaj sujata philips maharaja chutney jar blade wet grinder,18.0,False,0.0,0.0
+8516,Electronics,Induction Cooktop / Electric Induction Chulha,induction cooktop induction chulha prestige induction pigeon cooktop push button touch induction stove 2000w,18.0,False,0.0,0.0
+8418,Electronics,Refrigerator / Single & Double Door Fridge,refrigerator fridge single door double door whirlpool lg samsung godrej direct cool frost free deep fridge 190l 240l,18.0,False,0.0,0.0
+8450,Electronics,Washing Machine / Semi & Fully Automatic,washing machine kapda dhone ki machine semi automatic fully automatic top load front load lg samsung whirlpool 7kg,18.0,False,0.0,0.0
+8415,Electronics,Split & Window Air Conditioner (AC),air conditioner split ac 1.5 ton 1 ton 2 ton inverter ac window ac voltas daikin hitachi blue star condensor 5 star ac,28.0,False,0.0,0.0
+8523,Electronics,Pendrive / SD Memory Card / External Hard Disk,pendrive usb flash drive sd card memory card sandisk 32gb 64gb 128gb hard disk external drive ssd otg drive,18.0,False,0.0,0.0
+8513,Electronics,Emergency Light & Rechargeable Torch / Flashlight,emergency light rechargeable torch torch led flashlight kisan torch search light lantern charging light battery torch,12.0,False,0.0,0.0
+8537,Electronics,Distribution Board / MCB Box / Changeover Switch,mcb box distribution box main switch changeover switch busbar panel enclosure iron clad switch 4 way 8 way,18.0,False,0.0,0.0
+8525,Electronics,CCTV Camera / Security Camera / Dome & Bullet Camera,cctv camera security camera ip camera dome camera bullet camera cp plus hikvision wifi camera setup dvr,18.0,False,0.0,0.0
+2523,Hardware,Cement Katta / Bori / UltraTech / Ambuja / ACC,cement bori katta ultratech cement ambuja acc cement shree cement birla chettinad 50kg bag ppc opc 43 53 grade,28.0,False,0.0,0.0
+7214,Hardware,TMT Sariya / Iron Rod / Kamdhenu / Tata Tiscon,tmt sariya iron rod steel bar rebar kamdhenu tata tiscon jindal rathi 10mm 12mm 16mm saria danda bundle,18.0,False,0.0,0.0
+3917,Hardware,PVC & CPVC Pipe & Fittings / Supreme / Astral,pvc pipe cpvc pipe fitting elbow tee union socket band supreme astral ashirvad finolex water pipe conduit 1 inch 4 inch,18.0,False,0.0,0.0
+3208,Hardware,Paints & Primers / Asian Paints / Berger / Nerolac,asian paints berger nerolac distemper emulsion primer enamel oil paint apex tractor emulsion balti dabba 10l 20l,18.0,False,0.0,0.0
+3214,Hardware,Wall Putty / Birla White Putty / POP / Plaster,wall putty birla white putty jk wall putty pop plaster of paris gypsum wall crack filler bag 20kg 40kg white cement,18.0,False,0.0,0.0
+4412,Hardware,Plywood / Commercial Board / Sunmica / Laminate,plywood ply board commercial ply waterproof blockboard sunmica laminate sheet veneer marine ply 18mm 12mm 6mm,18.0,False,0.0,0.0
+8481,Hardware,Brass & Steel Taps / Toti / Angle Valve / Shower,tap toti nal brass tap angle valve pillar cock bib cock shower sink mixer bathroom tap faucet brass bibcock,18.0,False,0.0,0.0
+7318,Hardware,Iron Nails / Kili / Screws / Nut Bolt / Fasteners,iron nails kili kill screw wood screw drywall screw nut bolt washer rawl plug fasteners rivet gitti kante,18.0,False,0.0,0.0
+8301,Hardware,Door Locks / Padlocks / Tala / Godrej / Handles / Hinges,door lock tala padlock godrej lock main door handle kabza hinges tower bolt chitkani latch mortise lock aldrop,18.0,False,0.0,0.0
+9603,Hardware,Paint Brush / Roller / Regmar / Sandpaper,paint brush roller paint roller sandpaper regmar sand paper wire brush scraping tool spatula patti putty knife,18.0,False,0.0,0.0
+6907,Hardware,Ceramic Floor & Wall Tiles / Vitrified Tiles,floor tiles wall tiles vitrified tiles ceramic tiles bathroom tiles kitchen tiles border kajaria somany slab 2x2 box,18.0,False,0.0,0.0
+6810,Hardware,Ready Precast Concrete / RCC Drain Pipes / Blocks,concrete block cement brick fly ash brick rcc pipe concrete cover block pavement tile paver block drain slab,18.0,False,0.0,0.0
+3506,Hardware,Adhesives / Fevicol / Araldite / Silicone Sealant,fevicol sh marine adhesive bondtite araldite silicone sealant m-seal fevikwik masking tape solvent cement dabba,18.0,False,0.0,0.0
+8205,Hardware,Hand Tools / Hammer / Hathoda / Chhini / Plier / Screwdriver,hammer hathoda chhini chisel plier plas screwdriver screwdriver set wrench pana spanner saw aari file reti,18.0,False,0.0,0.0
+8467,Hardware,Power Tools / Drill Machine / Angle Grinder / Cutter,drill machine electric drill grinder angle grinder marble cutter wood cutter rotary hammer bosch blade cutter disc,18.0,False,0.0,0.0
+3925,Hardware,Water Storage Tank / Sintex / Overhead Plastic Tank,water tank sintex overhead tank triple layer water storage tank plastic balti loft tank 500l 1000l 4 layer tank,18.0,False,0.0,0.0
+6910,Hardware,Sanitaryware / Washbasin / Toilet Seat / Urinal,washbasin toilet seat commode indian seat angrezi seat cistern urinal flush tank cera hindware parryware basin,18.0,False,0.0,0.0
+7326,Hardware,Iron Wire & Fencing Net / Jaali / Barbed Wire,iron wire binding wire tar kanta wire barbed wire chain link fencing jaali mosquito mesh wire mesh jali bundle,18.0,False,0.0,0.0
+7308,Hardware,GI Roofing Sheets / Tin Shed / Tin Patti,gi sheet tin shed tin sheet corrugated roofing sheet metal profile sheet shed pipe purlin jindal sheet,18.0,False,0.0,0.0
+3814,Hardware,Paint Thinner & Turpentine Oil / Taarpeen Ka Tel,thinner paint thinner nc thinner enamel thinner turpentine oil tarpeen tel polish solvent cleaning spirit bottle,18.0,False,0.0,0.0
+3004,Medical,Paracetamol & Antipyretic / Dolo 650 / Crocin / Calpol,paracetamol dolo 650 crocin calpol pacimol fever tablet fever medicine patta strip 10 tablet pcm 500 650,12.0,False,0.0,0.0
+3004,Medical,Antibiotics / Azithromycin / Amoxicillin Strip,azithromycin azithral amoxicillin augmentin mox strip antibiotic capsule tablet bacterial infection 500mg strip,12.0,False,0.0,0.0
+3004,Medical,Cough Syrups & Expectorants / Benadryl / Corex / Ascoril,cough syrup benadryl corex ascoril alex tuss q cough cold shishi syrup bottle expectorant 100ml,12.0,False,0.0,0.0
+3004,Medical,Antacids & Gas Relief / Digene / Gelusil / Eno / Pantocid,antacid digene gelusil eno sachet pantocid pan 40 pan-d omeprazole aciloc gas acidity tablet chewable tablet,12.0,False,0.0,0.0
+3004,Medical,Painkillers & Ointments / Combiflam / Voveran / Moov / Volini,painkiller combiflam brufen voveran diclofenac zerodol-p moov volini spray iodex pain balm tube gel ointment,12.0,False,0.0,0.0
+3005,Medical,Cotton Bandages & First Aid / Patti / Hansaplast,cotton bandage patti crepe bandage micropore tape hansaplast bandaid sterile gauze roll first aid dressing surgical tape,12.0,False,0.0,0.0
+3005,Medical,Surgical Cotton & Rui Roll / Absorbent Cotton,surgical cotton rui absorbent cotton wool medical cotton roll sterile cotton gauze swab pad 100g 500g,12.0,False,0.0,0.0
+3808,Medical,Antiseptic Liquids / Dettol / Savlon / Betadine,dettol savlon antiseptic liquid betadine solution povodine iodine liquid disinfectant wound wash gargle bottle,18.0,False,0.0,0.0
+2106,Medical,ORS Electrolyte Sachets / Electral / Enerzal,ors sachet electral powder enerzal oral rehydration salts electrolyte energy drink glucose powder glocose-d,18.0,False,0.0,0.0
+9025,Medical,Digital Thermometer & Clinical Temperature Gauges,digital thermometer fever check clinical thermometer infrared thermometer temp meter oral thermometer gun thermometer,18.0,False,0.0,0.0
+9018,Medical,Blood Pressure Monitor & Glucometer Strips,bp monitor blood pressure machine omron bp accu-chek glucometer sugar test strips lancet needles testing strips,12.0,False,0.0,0.0
+2106,Medical,Protein Powder & Health Drinks / Horlicks / Bournvita,protein powder horlicks bournvita complan ensure protinex whey protein dietary supplement nutrition tin jar,18.0,False,0.0,0.0
+9619,Medical,Sanitary Pads & Napkins / Whisper / Stayfree,sanitary pads sanitary napkins whisper stayfree sofy period pads cotton sanitary protection pack wings regular xl,0.0,False,0.0,0.0
+9619,Medical,Baby Diapers & Adult Diapers / Pampers / Mamy Poko,baby diapers pampers mamy poko pants huggies adult diapers absorbent underpads pullup pants pant style l m xl,12.0,False,0.0,0.0
+3004,Medical,Antiallergic & Cold Tablets / Cetirizine / Allegra / Montair,cetirizine cetzip allegra montair lc cold allergy tablet running nose sneezing strip levocetirizine avil,12.0,False,0.0,0.0
+3004,Medical,Eye & Ear Drops / Ciplox / Genteal / Otrivin Nasal Spray,ciplox eye drops antibiotic drops otrivin nasal spray genteal tears lubricant ear drops solwax cipla drops bottle,12.0,False,0.0,0.0
+3004,Medical,Multivitamin Tablets & Capsules / Becosules / Supradyn,multivitamin becosules zincovit supradyn revital b-complex vitamin c limcee calcium shelcal d3 capsule zinc,12.0,False,0.0,0.0
+9018,Medical,Disposable Syringes & Needles / IV Infusion Set,syringe dispovan needle 2ml 5ml syringe iv cannula scalp vein set infusion drip bottle butterfly needle,12.0,False,0.0,0.0
+9004,Medical,Corrective Spectacles & Reading Glasses,chashma reading glasses frame spectacle lens powered spectacles eye glasses fiber lens bifocal frame,12.0,False,0.0,0.0
+3004,Medical,Digestive Tablets & Churan / Pudin Hara / Hajmola,pudin hara hajmola hingoli churan dabur pudin hara pearls gas digestive tablet ayurvedic churn bottle,12.0,False,0.0,0.0
+6402,Footwear_Utensils_Auto,Hawai Chappal & Slippers / Flip Flops / Slides,hawai chappal slippers flip flops slides rubber chappal relaxo paragon bath slipper rubber sole flat chappal,12.0,True,1000.0,18.0
+6403,Footwear_Utensils_Auto,Ladies Sandals / Jutti / Flats / Bellies / Heels,ladies sandals jutti punjabi jutti bellies flat chappal party wear sandal high heels wedges footwear mojari,12.0,True,1000.0,18.0
+6404,Footwear_Utensils_Auto,Men Sports Shoes / Sneakers / Running Shoes / School Shoes,sports shoes sneakers running shoes school shoes campus sparx bata action gym shoes canvas shoes lace shoes,12.0,True,1000.0,18.0
+6403,Footwear_Utensils_Auto,Men Leather Shoes & Formal Boots / Loafers,leather shoes formal shoes pure leather boot loafers partywear shoes office shoes gents leather joota derby oxford,12.0,True,1000.0,18.0
+6402,Footwear_Utensils_Auto,Kids Shoes & Clogs / Crocs / Cartoon Sandal,kids shoes clogs crocs baby sandals light wale joote school shoes boys girls sandal cartoon shoes,12.0,True,1000.0,18.0
+7323,Footwear_Utensils_Auto,Stainless Steel Utensils / Thali / Katori / Glass / Patila,steel bartan thali katori glass stainless steel spoon chammach patila tasla bhagona jug donga steel dibba,12.0,False,0.0,0.0
+7615,Footwear_Utensils_Auto,Aluminium Cookware / Pressure Cooker / Kadhai / Tawa,pressure cooker aluminium cooker hawkins prestige cooker kadhai frying pan tawa roti tawa saucepan handi,12.0,False,0.0,0.0
+7418,Footwear_Utensils_Auto,Brass & Copper Pooja Utensils / Lota / Thali / Diya,brass lota peetal lota copper bottle copper jug puja thali diya ghanti brass kalash hawan kund peetal katori,12.0,False,0.0,0.0
+7323,Footwear_Utensils_Auto,Non-Stick Cookware / Dosa Tawa / Fry Pan / Appam Maker,non stick tawa dosa tawa non stick fry pan granite pan appam maker grill pan prestige non stick kadhai,12.0,False,0.0,0.0
+3924,Footwear_Utensils_Auto,Plastic Household Items / Balti / Mug / Tub / Dustbin,plastic bucket balti mug bath tub dustbin laundry basket plastic stool storage container kitchen rack tub,18.0,False,0.0,0.0
+2710,Footwear_Utensils_Auto,Bike Engine Oil & Lubricants / Castrol / Motul / Servo,engine oil 4t bike oil castrol activ motul 20w40 servo 4t 10w30 gear oil brake fluid grease pouch bottle 1l 900ml,18.0,False,0.0,0.0
+4011,Footwear_Utensils_Auto,Two-Wheeler & Three-Wheeler Tyres / MRF / CEAT / Apollo,bike tyre mrf tyre ceat tubeless tyre scooter tyre activa tyre scooty tube moped auto rickshaw tyre nylon tyre,28.0,False,0.0,0.0
+4013,Footwear_Utensils_Auto,Rubber Inner Tubes for Tyres / Tube 2 Wheeler,rubber tyre tube 2 wheeler tube bike tube mrf tube ceat inner tube tyre flap puncture strip butyle tube,28.0,False,0.0,0.0
+8714,Footwear_Utensils_Auto,Bike Spare Parts / Spark Plug / Brake Shoe / Clutch Cable,spark plug champion ngk brake shoe clutch wire accelerator wire disc pad chain sprocket air filter bike parts lever,28.0,False,0.0,0.0
+8507,Footwear_Utensils_Auto,Automotive Lead Acid Battery / Bike Battery / Car Battery,bike battery 12v motorcycle battery car battery exide amaron tata green 4lb 5lb 7lb battery self start battery,28.0,False,0.0,0.0
+8714,Footwear_Utensils_Auto,Bicycle & Cycle Parts / Hero / Atlas / Tyres / Pedals,bicycle cycle pedal hero cycle chain cycle tyre tube handle mudguard cycle bell carrier cycle rim seat,12.0,False,0.0,0.0
+8708,Footwear_Utensils_Auto,Car Accessories / Seat Cover / Wiper Blade / Car Mat,car seat cover wiper blade car floor mat 7d mat steering cover car perfume body cover bumper guard mud flap,28.0,False,0.0,0.0
+8708,Footwear_Utensils_Auto,Motorcycle Helmets / ISI Approved Helmets / Vega / Studds,helmet bike helmet studds vega steelbird isi mark helmet full face helmet visor safety helmet open face helmet,18.0,False,0.0,0.0
+3926,Footwear_Utensils_Auto,Bike Side Mirror & Plastic Visor / Mudguard Guard,side mirror bike mirror number plate frame side view mirror plastic visor grip cover bike lever mudguard guard,18.0,False,0.0,0.0
+8512,Footwear_Utensils_Auto,Automobile Horns & Headlight Bulbs / Roots / Minda / Halogen,car horn bike horn roots horn minda horn h4 halogen bulb led headlight bulb indicator flasher relay bulb,18.0,False,0.0,0.0
+

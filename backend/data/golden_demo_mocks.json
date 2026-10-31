@@ -1,0 +1,1317 @@
+{
+  "kirana_demo": {
+    "bill_id": "golden_kirana_001",
+    "detected_sector": "Kirana",
+    "store_name_guess": "Gupta Kirana & General Store",
+    "merchant_name": "Gupta Kirana & General Store",
+    "raw_date_written": "31/10/2026",
+    "raw_image_b64": null,
+    "enhanced_image_b64": null,
+    "active_items": [
+      {
+        "row_id": 1,
+        "raw_text": "Dedh peti Aashirvaad Atta",
+        "product_name_normalized": "Aashirvaad Atta",
+        "quantity": 1.5,
+        "raw_unit": "Dedh peti",
+        "standard_uqc": "BOX",
+        "unit_price": 360.0,
+        "written_line_total": 540.0,
+        "audited_line_total": 540.0,
+        "expected_line_total": 540.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "1101",
+        "category_description": "Wheat Flour Packaged / Branded (Atta / Maida / Besan)",
+        "gst_rate": 5.0,
+        "cgst_rate": 2.5,
+        "sgst_rate": 2.5,
+        "igst_rate": 0.0,
+        "cgst_amount": 13.5,
+        "sgst_amount": 13.5,
+        "igst_amount": 0.0,
+        "total_tax_amount": 27.0,
+        "line_grand_total": 567.0,
+        "total_with_tax": 567.0,
+        "supply_type": "INTRA",
+        "confidence": 0.9,
+        "tax_rule_triggered": true,
+        "tax_rule_note": "Packaged/Branded Commodity Rule: 5% GST applied (Unbranded loose is 0%)",
+        "top_3_alternatives": [
+          {
+            "hsn_code": "0801",
+            "category_description": "Dry Fruits / Badam / Kaju / Kismis / Pista",
+            "label": "Dry Fruits / Badam / Kaju /  (12%)",
+            "gst_rate": 12.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "0403",
+            "category_description": "Curd / Dahi / Lassi / Chaas",
+            "label": "Curd / Dahi / Lassi / Chaas (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "1006",
+            "category_description": "Rice Packaged / Branded (Basmati / Kolam / Sona Masoori)",
+            "label": "Rice Packaged / Branded (Bas (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          }
+        ]
+      },
+      {
+        "row_id": 2,
+        "raw_text": "2 kg Khulla Chawal",
+        "product_name_normalized": "Khulla Chawal",
+        "quantity": 2.0,
+        "raw_unit": "2 kg",
+        "standard_uqc": "KGS",
+        "unit_price": 40.0,
+        "written_line_total": 80.0,
+        "audited_line_total": 80.0,
+        "expected_line_total": 80.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "1006",
+        "category_description": "Rice Loose (Chawal / Rice Unbranded)",
+        "gst_rate": 0.0,
+        "cgst_rate": 0.0,
+        "sgst_rate": 0.0,
+        "igst_rate": 0.0,
+        "cgst_amount": 0.0,
+        "sgst_amount": 0.0,
+        "igst_amount": 0.0,
+        "total_tax_amount": 0.0,
+        "line_grand_total": 80.0,
+        "total_with_tax": 80.0,
+        "supply_type": "INTRA",
+        "confidence": 0.9,
+        "tax_rule_triggered": true,
+        "tax_rule_note": "Loose Commodity Rule: 0% GST applied (Packaged/branded is 5%)",
+        "top_3_alternatives": [
+          {
+            "hsn_code": "0713",
+            "category_description": "Pulses & Dal Loose (Toor / Moong / Chana / Masoor / Urad)",
+            "label": "Pulses & Dal Loose (Toor / M (0%)",
+            "gst_rate": 0.0,
+            "confidence": 0.43
+          },
+          {
+            "hsn_code": "1101",
+            "category_description": "Wheat Flour Loose (Atta / Maida / Besan)",
+            "label": "Wheat Flour Loose (Atta / Ma (0%)",
+            "gst_rate": 0.0,
+            "confidence": 0.42
+          },
+          {
+            "hsn_code": "0902",
+            "category_description": "Tea / Chai Patti / Green Tea",
+            "label": "Tea / Chai Patti / Green Tea (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          }
+        ]
+      },
+      {
+        "row_id": 3,
+        "raw_text": "3 Nag Lux Soap @ 45 = 145",
+        "product_name_normalized": "Lux Soap",
+        "quantity": 3.0,
+        "raw_unit": "3 Nag",
+        "standard_uqc": "PCS",
+        "unit_price": 45.0,
+        "written_line_total": 145.0,
+        "audited_line_total": 135.0,
+        "expected_line_total": 135.0,
+        "has_math_error": true,
+        "math_discrepancy": 10.0,
+        "math_error_note": "Math Discrepancy: Written ₹145.00 vs Audited ₹135.00 (3.0 PCS @ ₹45.00) [Diff: ₹+10.00]",
+        "hsn_code": "3401",
+        "category_description": "Toilet Bath Soap / Lux / Lifebuoy / Dettol Soap",
+        "gst_rate": 18.0,
+        "cgst_rate": 9.0,
+        "sgst_rate": 9.0,
+        "igst_rate": 0.0,
+        "cgst_amount": 12.15,
+        "sgst_amount": 12.15,
+        "igst_amount": 0.0,
+        "total_tax_amount": 24.3,
+        "line_grand_total": 159.3,
+        "total_with_tax": 159.3,
+        "supply_type": "INTRA",
+        "confidence": 0.72,
+        "tax_rule_triggered": false,
+        "tax_rule_note": null,
+        "top_3_alternatives": [
+          {
+            "hsn_code": "3402",
+            "category_description": "Washing Powder & Detergent / Surf / Rin / Ghari / Tide",
+            "label": "Washing Powder & Detergent / (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "6109",
+            "category_description": "T-Shirts & Hosiery Undergarments / Baniyan / Vests",
+            "label": "T-Shirts & Hosiery Undergarm (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "1101",
+            "category_description": "Wheat Flour Loose (Atta / Maida / Besan)",
+            "label": "Wheat Flour Loose (Atta / Ma (0%)",
+            "gst_rate": 0.0,
+            "confidence": 0.4
+          }
+        ]
+      }
+    ],
+    "struck_out_items": [
+      {
+        "row_id": 4,
+        "raw_text": "1 kg Maida cut",
+        "written_line_total": 35.0,
+        "reason": "Crossed out or cut with pen on receipt"
+      }
+    ],
+    "audit_alerts": {
+      "math_errors_count": 1,
+      "struck_out_count": 1,
+      "dynamic_tax_rules_count": 2,
+      "total_math_discrepancy_amount": 10.0,
+      "alert_messages": [
+        "Row 1 GST Rule: Packaged/Branded Commodity Rule: 5% GST applied (Unbranded loose is 0%)",
+        "Row 2 GST Rule: Loose Commodity Rule: 0% GST applied (Packaged/branded is 5%)",
+        "Row 3 Math Error: Math Discrepancy: Written ₹145.00 vs Audited ₹135.00 (3.0 PCS @ ₹45.00) [Diff: ₹+10.00]",
+        "Row 4 Struck Out: '1 kg Maida cut' was excluded from taxable invoice (₹0.00)."
+      ]
+    },
+    "hsn_summary_table": [
+      {
+        "hsn_code": "1101",
+        "description": "Wheat Flour Packaged / Branded",
+        "standard_uqc": "BOX",
+        "total_quantity": 1.5,
+        "taxable_value": 540.0,
+        "gst_rate": 5.0,
+        "cgst_amount": 13.5,
+        "sgst_amount": 13.5,
+        "igst_amount": 0.0,
+        "total_tax": 27.0
+      },
+      {
+        "hsn_code": "1006",
+        "description": "Rice Loose (Chawal / Rice Unbr",
+        "standard_uqc": "KGS",
+        "total_quantity": 2.0,
+        "taxable_value": 80.0,
+        "gst_rate": 0.0,
+        "cgst_amount": 0.0,
+        "sgst_amount": 0.0,
+        "igst_amount": 0.0,
+        "total_tax": 0.0
+      },
+      {
+        "hsn_code": "3401",
+        "description": "Toilet Bath Soap / Lux / Lifeb",
+        "standard_uqc": "PCS",
+        "total_quantity": 3.0,
+        "taxable_value": 135.0,
+        "gst_rate": 18.0,
+        "cgst_amount": 12.15,
+        "sgst_amount": 12.15,
+        "igst_amount": 0.0,
+        "total_tax": 24.3
+      }
+    ],
+    "totals": {
+      "written_grand_total": 765.0,
+      "audited_taxable_total": 755.0,
+      "total_cgst": 25.65,
+      "total_sgst": 25.65,
+      "total_igst": 0.0,
+      "total_tax": 51.3,
+      "supply_type": "INTRA",
+      "supplier_state_code": "03",
+      "buyer_state_code": "03",
+      "final_payable_pakka_total": 806.3,
+      "total_math_saved": 10.0,
+      "amount_in_words_inr": "Eight Hundred Six Rupees and Thirty Paise Only"
+    },
+    "summary": {
+      "written_grand_total": 765.0,
+      "audited_taxable_total": 755.0,
+      "total_math_saved": 10.0,
+      "total_cgst": 25.65,
+      "total_sgst": 25.65,
+      "final_payable_pakka_total": 806.3
+    },
+    "gstr1_payload": {
+      "gstin": "03AABCU9603R1ZM",
+      "fp": "102026",
+      "version": "GST3.1.6",
+      "hash": "hash",
+      "cur_gt": 806.3,
+      "b2cs": [
+        {
+          "sply_ty": "INTRA",
+          "pos": "03",
+          "typ": "OE",
+          "rt": 0.0,
+          "txval": 80.0,
+          "iamt": 0.0,
+          "camt": 0.0,
+          "samt": 0.0,
+          "csamt": 0.0
+        },
+        {
+          "sply_ty": "INTRA",
+          "pos": "03",
+          "typ": "OE",
+          "rt": 5.0,
+          "txval": 540.0,
+          "iamt": 0.0,
+          "camt": 13.5,
+          "samt": 13.5,
+          "csamt": 0.0
+        },
+        {
+          "sply_ty": "INTRA",
+          "pos": "03",
+          "typ": "OE",
+          "rt": 18.0,
+          "txval": 135.0,
+          "iamt": 0.0,
+          "camt": 12.15,
+          "samt": 12.15,
+          "csamt": 0.0
+        }
+      ],
+      "hsn": {
+        "data": [
+          {
+            "num": 1,
+            "hsn_sc": "1006",
+            "desc": "Rice Loose (Chawal / Rice Unbr",
+            "uqc": "KGS",
+            "qty": 2.0,
+            "txval": 80.0,
+            "rt": 0.0,
+            "iamt": 0.0,
+            "camt": 0.0,
+            "samt": 0.0,
+            "csamt": 0.0
+          },
+          {
+            "num": 2,
+            "hsn_sc": "1101",
+            "desc": "Wheat Flour Packaged / Branded",
+            "uqc": "BOX",
+            "qty": 1.5,
+            "txval": 540.0,
+            "rt": 5.0,
+            "iamt": 0.0,
+            "camt": 13.5,
+            "samt": 13.5,
+            "csamt": 0.0
+          },
+          {
+            "num": 3,
+            "hsn_sc": "3401",
+            "desc": "Toilet Bath Soap / Lux / Lifeb",
+            "uqc": "PCS",
+            "qty": 3.0,
+            "txval": 135.0,
+            "rt": 18.0,
+            "iamt": 0.0,
+            "camt": 12.15,
+            "samt": 12.15,
+            "csamt": 0.0
+          }
+        ]
+      },
+      "doc_issue": {
+        "doc_det": [
+          {
+            "doc_num": 1,
+            "doc_typ": "Invoices for outward supply",
+            "docs": [
+              {
+                "num": 1,
+                "from": "INV-001",
+                "to": "INV-001",
+                "totnum": 1,
+                "canc": 0,
+                "net_issue": 1
+              }
+            ]
+          }
+        ]
+      },
+      "metadata": {
+        "supplier_state": "Punjab",
+        "place_of_supply": "Punjab",
+        "is_intra_state": true,
+        "total_taxable_value": 755.0,
+        "total_tax_amount": 51.3
+      }
+    }
+  },
+  "textile_demo": {
+    "bill_id": "golden_textile_002",
+    "detected_sector": "Textile",
+    "store_name_guess": "Punjab Cloth & Readymade House",
+    "merchant_name": "Punjab Cloth & Readymade House",
+    "raw_date_written": "31/10/2026",
+    "raw_image_b64": null,
+    "enhanced_image_b64": null,
+    "active_items": [
+      {
+        "row_id": 1,
+        "raw_text": "10 Gaz Cotton Kapda @ 120",
+        "product_name_normalized": "Cotton Kapda",
+        "quantity": 10.0,
+        "raw_unit": "10 Gaz",
+        "standard_uqc": "YD",
+        "unit_price": 120.0,
+        "written_line_total": 1200.0,
+        "audited_line_total": 1200.0,
+        "expected_line_total": 1200.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "5208",
+        "category_description": "Unstitched Cotton Fabric / Kapda / Thaan / Poplin",
+        "gst_rate": 5.0,
+        "cgst_rate": 2.5,
+        "sgst_rate": 2.5,
+        "igst_rate": 0.0,
+        "cgst_amount": 30.0,
+        "sgst_amount": 30.0,
+        "igst_amount": 0.0,
+        "total_tax_amount": 60.0,
+        "line_grand_total": 1260.0,
+        "total_with_tax": 1260.0,
+        "supply_type": "INTRA",
+        "confidence": 0.71,
+        "tax_rule_triggered": false,
+        "tax_rule_note": null,
+        "top_3_alternatives": [
+          {
+            "hsn_code": "3005",
+            "category_description": "Surgical Cotton & Rui Roll / Absorbent Cotton",
+            "label": "Surgical Cotton & Rui Roll / (12%)",
+            "gst_rate": 12.0,
+            "confidence": 0.43
+          },
+          {
+            "hsn_code": "5205",
+            "category_description": "Cotton Yarn & Sewing Thread / Soot / Dhaga",
+            "label": "Cotton Yarn & Sewing Thread  (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "6302",
+            "category_description": "Towels & Bath Linen / Tauliya / Gamchha",
+            "label": "Towels & Bath Linen / Tauliy (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          }
+        ]
+      },
+      {
+        "row_id": 2,
+        "raw_text": "1 Cotton Kurti @ 850",
+        "product_name_normalized": "Cotton Kurti",
+        "quantity": 1.0,
+        "raw_unit": "1 nag",
+        "standard_uqc": "PCS",
+        "unit_price": 850.0,
+        "written_line_total": 850.0,
+        "audited_line_total": 850.0,
+        "expected_line_total": 850.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "6204",
+        "category_description": "Readymade Kurti / Ladies Suit / Salwar Suit",
+        "gst_rate": 5.0,
+        "cgst_rate": 2.5,
+        "sgst_rate": 2.5,
+        "igst_rate": 0.0,
+        "cgst_amount": 21.25,
+        "sgst_amount": 21.25,
+        "igst_amount": 0.0,
+        "total_tax_amount": 42.5,
+        "line_grand_total": 892.5,
+        "total_with_tax": 892.5,
+        "supply_type": "INTRA",
+        "confidence": 0.68,
+        "tax_rule_triggered": true,
+        "tax_rule_note": "Indian GST Threshold Rule (HSN 62): Unit price ₹850 ≤ ₹1000 → Lower 5% GST slab applied",
+        "top_3_alternatives": [
+          {
+            "hsn_code": "5208",
+            "category_description": "Unstitched Cotton Fabric / Kapda / Thaan / Poplin",
+            "label": "Unstitched Cotton Fabric / K (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.47
+          },
+          {
+            "hsn_code": "3005",
+            "category_description": "Surgical Cotton & Rui Roll / Absorbent Cotton",
+            "label": "Surgical Cotton & Rui Roll / (12%)",
+            "gst_rate": 12.0,
+            "confidence": 0.44
+          },
+          {
+            "hsn_code": "5205",
+            "category_description": "Cotton Yarn & Sewing Thread / Soot / Dhaga",
+            "label": "Cotton Yarn & Sewing Thread  (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.41
+          }
+        ]
+      },
+      {
+        "row_id": 3,
+        "raw_text": "1 Heavy Wedding Suit @ 2400",
+        "product_name_normalized": "Heavy Wedding Suit",
+        "quantity": 1.0,
+        "raw_unit": "1 nag",
+        "standard_uqc": "PCS",
+        "unit_price": 2400.0,
+        "written_line_total": 2400.0,
+        "audited_line_total": 2400.0,
+        "expected_line_total": 2400.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "6204",
+        "category_description": "Wedding Lehnga / Sherwani / Heavy Partywear Suit",
+        "gst_rate": 12.0,
+        "cgst_rate": 6.0,
+        "sgst_rate": 6.0,
+        "igst_rate": 0.0,
+        "cgst_amount": 144.0,
+        "sgst_amount": 144.0,
+        "igst_amount": 0.0,
+        "total_tax_amount": 288.0,
+        "line_grand_total": 2688.0,
+        "total_with_tax": 2688.0,
+        "supply_type": "INTRA",
+        "confidence": 0.66,
+        "tax_rule_triggered": true,
+        "tax_rule_note": "Indian GST Threshold Rule (HSN 62): Unit price ₹2400 > ₹1000 → Slab auto-upgraded from 5% to 12% GST",
+        "top_3_alternatives": [
+          {
+            "hsn_code": "6209",
+            "category_description": "Baby Garments & Kids Apparel / Baba Suit / Frock",
+            "label": "Baby Garments & Kids Apparel (12%)",
+            "gst_rate": 12.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "6211",
+            "category_description": "Tracksuits & Sportswear / Gymwear",
+            "label": "Tracksuits & Sportswear / Gy (12%)",
+            "gst_rate": 12.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "5205",
+            "category_description": "Cotton Yarn & Sewing Thread / Soot / Dhaga",
+            "label": "Cotton Yarn & Sewing Thread  (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          }
+        ]
+      }
+    ],
+    "struck_out_items": [
+      {
+        "row_id": 4,
+        "raw_text": "2 mtr Astar Kapda - 160 (cut)",
+        "written_line_total": 160.0,
+        "reason": "Crossed out or cut with pen on receipt"
+      }
+    ],
+    "audit_alerts": {
+      "math_errors_count": 0,
+      "struck_out_count": 1,
+      "dynamic_tax_rules_count": 2,
+      "total_math_discrepancy_amount": 0.0,
+      "alert_messages": [
+        "Row 2 GST Rule: Indian GST Threshold Rule (HSN 62): Unit price ₹850 ≤ ₹1000 → Lower 5% GST slab applied",
+        "Row 3 GST Rule: Indian GST Threshold Rule (HSN 62): Unit price ₹2400 > ₹1000 → Slab auto-upgraded from 5% to 12% GST",
+        "Row 4 Struck Out: '2 mtr Astar Kapda - 160 (cut)' was excluded from taxable invoice (₹0.00)."
+      ]
+    },
+    "hsn_summary_table": [
+      {
+        "hsn_code": "5208",
+        "description": "Unstitched Cotton Fabric / Kap",
+        "standard_uqc": "YD",
+        "total_quantity": 10.0,
+        "taxable_value": 1200.0,
+        "gst_rate": 5.0,
+        "cgst_amount": 30.0,
+        "sgst_amount": 30.0,
+        "igst_amount": 0.0,
+        "total_tax": 60.0
+      },
+      {
+        "hsn_code": "6204",
+        "description": "Readymade Kurti / Ladies Suit ",
+        "standard_uqc": "PCS",
+        "total_quantity": 2.0,
+        "taxable_value": 3250.0,
+        "gst_rate": 5.0,
+        "cgst_amount": 165.25,
+        "sgst_amount": 165.25,
+        "igst_amount": 0.0,
+        "total_tax": 330.5
+      }
+    ],
+    "totals": {
+      "written_grand_total": 4450.0,
+      "audited_taxable_total": 4450.0,
+      "total_cgst": 195.25,
+      "total_sgst": 195.25,
+      "total_igst": 0.0,
+      "total_tax": 390.5,
+      "supply_type": "INTRA",
+      "supplier_state_code": "03",
+      "buyer_state_code": "03",
+      "final_payable_pakka_total": 4840.5,
+      "total_math_saved": 0.0,
+      "amount_in_words_inr": "Four Thousand Eight Hundred Forty Rupees and Fifty Paise Only"
+    },
+    "summary": {
+      "written_grand_total": 4450.0,
+      "audited_taxable_total": 4450.0,
+      "total_math_saved": 0.0,
+      "total_cgst": 195.25,
+      "total_sgst": 195.25,
+      "final_payable_pakka_total": 4840.5
+    },
+    "gstr1_payload": {
+      "gstin": "03AABCU9603R1ZM",
+      "fp": "102026",
+      "version": "GST3.1.6",
+      "hash": "hash",
+      "cur_gt": 4840.5,
+      "b2cs": [
+        {
+          "sply_ty": "INTRA",
+          "pos": "03",
+          "typ": "OE",
+          "rt": 5.0,
+          "txval": 2050.0,
+          "iamt": 0.0,
+          "camt": 51.25,
+          "samt": 51.25,
+          "csamt": 0.0
+        },
+        {
+          "sply_ty": "INTRA",
+          "pos": "03",
+          "typ": "OE",
+          "rt": 12.0,
+          "txval": 2400.0,
+          "iamt": 0.0,
+          "camt": 144.0,
+          "samt": 144.0,
+          "csamt": 0.0
+        }
+      ],
+      "hsn": {
+        "data": [
+          {
+            "num": 1,
+            "hsn_sc": "5208",
+            "desc": "Unstitched Cotton Fabric / Kap",
+            "uqc": "YD",
+            "qty": 10.0,
+            "txval": 1200.0,
+            "rt": 5.0,
+            "iamt": 0.0,
+            "camt": 30.0,
+            "samt": 30.0,
+            "csamt": 0.0
+          },
+          {
+            "num": 2,
+            "hsn_sc": "6204",
+            "desc": "Readymade Kurti / Ladies Suit ",
+            "uqc": "PCS",
+            "qty": 1.0,
+            "txval": 850.0,
+            "rt": 5.0,
+            "iamt": 0.0,
+            "camt": 21.25,
+            "samt": 21.25,
+            "csamt": 0.0
+          },
+          {
+            "num": 3,
+            "hsn_sc": "6204",
+            "desc": "Wedding Lehnga / Sherwani / He",
+            "uqc": "PCS",
+            "qty": 1.0,
+            "txval": 2400.0,
+            "rt": 12.0,
+            "iamt": 0.0,
+            "camt": 144.0,
+            "samt": 144.0,
+            "csamt": 0.0
+          }
+        ]
+      },
+      "doc_issue": {
+        "doc_det": [
+          {
+            "doc_num": 1,
+            "doc_typ": "Invoices for outward supply",
+            "docs": [
+              {
+                "num": 1,
+                "from": "INV-001",
+                "to": "INV-001",
+                "totnum": 1,
+                "canc": 0,
+                "net_issue": 1
+              }
+            ]
+          }
+        ]
+      },
+      "metadata": {
+        "supplier_state": "Punjab",
+        "place_of_supply": "Punjab",
+        "is_intra_state": true,
+        "total_taxable_value": 4450.0,
+        "total_tax_amount": 390.5
+      }
+    }
+  },
+  "hardware_electronics_demo": {
+    "bill_id": "golden_hardware_003",
+    "detected_sector": "Hardware",
+    "store_name_guess": "Shree Balaji Electricals & Hardware",
+    "merchant_name": "Shree Balaji Electricals & Hardware",
+    "raw_date_written": "31/10/2026",
+    "raw_image_b64": null,
+    "enhanced_image_b64": null,
+    "active_items": [
+      {
+        "row_id": 1,
+        "raw_text": "4 Nag 9W LED Bulb @ 90",
+        "product_name_normalized": "9W LED Bulb",
+        "quantity": 4.0,
+        "raw_unit": "4 Nag",
+        "standard_uqc": "PCS",
+        "unit_price": 90.0,
+        "written_line_total": 360.0,
+        "audited_line_total": 360.0,
+        "expected_line_total": 360.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "8539",
+        "category_description": "LED Bulbs / 9W 12W 18W Syska Philips Havells",
+        "gst_rate": 12.0,
+        "cgst_rate": 6.0,
+        "sgst_rate": 6.0,
+        "igst_rate": 0.0,
+        "cgst_amount": 21.6,
+        "sgst_amount": 21.6,
+        "igst_amount": 0.0,
+        "total_tax_amount": 43.2,
+        "line_grand_total": 403.2,
+        "total_with_tax": 403.2,
+        "supply_type": "INTRA",
+        "confidence": 0.63,
+        "tax_rule_triggered": false,
+        "tax_rule_note": null,
+        "top_3_alternatives": [
+          {
+            "hsn_code": "8512",
+            "category_description": "Automobile Horns & Headlight Bulbs / Roots / Minda / Halogen",
+            "label": "Automobile Horns & Headlight (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "9405",
+            "category_description": "LED Tubelight / Batten / Panel Lights / Downlight",
+            "label": "LED Tubelight / Batten / Pan (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "3814",
+            "category_description": "Paint Thinner & Turpentine Oil / Taarpeen Ka Tel",
+            "label": "Paint Thinner & Turpentine O (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          }
+        ]
+      },
+      {
+        "row_id": 2,
+        "raw_text": "2 Bori UltraTech Cement @ 380",
+        "product_name_normalized": "UltraTech Cement",
+        "quantity": 2.0,
+        "raw_unit": "2 Bori",
+        "standard_uqc": "BAG",
+        "unit_price": 380.0,
+        "written_line_total": 760.0,
+        "audited_line_total": 760.0,
+        "expected_line_total": 760.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "2523",
+        "category_description": "Cement Katta / Bori / UltraTech / Ambuja / ACC",
+        "gst_rate": 28.0,
+        "cgst_rate": 14.0,
+        "sgst_rate": 14.0,
+        "igst_rate": 0.0,
+        "cgst_amount": 106.4,
+        "sgst_amount": 106.4,
+        "igst_amount": 0.0,
+        "total_tax_amount": 212.8,
+        "line_grand_total": 972.8,
+        "total_with_tax": 972.8,
+        "supply_type": "INTRA",
+        "confidence": 0.84,
+        "tax_rule_triggered": false,
+        "tax_rule_note": null,
+        "top_3_alternatives": [
+          {
+            "hsn_code": "3506",
+            "category_description": "Adhesives / Fevicol / Araldite / Silicone Sealant",
+            "label": "Adhesives / Fevicol / Araldi (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "6810",
+            "category_description": "Ready Precast Concrete / RCC Drain Pipes / Blocks",
+            "label": "Ready Precast Concrete / RCC (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "3214",
+            "category_description": "Wall Putty / Birla White Putty / POP / Plaster",
+            "label": "Wall Putty / Birla White Put (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          }
+        ]
+      },
+      {
+        "row_id": 3,
+        "raw_text": "100 Nos Iron Screws @ 1.5 = 150",
+        "product_name_normalized": "Iron Screws",
+        "quantity": 100.0,
+        "raw_unit": "100 Nos",
+        "standard_uqc": "PCS",
+        "unit_price": 1.5,
+        "written_line_total": 150.0,
+        "audited_line_total": 150.0,
+        "expected_line_total": 150.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "7318",
+        "category_description": "Iron Nails / Kili / Screws / Nut Bolt / Fasteners",
+        "gst_rate": 18.0,
+        "cgst_rate": 9.0,
+        "sgst_rate": 9.0,
+        "igst_rate": 0.0,
+        "cgst_amount": 13.5,
+        "sgst_amount": 13.5,
+        "igst_amount": 0.0,
+        "total_tax_amount": 27.0,
+        "line_grand_total": 177.0,
+        "total_with_tax": 177.0,
+        "supply_type": "INTRA",
+        "confidence": 0.65,
+        "tax_rule_triggered": false,
+        "tax_rule_note": null,
+        "top_3_alternatives": [
+          {
+            "hsn_code": "7214",
+            "category_description": "TMT Sariya / Iron Rod / Kamdhenu / Tata Tiscon",
+            "label": "TMT Sariya / Iron Rod / Kamd (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "7326",
+            "category_description": "Iron Wire & Fencing Net / Jaali / Barbed Wire",
+            "label": "Iron Wire & Fencing Net / Ja (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "8537",
+            "category_description": "Distribution Board / MCB Box / Changeover Switch",
+            "label": "Distribution Board / MCB Box (18%)",
+            "gst_rate": 18.0,
+            "confidence": 0.4
+          }
+        ]
+      }
+    ],
+    "struck_out_items": [
+      {
+        "row_id": 4,
+        "raw_text": "1 Pkt Cut Fasteners - 40 (cut)",
+        "written_line_total": 40.0,
+        "reason": "Crossed out or cut with pen on receipt"
+      }
+    ],
+    "audit_alerts": {
+      "math_errors_count": 0,
+      "struck_out_count": 1,
+      "dynamic_tax_rules_count": 0,
+      "total_math_discrepancy_amount": 0.0,
+      "alert_messages": [
+        "Row 4 Struck Out: '1 Pkt Cut Fasteners - 40 (cut)' was excluded from taxable invoice (₹0.00)."
+      ]
+    },
+    "hsn_summary_table": [
+      {
+        "hsn_code": "8539",
+        "description": "LED Bulbs / 9W 12W 18W Syska P",
+        "standard_uqc": "PCS",
+        "total_quantity": 4.0,
+        "taxable_value": 360.0,
+        "gst_rate": 12.0,
+        "cgst_amount": 21.6,
+        "sgst_amount": 21.6,
+        "igst_amount": 0.0,
+        "total_tax": 43.2
+      },
+      {
+        "hsn_code": "2523",
+        "description": "Cement Katta / Bori / UltraTec",
+        "standard_uqc": "BAG",
+        "total_quantity": 2.0,
+        "taxable_value": 760.0,
+        "gst_rate": 28.0,
+        "cgst_amount": 106.4,
+        "sgst_amount": 106.4,
+        "igst_amount": 0.0,
+        "total_tax": 212.8
+      },
+      {
+        "hsn_code": "7318",
+        "description": "Iron Nails / Kili / Screws / N",
+        "standard_uqc": "PCS",
+        "total_quantity": 100.0,
+        "taxable_value": 150.0,
+        "gst_rate": 18.0,
+        "cgst_amount": 13.5,
+        "sgst_amount": 13.5,
+        "igst_amount": 0.0,
+        "total_tax": 27.0
+      }
+    ],
+    "totals": {
+      "written_grand_total": 1270.0,
+      "audited_taxable_total": 1270.0,
+      "total_cgst": 141.5,
+      "total_sgst": 141.5,
+      "total_igst": 0.0,
+      "total_tax": 283.0,
+      "supply_type": "INTRA",
+      "supplier_state_code": "03",
+      "buyer_state_code": "03",
+      "final_payable_pakka_total": 1553.0,
+      "total_math_saved": 0.0,
+      "amount_in_words_inr": "One Thousand Five Hundred Fifty-Three Rupees Only"
+    },
+    "summary": {
+      "written_grand_total": 1270.0,
+      "audited_taxable_total": 1270.0,
+      "total_math_saved": 0.0,
+      "total_cgst": 141.5,
+      "total_sgst": 141.5,
+      "final_payable_pakka_total": 1553.0
+    },
+    "gstr1_payload": {
+      "gstin": "03AABCU9603R1ZM",
+      "fp": "102026",
+      "version": "GST3.1.6",
+      "hash": "hash",
+      "cur_gt": 1553.0,
+      "b2cs": [
+        {
+          "sply_ty": "INTRA",
+          "pos": "03",
+          "typ": "OE",
+          "rt": 12.0,
+          "txval": 360.0,
+          "iamt": 0.0,
+          "camt": 21.6,
+          "samt": 21.6,
+          "csamt": 0.0
+        },
+        {
+          "sply_ty": "INTRA",
+          "pos": "03",
+          "typ": "OE",
+          "rt": 18.0,
+          "txval": 150.0,
+          "iamt": 0.0,
+          "camt": 13.5,
+          "samt": 13.5,
+          "csamt": 0.0
+        },
+        {
+          "sply_ty": "INTRA",
+          "pos": "03",
+          "typ": "OE",
+          "rt": 28.0,
+          "txval": 760.0,
+          "iamt": 0.0,
+          "camt": 106.4,
+          "samt": 106.4,
+          "csamt": 0.0
+        }
+      ],
+      "hsn": {
+        "data": [
+          {
+            "num": 1,
+            "hsn_sc": "2523",
+            "desc": "Cement Katta / Bori / UltraTec",
+            "uqc": "BAG",
+            "qty": 2.0,
+            "txval": 760.0,
+            "rt": 28.0,
+            "iamt": 0.0,
+            "camt": 106.4,
+            "samt": 106.4,
+            "csamt": 0.0
+          },
+          {
+            "num": 2,
+            "hsn_sc": "7318",
+            "desc": "Iron Nails / Kili / Screws / N",
+            "uqc": "PCS",
+            "qty": 100.0,
+            "txval": 150.0,
+            "rt": 18.0,
+            "iamt": 0.0,
+            "camt": 13.5,
+            "samt": 13.5,
+            "csamt": 0.0
+          },
+          {
+            "num": 3,
+            "hsn_sc": "8539",
+            "desc": "LED Bulbs / 9W 12W 18W Syska P",
+            "uqc": "PCS",
+            "qty": 4.0,
+            "txval": 360.0,
+            "rt": 12.0,
+            "iamt": 0.0,
+            "camt": 21.6,
+            "samt": 21.6,
+            "csamt": 0.0
+          }
+        ]
+      },
+      "doc_issue": {
+        "doc_det": [
+          {
+            "doc_num": 1,
+            "doc_typ": "Invoices for outward supply",
+            "docs": [
+              {
+                "num": 1,
+                "from": "INV-001",
+                "to": "INV-001",
+                "totnum": 1,
+                "canc": 0,
+                "net_issue": 1
+              }
+            ]
+          }
+        ]
+      },
+      "metadata": {
+        "supplier_state": "Punjab",
+        "place_of_supply": "Punjab",
+        "is_intra_state": true,
+        "total_taxable_value": 1270.0,
+        "total_tax_amount": 283.0
+      }
+    }
+  },
+  "interstate_textile_demo": {
+    "bill_id": "golden_interstate_004",
+    "detected_sector": "Textile",
+    "store_name_guess": "Punjab Heritage Handlooms (Ludhiana)",
+    "merchant_name": "Punjab Heritage Handlooms",
+    "raw_date_written": "31/10/2026",
+    "raw_image_b64": null,
+    "enhanced_image_b64": null,
+    "active_items": [
+      {
+        "row_id": 1,
+        "raw_text": "2 Cotton Kurti @ 850",
+        "product_name_normalized": "Cotton Kurti",
+        "quantity": 2.0,
+        "raw_unit": "2 nag",
+        "standard_uqc": "PCS",
+        "unit_price": 850.0,
+        "written_line_total": 1700.0,
+        "audited_line_total": 1700.0,
+        "expected_line_total": 1700.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "6204",
+        "category_description": "Readymade Kurti / Ladies Suit / Salwar Suit",
+        "gst_rate": 5.0,
+        "cgst_rate": 0.0,
+        "sgst_rate": 0.0,
+        "igst_rate": 5.0,
+        "cgst_amount": 0.0,
+        "sgst_amount": 0.0,
+        "igst_amount": 85.0,
+        "total_tax_amount": 85.0,
+        "line_grand_total": 1785.0,
+        "total_with_tax": 1785.0,
+        "supply_type": "INTER",
+        "confidence": 0.68,
+        "tax_rule_triggered": true,
+        "tax_rule_note": "Indian GST Threshold Rule (HSN 62): Unit price ₹850 ≤ ₹1000 → Lower 5% GST slab applied",
+        "top_3_alternatives": [
+          {
+            "hsn_code": "5208",
+            "category_description": "Unstitched Cotton Fabric / Kapda / Thaan / Poplin",
+            "label": "Unstitched Cotton Fabric / K (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.47
+          },
+          {
+            "hsn_code": "3005",
+            "category_description": "Surgical Cotton & Rui Roll / Absorbent Cotton",
+            "label": "Surgical Cotton & Rui Roll / (12%)",
+            "gst_rate": 12.0,
+            "confidence": 0.44
+          },
+          {
+            "hsn_code": "5205",
+            "category_description": "Cotton Yarn & Sewing Thread / Soot / Dhaga",
+            "label": "Cotton Yarn & Sewing Thread  (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          }
+        ]
+      },
+      {
+        "row_id": 2,
+        "raw_text": "1 Heavy Wedding Lehnga @ 3500",
+        "product_name_normalized": "Heavy Wedding Lehnga",
+        "quantity": 1.0,
+        "raw_unit": "1 nag",
+        "standard_uqc": "PCS",
+        "unit_price": 3500.0,
+        "written_line_total": 3500.0,
+        "audited_line_total": 3500.0,
+        "expected_line_total": 3500.0,
+        "has_math_error": false,
+        "math_discrepancy": 0.0,
+        "math_error_note": null,
+        "hsn_code": "6204",
+        "category_description": "Wedding Lehnga / Sherwani / Heavy Partywear Suit",
+        "gst_rate": 12.0,
+        "cgst_rate": 0.0,
+        "sgst_rate": 0.0,
+        "igst_rate": 12.0,
+        "cgst_amount": 0.0,
+        "sgst_amount": 0.0,
+        "igst_amount": 420.0,
+        "total_tax_amount": 420.0,
+        "line_grand_total": 3920.0,
+        "total_with_tax": 3920.0,
+        "supply_type": "INTER",
+        "confidence": 0.73,
+        "tax_rule_triggered": true,
+        "tax_rule_note": "Indian GST Threshold Rule (HSN 62): Unit price ₹3500 > ₹1000 → Slab auto-upgraded from 5% to 12% GST",
+        "top_3_alternatives": [
+          {
+            "hsn_code": "5205",
+            "category_description": "Cotton Yarn & Sewing Thread / Soot / Dhaga",
+            "label": "Cotton Yarn & Sewing Thread  (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "5705",
+            "category_description": "Carpets / Rugs / Floor Dari / Mats",
+            "label": "Carpets / Rugs / Floor Dari  (12%)",
+            "gst_rate": 12.0,
+            "confidence": 0.4
+          },
+          {
+            "hsn_code": "5208",
+            "category_description": "Cotton Saree / Chunni / Dupatta / Gamchha",
+            "label": "Cotton Saree / Chunni / Dupa (5%)",
+            "gst_rate": 5.0,
+            "confidence": 0.4
+          }
+        ]
+      }
+    ],
+    "struck_out_items": [],
+    "audit_alerts": {
+      "math_errors_count": 0,
+      "struck_out_count": 0,
+      "dynamic_tax_rules_count": 2,
+      "total_math_discrepancy_amount": 0.0,
+      "alert_messages": [
+        "Inter-State Supply Detected (State 03 → 07): Auto-switched from CGST+SGST to full IGST.",
+        "Row 1 GST Rule: Indian GST Threshold Rule (HSN 62): Unit price ₹850 ≤ ₹1000 → Lower 5% GST slab applied",
+        "Row 2 GST Rule: Indian GST Threshold Rule (HSN 62): Unit price ₹3500 > ₹1000 → Slab auto-upgraded from 5% to 12% GST"
+      ]
+    },
+    "hsn_summary_table": [
+      {
+        "hsn_code": "6204",
+        "description": "Readymade Kurti / Ladies Suit ",
+        "standard_uqc": "PCS",
+        "total_quantity": 3.0,
+        "taxable_value": 5200.0,
+        "gst_rate": 5.0,
+        "cgst_amount": 0.0,
+        "sgst_amount": 0.0,
+        "igst_amount": 505.0,
+        "total_tax": 505.0
+      }
+    ],
+    "totals": {
+      "written_grand_total": 5200.0,
+      "audited_taxable_total": 5200.0,
+      "total_cgst": 0.0,
+      "total_sgst": 0.0,
+      "total_igst": 505.0,
+      "total_tax": 505.0,
+      "supply_type": "INTER",
+      "supplier_state_code": "03",
+      "buyer_state_code": "07",
+      "final_payable_pakka_total": 5705.0,
+      "total_math_saved": 0.0,
+      "amount_in_words_inr": "Five Thousand Seven Hundred Five Rupees Only"
+    },
+    "summary": {
+      "written_grand_total": 5200.0,
+      "audited_taxable_total": 5200.0,
+      "total_math_saved": 0.0,
+      "total_cgst": 0.0,
+      "total_sgst": 0.0,
+      "final_payable_pakka_total": 5705.0
+    },
+    "gstr1_payload": {
+      "gstin": "03AABCU9603R1ZM",
+      "fp": "102026",
+      "version": "GST3.1.6",
+      "hash": "hash",
+      "cur_gt": 5705.0,
+      "b2cs": [
+        {
+          "sply_ty": "INTER",
+          "pos": "07",
+          "typ": "OE",
+          "rt": 5.0,
+          "txval": 1700.0,
+          "iamt": 85.0,
+          "camt": 0.0,
+          "samt": 0.0,
+          "csamt": 0.0
+        },
+        {
+          "sply_ty": "INTER",
+          "pos": "07",
+          "typ": "OE",
+          "rt": 12.0,
+          "txval": 3500.0,
+          "iamt": 420.0,
+          "camt": 0.0,
+          "samt": 0.0,
+          "csamt": 0.0
+        }
+      ],
+      "hsn": {
+        "data": [
+          {
+            "num": 1,
+            "hsn_sc": "6204",
+            "desc": "Readymade Kurti / Ladies Suit ",
+            "uqc": "PCS",
+            "qty": 2.0,
+            "txval": 1700.0,
+            "rt": 5.0,
+            "iamt": 85.0,
+            "camt": 0.0,
+            "samt": 0.0,
+            "csamt": 0.0
+          },
+          {
+            "num": 2,
+            "hsn_sc": "6204",
+            "desc": "Wedding Lehnga / Sherwani / He",
+            "uqc": "PCS",
+            "qty": 1.0,
+            "txval": 3500.0,
+            "rt": 12.0,
+            "iamt": 420.0,
+            "camt": 0.0,
+            "samt": 0.0,
+            "csamt": 0.0
+          }
+        ]
+      },
+      "doc_issue": {
+        "doc_det": [
+          {
+            "doc_num": 1,
+            "doc_typ": "Invoices for outward supply",
+            "docs": [
+              {
+                "num": 1,
+                "from": "INV-001",
+                "to": "INV-001",
+                "totnum": 1,
+                "canc": 0,
+                "net_issue": 1
+              }
+            ]
+          }
+        ]
+      },
+      "metadata": {
+        "supplier_state": "Punjab",
+        "place_of_supply": "Delhi",
+        "is_intra_state": false,
+        "total_taxable_value": 5200.0,
+        "total_tax_amount": 505.0
+      }
+    }
+  }
+}
