@@ -252,6 +252,15 @@ class HSNMasterCatalog:
         Matches a normalized item name against HSN catalog:
         Returns top match, top 3 alternatives, dynamic GST rate with threshold notes, and confidence.
         """
+        # Handle calling convention flexibility:
+        if isinstance(raw_text, str) and isinstance(item_sector, (int, float)):
+            unit_price = float(item_sector)
+            item_sector = raw_text
+            raw_text = ""
+        elif isinstance(raw_text, (int, float)):
+            unit_price = float(raw_text)
+            raw_text = ""
+
         combined_query = f"{product_name_normalized} {raw_text}".strip()
         combined_lower = combined_query.lower()
         sector_upper = (item_sector or "GENERAL").upper()
@@ -276,6 +285,29 @@ class HSNMasterCatalog:
                     {"hsn_code": "6907", "label": "6907 - Ceramic & Vitrified Tiles (18%)", "gst_rate": 18.0},
                     {"hsn_code": "6802", "label": "6802 - Granite & Marble Slabs (18%)", "gst_rate": 18.0},
                     {"hsn_code": "6910", "label": "6910 - Ceramic Sanitaryware (18%)", "gst_rate": 18.0},
+                ],
+                "confidence": 0.98,
+            }
+
+        # Priority Check: Portland Cement / JK Cement / Ultratech / Ambuja / सीमेंट / सिमेंट (28% GST)
+        is_cement_query = any(k in combined_lower for k in [
+            "cement", "सीमेंट", "सिमेंट", "ultratech", "ambuja", "acc cement", "jk cement",
+            "grey cement", "portland", "2523"
+        ]) and not is_tile_query
+        if is_cement_query:
+            rag = build_rag_citation("2523", "Portland Cement, Aluminous Cement, Slag Cement", 28.0, 0.98, "Portland Cement (28% GST: 14% CGST + 14% SGST)")
+            return {
+                "hsn_code": "2523",
+                "category_description": "Portland Cement, Aluminous Cement, Slag Cement",
+                "gst_rate": 28.0,
+                "tax_rule_note": "Standard Portland Cement (28% GST: 14% CGST + 14% SGST)",
+                "cbic_schedule": rag["cbic_schedule"],
+                "statutory_chapter_note": rag["statutory_chapter_note"],
+                "rag_citation": rag,
+                "top_3_alternatives": [
+                    {"hsn_code": "2523", "label": "2523 - Portland Cement (28%)", "gst_rate": 28.0},
+                    {"hsn_code": "3506", "label": "3506 - Tile Adhesive (18%)", "gst_rate": 18.0},
+                    {"hsn_code": "3214", "label": "3214 - Wall Putty (18%)", "gst_rate": 18.0},
                 ],
                 "confidence": 0.98,
             }
@@ -465,6 +497,13 @@ def match_hsn_item(
     unit_price: float = 0.0
 ) -> Dict[str, Any]:
     """Exposed entrypoint for Lane 1 & main.py."""
+    if isinstance(raw_text, str) and isinstance(item_sector, (int, float)):
+        unit_price = float(item_sector)
+        item_sector = raw_text
+        raw_text = ""
+    elif isinstance(raw_text, (int, float)):
+        unit_price = float(raw_text)
+        raw_text = ""
     return hsn_catalog.match_item(
         product_name_normalized=product_name_normalized,
         raw_text=raw_text,

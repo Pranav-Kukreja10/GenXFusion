@@ -32,6 +32,9 @@ class RawVisionBill(BaseModel):
         description="Overall detected business sector of the invoice"
     )
     merchant_name: Optional[str] = Field(None, description="Shop / Merchant name extracted from header")
+    supplier_gstin: Optional[str] = Field(None, description="Supplier GSTIN printed or stamped on bill header")
+    invoice_id: Optional[str] = Field(None, description="Bill/Invoice number printed or written on slip (e.g. 406)")
+    store_address: Optional[str] = Field(None, description="Shop/merchant store address printed on header")
     raw_date_written: Optional[str] = Field(None, description="Date text as written on the receipt")
     customer_name: Optional[str] = Field(None, description="Customer / Buyer name written on bill")
     customer_phone: Optional[str] = Field(None, description="Customer phone / 10-digit mobile number written on bill")
@@ -136,6 +139,7 @@ class AuditedInvoiceResponse(BaseModel):
     detected_sector: str = Field(default="GENERAL")
     store_name_guess: Optional[str] = None
     merchant_name: Optional[str] = None
+    store_address: Optional[str] = None
     supplier_gstin: Optional[str] = None
     supplier_state_code: str = Field(default="03")
     supplier_state_name: Optional[str] = "Punjab"
@@ -188,6 +192,7 @@ class RecalculateRequest(BaseModel):
     detected_sector: Optional[str] = "GENERAL"
     store_name_guess: Optional[str] = None
     merchant_name: Optional[str] = None
+    store_address: Optional[str] = None
     supplier_gstin: Optional[str] = None
     supplier_state_code: Optional[str] = "03"
     buyer_gstin: Optional[str] = None
@@ -216,4 +221,3 @@ class GSTR1ExportRequest(BaseModel):
     pos_code: Optional[str] = "03"
     invoice: Optional[AuditedInvoiceResponse] = None
     raw_payload: Optional[Dict[str, Any]] = None
-

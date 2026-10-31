@@ -375,9 +375,10 @@ def fallback_audit_and_calculate_invoice(
         if EXTERNAL_HSN_AVAILABLE:
             try:
                 hsn_info = match_hsn_item(
-                    item.product_name_normalized,
-                    raw_bill.detected_sector,
-                    unit_price
+                    product_name_normalized=item.product_name_normalized,
+                    raw_text=item.raw_text_on_paper,
+                    item_sector=raw_bill.detected_sector,
+                    unit_price=unit_price
                 )
             except Exception as e:
                 logger.warning(f"External HSN matcher failed: {e}. Using fallback.")
@@ -465,12 +466,27 @@ def fallback_audit_and_calculate_invoice(
         final_payable_pakka_total=final_payable_pakka
     )
 
+    inv_num = getattr(raw_bill, "invoice_id", None) or bill_id
+    store_addr = getattr(raw_bill, "store_address", None)
+    supp_gstin = getattr(raw_bill, "supplier_gstin", None)
+    supp_val = validate_gstin(supp_gstin) if supp_gstin else {"is_valid": False}
+    supp_state = supp_val["state_code"] if supp_val.get("is_valid") else "03"
+    supp_state_name = supp_val["state_name"] if supp_val.get("is_valid") else "Punjab"
+
     return AuditedInvoiceResponse(
         bill_id=bill_id,
-        invoice_id=bill_id,
+        invoice_id=inv_num,
         detected_sector=raw_bill.detected_sector,
         store_name_guess=raw_bill.merchant_name or "Bharat Kacha Dukaan",
         merchant_name=raw_bill.merchant_name or "Bharat Kacha Dukaan",
+        store_address=store_addr,
+        supplier_gstin=supp_gstin or "03AAEPG1807C1ZM",
+        supplier_state_code=supp_state,
+        supplier_state_name=supp_state_name,
+        place_of_supply_state_code=supp_state,
+        place_of_supply_state_name=supp_state_name,
+        is_inter_state=False,
+        supply_type_b2b="B2CS",
         customer_name=raw_bill.customer_name,
         customer_phone=raw_bill.customer_phone,
         customer_address=raw_bill.customer_address,

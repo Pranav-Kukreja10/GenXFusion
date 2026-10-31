@@ -92,14 +92,19 @@ def audit_and_calculate_invoice(
     and returns an AuditedInvoiceResponse with compliance audit.
     """
     # 1. State & Interstate tax mode resolution
-    eff_supp_gstin = supplier_gstin
+    eff_supp_gstin = supplier_gstin or getattr(raw_bill, "supplier_gstin", None)
     supp_val = validate_gstin(eff_supp_gstin)
     if supp_val["is_valid"]:
         eff_supp_state = supp_val["state_code"]
     else:
         eff_supp_state = str(supplier_state_code or "03").zfill(2)
 
-    eff_pos = str(place_of_supply_state_code or eff_supp_state).zfill(2)
+    # If place_of_supply was default "03" but supplier is from another state, default POS to supplier state
+    if (place_of_supply_state_code == "03" or not place_of_supply_state_code) and eff_supp_state != "03" and not supplier_gstin:
+        eff_pos = eff_supp_state
+    else:
+        eff_pos = str(place_of_supply_state_code or eff_supp_state).zfill(2)
+
     # Statutory IGST Rule: Inter-State when Supplier State != Place of Supply State
     inter_state_flag = (eff_supp_state != eff_pos)
 
@@ -261,12 +266,16 @@ def audit_and_calculate_invoice(
         pos_state_code=eff_pos
     )
 
+    inv_num = getattr(raw_bill, "invoice_id", None) or bill_id
+    store_addr = getattr(raw_bill, "store_address", None)
+
     return AuditedInvoiceResponse(
         bill_id=bill_id,
-        invoice_id=bill_id,
+        invoice_id=inv_num,
         detected_sector=raw_bill.detected_sector,
         store_name_guess=raw_bill.merchant_name or "Bharat Kacha Dukaan",
         merchant_name=raw_bill.merchant_name or "Bharat Kacha Dukaan",
+        store_address=store_addr,
         supplier_gstin=eff_supp_gstin,
         supplier_state_code=eff_supp_state,
         supplier_state_name=INDIAN_STATES.get(eff_supp_state, "Punjab"),
