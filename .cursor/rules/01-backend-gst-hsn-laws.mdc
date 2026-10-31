@@ -1,0 +1,7 @@
+---
+description: Indian GST rules, ₹1000 threshold, and vernacular unit conversion
+globs: ["backend/**/*.py"]
+alwaysApply: false
+---
+- Enforce the ₹1,000 unit price threshold on HSN Chapters 61, 62, 63 (5% <= ₹1000 else 12%) and HSN Chapter 64 Footwear (12% <= ₹1000 else 18%).
+- Convert Hindi fractional words (`pao`=0.25, `adha`=0.5, `sawa`=1.25, `dedh`=1.5, `dhai`=2.5) and units (`thaan`->`MTR`, `gaz`->`YD`, `patta`->`STRP`, `bori`->`BAG`, `peti`->`BOX`, `nag`->`PCS`).

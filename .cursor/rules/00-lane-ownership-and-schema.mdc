@@ -1,0 +1,5 @@
+---
+description: Enforces 4-person lane isolation and immutable JSON contract
+alwaysApply: true
+---
+Check `AGENTS.md` before every edit. Never modify files belonging to another teammate's lane unless explicitly instructed. Always preserve exact field names in the `/api/scan-bill` JSON response contract.

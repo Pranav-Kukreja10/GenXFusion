@@ -1,0 +1,7 @@
+---
+description: Anti-slop Indian Fintech & Tally Pakka Invoice aesthetic rules
+globs: ["frontend/**/*.{jsx,tsx,css}"]
+alwaysApply: false
+---
+- Ban purple/indigo AI gradients. Use a crisp ClearTax/Razorpay Industrial Ledger palette (`#FAF8F5` surface, `#111827` text, `#DC2626` math error alert, `#D97706` dynamic threshold badge, `#059669` verified GST badge).
+- Format all currency with Indian numbering (`en-IN`, e.g., `₹1,24,500.00`) and `tabular-nums`.
