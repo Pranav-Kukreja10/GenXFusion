@@ -1,4 +1,4 @@
-# 🇮🇳 GenXFusion — ParchiSetu AI
+# 🇮🇳 GenXFusion — TrueTax
 
 ### AI-Powered Vernacular Invoice Intelligence & GST Automation Platform
 
@@ -6,11 +6,11 @@
 
 ##  Overview
 
-**GenXFusion (ParchiSetu AI)** is an AI-powered invoice intelligence platform designed to simplify GST compliance for Indian small businesses, shopkeepers, and merchants.
+**GenXFusion (TrueTax AI)** is an AI-powered invoice intelligence platform designed to simplify GST compliance for Indian small businesses, shopkeepers, and merchants.
 
 Traditional handwritten invoices contain valuable business information but are difficult to process manually. Extracting product descriptions, quantities, prices, GST rates, and tax amounts requires significant time and is prone to human error.
 
-ParchiSetu AI addresses this problem by combining computer vision, AI-powered OCR, intelligent HSN matching, mathematical auditing, and GST validation into a unified workflow.
+TrueTax AI addresses this problem by combining computer vision, AI-powered OCR, intelligent HSN matching, mathematical auditing, and GST validation into a unified workflow.
 
 Users can upload handwritten or printed invoices and convert them into structured digital records that can be reviewed, corrected, validated, and exported into GST-compatible formats.
 
@@ -33,7 +33,7 @@ Manually converting these documents into GST-compliant digital records creates s
 * Difficulty identifying invalid GSTINs.
 * Complicated preparation of GST return data.
 
-ParchiSetu AI aims to reduce these challenges through an intelligent, automated invoice-processing workflow.
+TrueTax AI aims to reduce these challenges through an intelligent, automated invoice-processing workflow.
 
 ---
 
