@@ -15,7 +15,8 @@ import os
 import uuid
 from typing import Optional, Dict, Any, List
 
-from fastapi import FastAPI, File, UploadFile, Query, HTTPException, Body
+from fastapi import FastAPI, File, UploadFile, Query, HTTPException, Body, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -52,6 +53,27 @@ from gst_validator import (
     generate_next_sequential_invoice_number,
     get_indian_financial_year,
 )
+import auth_db
+
+# Initialize SQLite database and seed demo account with 3 multi-state branches
+auth_db.init_db()
+
+security_bearer = HTTPBearer(auto_error=False)
+
+def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer)) -> Dict[str, Any]:
+    """Dependency validating HS256 JWT Bearer token and returning user profile with branches."""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Missing or invalid authentication token.")
+    token = credentials.credentials
+    payload = auth_db.decode_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token expired or invalid signature.")
+    user_id = payload.get("user_id")
+    user = auth_db.get_user_profile(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User account not found.")
+    return user
+
 
 # ============================================================================
 # Dynamic Integration Hooks for Lane 2 (hsn_matcher & math_auditor)
@@ -934,6 +956,143 @@ async def root():
             "export_gstr1": "POST /api/v1/invoice/export-gstr1 (or /api/export-gstr1)",
             "hsn_search": "GET /api/v1/hsn/search?q=...",
         }
+    }
+
+
+# ============================================================================
+# 1.5 SQLite + JWT Authentication & Multi-GSTIN Merchant Profile System
+# ============================================================================
+
+@app.post("/api/v1/auth/register")
+async def api_register(payload: Dict[str, Any] = Body(...)):
+    """Registers a new merchant user and optional initial GSTIN branch."""
+    email_or_phone = str(payload.get("email_or_phone", "")).strip()
+    password = str(payload.get("password", "")).strip()
+    full_name = str(payload.get("full_name", "")).strip()
+    contact_phone = str(payload.get("contact_phone", "")).strip()
+    default_business_name = str(payload.get("default_business_name", "")).strip()
+    initial_gstin = str(payload.get("initial_gstin", "")).strip()
+
+    if not email_or_phone or not password or not full_name:
+        raise HTTPException(status_code=400, detail="email_or_phone, password, and full_name are required.")
+
+    try:
+        user_profile = auth_db.register_user(
+            email_or_phone=email_or_phone,
+            password=password,
+            full_name=full_name,
+            contact_phone=contact_phone,
+            default_business_name=default_business_name,
+            initial_gstin=initial_gstin
+        )
+        token = auth_db.create_access_token(user_profile["id"], user_profile["email_or_phone"])
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": user_profile,
+            "merchant_gstins": user_profile.get("merchant_gstins", []),
+            "default_gstin": user_profile.get("default_gstin")
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/auth/login")
+async def api_login(payload: Dict[str, Any] = Body(...)):
+    """Authenticates credentials or provides 1-click Demo Login pre-loaded with 3 multi-state branches."""
+    demo_mode = bool(payload.get("demo_mode", False))
+    email_or_phone = str(payload.get("email_or_phone", "")).strip().lower()
+    password = str(payload.get("password", "")).strip()
+
+    if demo_mode or email_or_phone in ("demo", "demo@parchisetu.in", "9876543210"):
+        return auth_db.get_demo_login_response()
+
+    if not email_or_phone or not password:
+        raise HTTPException(status_code=400, detail="email_or_phone and password are required.")
+
+    user_profile = auth_db.authenticate_user(email_or_phone, password)
+    if not user_profile:
+        raise HTTPException(status_code=401, detail="Invalid email/phone or password.")
+
+    token = auth_db.create_access_token(user_profile["id"], user_profile["email_or_phone"])
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": user_profile,
+        "merchant_gstins": user_profile.get("merchant_gstins", []),
+        "default_gstin": user_profile.get("default_gstin")
+    }
+
+
+@app.get("/api/v1/auth/me")
+async def api_get_me(user: Dict[str, Any] = Depends(get_current_user)):
+    """Returns currently authenticated user profile and all saved GSTIN branches."""
+    return {
+        "user": user,
+        "merchant_gstins": user.get("merchant_gstins", []),
+        "default_gstin": user.get("default_gstin")
+    }
+
+
+@app.post("/api/v1/auth/gstins")
+async def api_add_gstin(payload: Dict[str, Any] = Body(...), user: Dict[str, Any] = Depends(get_current_user)):
+    """Adds a new GSTIN branch after validating Mod-36 checksum. Auto-derives state code and name."""
+    gstin = str(payload.get("gstin", "")).strip().upper()
+    trade_name = str(payload.get("trade_name", "")).strip() or user.get("default_business_name") or user.get("full_name")
+    branch_address = str(payload.get("branch_address", "")).strip()
+    branch_phone = str(payload.get("branch_phone", "")).strip() or user.get("contact_phone", "")
+    invoice_prefix = str(payload.get("invoice_prefix", "")).strip()
+    is_default = bool(payload.get("is_default", False))
+
+    if not gstin:
+        raise HTTPException(status_code=400, detail="GSTIN is required.")
+
+    try:
+        new_branch = auth_db.add_merchant_gstin(
+            user_id=user["id"],
+            gstin=gstin,
+            trade_name=trade_name,
+            branch_address=branch_address,
+            branch_phone=branch_phone,
+            invoice_prefix=invoice_prefix,
+            is_default=is_default
+        )
+        updated_profile = auth_db.get_user_profile(user["id"])
+        return {
+            "status": "success",
+            "branch": new_branch,
+            "merchant_gstins": updated_profile.get("merchant_gstins", []),
+            "default_gstin": updated_profile.get("default_gstin")
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.put("/api/v1/auth/gstins/{gstin_id}/default")
+async def api_make_default_gstin(gstin_id: int, user: Dict[str, Any] = Depends(get_current_user)):
+    """Switches the active default GSTIN branch for this merchant profile."""
+    success = auth_db.set_default_gstin(user["id"], gstin_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="GSTIN branch not found.")
+    profile = auth_db.get_user_profile(user["id"])
+    return {
+        "status": "success",
+        "default_gstin": profile.get("default_gstin"),
+        "merchant_gstins": profile.get("merchant_gstins", [])
+    }
+
+
+@app.delete("/api/v1/auth/gstins/{gstin_id}")
+async def api_delete_gstin(gstin_id: int, user: Dict[str, Any] = Depends(get_current_user)):
+    """Deletes a GSTIN branch and auto-promotes the next remaining branch as default."""
+    success = auth_db.delete_merchant_gstin(user["id"], gstin_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="GSTIN branch not found.")
+    profile = auth_db.get_user_profile(user["id"])
+    return {
+        "status": "success",
+        "merchant_gstins": profile.get("merchant_gstins", []),
+        "default_gstin": profile.get("default_gstin")
     }
 
 

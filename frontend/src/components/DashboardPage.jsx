@@ -12,10 +12,12 @@ import Gstr1Modal from './Gstr1Modal';
 import ApiSettingsModal from './ApiSettingsModal';
 import HsnSearchModal from './HsnSearchModal';
 import ProfileModal from './ProfileModal';
+import AuthModal from './AuthModal';
 import Toast from './Toast';
 import VerificationQueue from './VerificationQueue';
 import { useBills } from '../context/BillsContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { loadProfile, addRecentScan } from '../utils/profileStorage';
 import {
   parseInvoiceApi,
@@ -42,7 +44,9 @@ export default function DashboardPage() {
   const [backendStatus, setBackendStatus] = useState('offline');
 
   // Modals and Toasts
+  const { quickFillHeader } = useAuth();
   const [profile, setProfile] = useState(loadProfile);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPakkaModalOpen, setIsPakkaModalOpen] = useState(false);
   const [isGstr1ModalOpen, setIsGstr1ModalOpen] = useState(false);
@@ -466,6 +470,13 @@ export default function DashboardPage() {
     setIsGstr1ModalOpen(true);
   };
 
+  const handleQuickFillHeader = async () => {
+    if (!currentInvoice) return;
+    const filled = quickFillHeader(currentInvoice);
+    await triggerRecalculate(filled);
+    addToast('Populated merchant details from active GSTIN branch.', 'success', 'Header Updated');
+  };
+
   // If the billId does not exist, redirect to /dashboard (which routes to latest bill)
   if (!currentInvoice) {
     return <Navigate to="/dashboard" replace />;
@@ -479,6 +490,8 @@ export default function DashboardPage() {
         onLoadPreset={(preset) => navigate(`/dashboard/${preset.data.invoice_id}`)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenProfile={() => setIsProfileModalOpen(true)}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onQuickFillHeader={handleQuickFillHeader}
         onOpenHistory={() => setIsProfileModalOpen(true)}
         onLogout={() => addToast('Logged out of TrueTax AI session.', 'info')}
         isRecalculating={isRecalculating}
@@ -616,6 +629,11 @@ export default function DashboardPage() {
       <Toast toasts={toasts} onDismiss={dismissToast} />
 
       {/* Modals */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
+
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}

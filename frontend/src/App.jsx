@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
 import { BillsProvider, useBills } from './context/BillsContext';
 import ScrollToTopAndFocus from './components/ScrollToTopAndFocus';
 import LandingRoute from './components/LandingRoute';
@@ -19,15 +20,17 @@ function DashboardRedirect() {
 export default function App() {
   return (
     <ThemeProvider>
-      <BillsProvider>
-        <ScrollToTopAndFocus />
-        <Routes>
-          <Route path="/" element={<LandingRoute />} />
-          <Route path="/dashboard" element={<DashboardRedirect />} />
-          <Route path="/dashboard/:billId" element={<DashboardPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </BillsProvider>
+      <AuthProvider>
+        <BillsProvider>
+          <ScrollToTopAndFocus />
+          <Routes>
+            <Route path="/" element={<LandingRoute />} />
+            <Route path="/dashboard" element={<DashboardRedirect />} />
+            <Route path="/dashboard/:billId" element={<DashboardPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </BillsProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

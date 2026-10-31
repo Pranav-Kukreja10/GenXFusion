@@ -322,3 +322,139 @@ export async function getNextInvoiceNumberApi(supplierKey, financialYear) {
   }
   return `INV/${financialYear || '2026-27'}/0001`;
 }
+
+
+// ============================================================================
+// 8. SQLite + JWT Authentication & Multi-GSTIN Profile API
+// ============================================================================
+
+const AUTH_TOKEN_KEY = 'parchisetu_jwt_token';
+
+export function getAuthToken() {
+  return localStorage.getItem(AUTH_TOKEN_KEY) || '';
+}
+
+export function setAuthToken(token) {
+  if (token) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+  }
+}
+
+export function clearAuthToken() {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+function getAuthHeaders() {
+  const token = getAuthToken();
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+export async function loginApi({ email_or_phone, password, demo_mode = false }) {
+  const base = getApiBaseUrl();
+  const res = await fetch(`${base}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email_or_phone, password, demo_mode }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Login failed with status ${res.status}`);
+  }
+  const data = await res.json();
+  if (data.access_token) {
+    setAuthToken(data.access_token);
+  }
+  return data;
+}
+
+export async function registerApi({
+  email_or_phone,
+  password,
+  full_name,
+  contact_phone = '',
+  default_business_name = '',
+  initial_gstin = '',
+}) {
+  const base = getApiBaseUrl();
+  const res = await fetch(`${base}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email_or_phone,
+      password,
+      full_name,
+      contact_phone,
+      default_business_name,
+      initial_gstin,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Registration failed with status ${res.status}`);
+  }
+  const data = await res.json();
+  if (data.access_token) {
+    setAuthToken(data.access_token);
+  }
+  return data;
+}
+
+export async function getMeApi() {
+  const base = getApiBaseUrl();
+  const res = await fetch(`${base}/auth/me`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    if (res.status === 401) {
+      clearAuthToken();
+    }
+    throw new Error(`Authentication check failed: ${res.status}`);
+  }
+  return await res.json();
+}
+
+export async function addGstinApi(payload) {
+  const base = getApiBaseUrl();
+  const res = await fetch(`${base}/auth/gstins`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to add GSTIN: ${res.status}`);
+  }
+  return await res.json();
+}
+
+export async function setDefaultGstinApi(gstinId) {
+  const base = getApiBaseUrl();
+  const res = await fetch(`${base}/auth/gstins/${gstinId}/default`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to set default GSTIN: ${res.status}`);
+  }
+  return await res.json();
+}
+
+export async function deleteGstinApi(gstinId) {
+  const base = getApiBaseUrl();
+  const res = await fetch(`${base}/auth/gstins/${gstinId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to delete GSTIN: ${res.status}`);
+  }
+  return await res.json();
+}
