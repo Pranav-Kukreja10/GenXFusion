@@ -621,8 +621,24 @@ app.add_middleware(
 
 
 # ============================================================================
-# 1. Health Check Endpoint
+# 1. Root & Health Check Endpoints
 # ============================================================================
+
+@app.get("/")
+async def root():
+    """Root landing endpoint with quick links to interactive Swagger docs and health."""
+    return {
+        "service": "ParchiSetu AI - Bharat GST Vision Engine (Lane 1)",
+        "status": "online",
+        "documentation": "/docs",
+        "health_check": "/api/v1/health",
+        "endpoints": {
+            "parse_invoice": "POST /api/v1/invoice/parse (or /api/scan-bill)",
+            "recalculate_invoice": "POST /api/v1/invoice/recalculate (or /api/recalculate)",
+            "export_gstr1": "POST /api/v1/invoice/export-gstr1 (or /api/export-gstr1)",
+        }
+    }
+
 
 @app.get("/api/v1/health")
 @app.get("/health")
