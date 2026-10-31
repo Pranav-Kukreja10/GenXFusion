@@ -32,9 +32,6 @@ export default function TopBar({
             <span className="font-extrabold text-[clamp(1rem,1.5vw,1.15rem)] tracking-tight text-[#0F172A] dark:text-[#E5E7EB]">
               TrueTax <span className="text-[#059669] dark:text-emerald-400">AI</span>
             </span>
-            <span className="bg-[#D1FAE5] text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-[11px] font-semibold px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60 font-mono">
-              #25
-            </span>
           </div>
         </Link>
 

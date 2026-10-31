@@ -31,9 +31,6 @@ export default function NotFoundPage() {
           <span className="font-extrabold text-base tracking-tight">
             TrueTax <span className="text-emerald-700 dark:text-emerald-500">AI</span>
           </span>
-          <span className="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.5 rounded font-mono">
-            #25
-          </span>
         </Link>
 
         <button

@@ -44,9 +44,6 @@ export default function HeaderCommandBar({
                 <span className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
                   TrueTax <span className="text-emerald-700 dark:text-emerald-500 font-black">AI</span>
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.5 rounded">
-                  #25
-                </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
                 Vernacular OCR & GST Command Center

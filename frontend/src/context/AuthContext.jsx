@@ -14,6 +14,7 @@ const AuthContext = createContext(null);
 
 const ACTIVE_GSTIN_STORAGE_KEY = 'truetax_active_gstin_id';
 const LEGACY_GSTIN_STORAGE_KEY = 'parchisetu_active_gstin_id';
+const SIGNED_OUT_KEY = 'truetax_signed_out';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -55,6 +56,12 @@ export function AuthProvider({ children }) {
         }
       }
 
+      // Respect explicit sign-out: never auto-login after the user signed out
+      if (localStorage.getItem(SIGNED_OUT_KEY) === '1') {
+        setLoading(false);
+        return;
+      }
+
       // Auto-initialize demo merchant for effortless judging & testing
       try {
         const demoData = await loginApi({ demo_mode: true });
@@ -80,6 +87,7 @@ export function AuthProvider({ children }) {
       setLoading(true);
       try {
         const data = await loginApi({ email_or_phone, password });
+        localStorage.removeItem(SIGNED_OUT_KEY);
         setUser(data.user);
         const branches = data.merchant_gstins || [];
         setMerchantGstins(branches);
@@ -99,6 +107,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const data = await loginApi({ demo_mode: true });
+      localStorage.removeItem(SIGNED_OUT_KEY);
       setUser(data.user);
       const branches = data.merchant_gstins || [];
       setMerchantGstins(branches);
@@ -117,6 +126,7 @@ export function AuthProvider({ children }) {
       setLoading(true);
       try {
         const data = await registerApi(payload);
+        localStorage.removeItem(SIGNED_OUT_KEY);
         setUser(data.user);
         const branches = data.merchant_gstins || [];
         setMerchantGstins(branches);
@@ -134,6 +144,7 @@ export function AuthProvider({ children }) {
   // Logout handler
   const logout = useCallback(() => {
     clearAuthToken();
+    localStorage.setItem(SIGNED_OUT_KEY, '1');
     localStorage.removeItem(ACTIVE_GSTIN_STORAGE_KEY);
     localStorage.removeItem(LEGACY_GSTIN_STORAGE_KEY);
     setUser(null);
