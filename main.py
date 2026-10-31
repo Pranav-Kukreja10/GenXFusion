@@ -886,15 +886,14 @@ async def parse_invoice(
     api_key_valid = bool(api_key and api_key.strip() not in ("", "your_key_here"))
 
     # Return mock if requested, or if no file was uploaded, or if API key is unconfigured
-    if mock or file is None or not api_key_valid:
-        logger.info("Serving rich mock invoice (mock requested or API key not set).")
+    if mock or file is None:
+        logger.info("Serving rich mock invoice (mock explicitly requested).")
         return create_rich_mock_invoice()
 
     try:
         image_bytes = await file.read()
         if not image_bytes:
-            logger.warning("Empty file payload received; returning mock invoice.")
-            return create_rich_mock_invoice()
+            raise HTTPException(status_code=400, detail="Empty file uploaded.")
 
         # Step 1: OpenCV CLAHE Preprocessing & Shadow Removal
         prep_result = preprocess_bill_image(image_bytes)
@@ -939,9 +938,9 @@ async def parse_invoice(
 
     except Exception as e:
         logger.error(f"Error during invoice parsing: {e}", exc_info=True)
-        # Never crash the frontend demo: return mock response on unexpected error
-        logger.info("Falling back to rich mock invoice due to processing error.")
-        return create_rich_mock_invoice()
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=502, detail=f"Scan failed: {e}")
 
 
 # ============================================================================

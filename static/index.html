@@ -283,6 +283,7 @@
               <option value="36">36 - Telangana (Inter-State IGST)</option>
             </select>
             <div id="posStatusBadge" class="text-[10px] text-blue-400 font-semibold mt-0.5">Intra-State: 03 Punjab -> 03 Punjab</div>
+            <div id="headerPosBadge" class="hidden"></div>
           </div>
 
           <!-- Customer Name & Phone -->
@@ -980,6 +981,7 @@
         currentEnhancedImage = e.target.result;
         showImagePreview(currentRawImage);
         document.getElementById("imageToggleBar").classList.remove("hidden");
+        triggerScan();
       };
       reader.readAsDataURL(file);
     }
@@ -1019,6 +1021,10 @@
             method: "POST",
             body: formData
           });
+          if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            throw new Error(errBody.detail || ("Server returned " + res.status));
+          }
           const data = await res.json();
           currentInvoice = data;
           if (data.raw_image_b64) currentRawImage = data.raw_image_b64;
@@ -1033,8 +1039,8 @@
         }
         renderInvoiceUI();
       } catch (err) {
-        console.error("Scan failed, using preset:", err);
-        loadPreset('textile');
+        console.error("Scan failed:", err);
+        alert("Scan failed for your uploaded bill (no fake demo data shown):\n" + err.message);
       } finally {
         btnText.innerText = "Run AI OCR & Tax Audit";
       }
@@ -1160,80 +1166,110 @@
 
       // Badges
       const taxBadge = document.getElementById("headerTaxModeBadge");
-      const posBadge = document.getElementById("headerPosBadge");
+      const posBadge = document.getElementById("posStatusBadge") || document.getElementById("headerPosBadge");
       const thTaxCol = document.getElementById("thTaxCol");
 
       if (isInter) {
-        taxBadge.innerText = "⚡ Inter-State Supply (100% IGST)";
-        taxBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40";
-        posBadge.innerText = `Inter-State Supply: Supplier (${suppState}) -> POS (${posState})`;
-        posBadge.className = "text-[10px] text-purple-400 font-bold mt-0.5";
-        thTaxCol.innerText = "IGST (100%)";
+        if (taxBadge) {
+          taxBadge.innerText = "⚡ Inter-State Supply (100% IGST)";
+          taxBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40";
+        }
+        if (posBadge) {
+          posBadge.innerText = `Inter-State Supply: Supplier (${suppState}) -> POS (${posState})`;
+          posBadge.className = "text-[10px] text-purple-400 font-bold mt-0.5";
+        }
+        if (thTaxCol) thTaxCol.innerText = "IGST (100%)";
       } else {
-        taxBadge.innerText = "⚡ Intra-State Supply (CGST + SGST)";
-        taxBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30";
-        posBadge.innerText = `Intra-State Supply: Supplier (${suppState}) -> POS (${posState})`;
-        posBadge.className = "text-[10px] text-blue-400 font-semibold mt-0.5";
-        thTaxCol.innerText = "CGST + SGST";
+        if (taxBadge) {
+          taxBadge.innerText = "⚡ Intra-State Supply (CGST + SGST)";
+          taxBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30";
+        }
+        if (posBadge) {
+          posBadge.innerText = `Intra-State Supply: Supplier (${suppState}) -> POS (${posState})`;
+          posBadge.className = "text-[10px] text-blue-400 font-semibold mt-0.5";
+        }
+        if (thTaxCol) thTaxCol.innerText = "CGST + SGST";
       }
 
       const b2bBadge = document.getElementById("headerB2bBadge");
       const b2bHeader = document.getElementById("supplyBadgeHeader");
       if (isB2B) {
-        b2bBadge.innerText = "🏢 B2B Registered Business";
-        b2bBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
-        b2bHeader.innerText = "B2B Invoice Ready";
-        b2bHeader.className = "inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold";
+        if (b2bBadge) {
+          b2bBadge.innerText = "🏢 B2B Registered Business";
+          b2bBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        }
+        if (b2bHeader) {
+          b2bHeader.innerText = "B2B Invoice Ready";
+          b2bHeader.className = "inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold";
+        }
       } else {
-        b2bBadge.innerText = "🛒 B2CS Retail Consumer";
-        b2bBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30";
-        b2bHeader.innerText = "B2CS Retail Small";
-        b2bHeader.className = "inline-flex items-center px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold";
+        if (b2bBadge) {
+          b2bBadge.innerText = "🛒 B2CS Retail Consumer";
+          b2bBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30";
+        }
+        if (b2bHeader) {
+          b2bHeader.innerText = "B2CS Retail Small";
+          b2bHeader.className = "inline-flex items-center px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold";
+        }
       }
 
       // Meta tags on left panel
-      document.getElementById("merchantInfoTag").innerText = `Merchant: ${currentInvoice.store_name_guess || currentInvoice.merchant_name || 'Bharat Dukaan'}`;
-      document.getElementById("sectorInfoTag").innerText = `Sector: ${currentInvoice.detected_sector || 'GENERAL'}`;
-      document.getElementById("itemCountBadge").innerText = `${currentInvoice.active_items.length} Items`;
+      const mInfo = document.getElementById("merchantInfoTag");
+      if (mInfo) mInfo.innerText = `Merchant: ${currentInvoice.store_name_guess || currentInvoice.merchant_name || 'Bharat Dukaan'}`;
+      const sInfo = document.getElementById("sectorInfoTag");
+      if (sInfo) sInfo.innerText = `Sector: ${currentInvoice.detected_sector || 'GENERAL'}`;
+      const iCount = document.getElementById("itemCountBadge");
+      if (iCount) iCount.innerText = `${(currentInvoice.active_items || []).length} Items`;
 
       // Customer info tag
       const custTag = document.getElementById("customerInfoTag");
       const custText = document.getElementById("customerInfoText");
       if (currentInvoice.customer_name || currentInvoice.customer_phone) {
-        custTag.classList.remove("hidden");
-        custText.innerText = `${currentInvoice.customer_name || 'Buyer'} ${currentInvoice.customer_phone ? '📞 ' + currentInvoice.customer_phone : ''}`;
+        if (custTag) custTag.classList.remove("hidden");
+        if (custText) custText.innerText = `${currentInvoice.customer_name || 'Buyer'} ${currentInvoice.customer_phone ? '📞 ' + currentInvoice.customer_phone : ''}`;
       } else {
-        custTag.classList.add("hidden");
+        if (custTag) custTag.classList.add("hidden");
       }
 
       // KPIs
       const sum = currentInvoice.summary || {};
-      document.getElementById("kpiWrittenTotal").innerText = `₹${(sum.written_grand_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-      document.getElementById("kpiTaxableTotal").innerText = `₹${(sum.audited_taxable_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-      document.getElementById("kpiPakkaTotal").innerText = `₹${(sum.final_payable_pakka_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      const kpiW = document.getElementById("kpiWrittenTotal");
+      if (kpiW) kpiW.innerText = `₹${(sum.written_grand_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      const kpiT = document.getElementById("kpiTaxableTotal");
+      if (kpiT) kpiT.innerText = `₹${(sum.audited_taxable_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      const kpiP = document.getElementById("kpiPakkaTotal");
+      if (kpiP) kpiP.innerText = `₹${(sum.final_payable_pakka_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
 
-      if (isInter) {
-        document.getElementById("kpiGstSplit").innerText = `IGST: ₹${(sum.total_igst || 0).toFixed(2)} (Inter-State 100%)`;
-      } else {
-        document.getElementById("kpiGstSplit").innerText = `CGST: ₹${(sum.total_cgst || 0).toFixed(2)} | SGST: ₹${(sum.total_sgst || 0).toFixed(2)}`;
+      const kpiSplit = document.getElementById("kpiGstSplit");
+      if (kpiSplit) {
+        if (isInter) {
+          kpiSplit.innerText = `IGST: ₹${(sum.total_igst || 0).toFixed(2)} (Inter-State 100%)`;
+        } else {
+          kpiSplit.innerText = `CGST: ₹${(sum.total_cgst || 0).toFixed(2)} | SGST: ₹${(sum.total_sgst || 0).toFixed(2)}`;
+        }
       }
 
       // Math Errors Counter
-      const mathErrors = currentInvoice.active_items.filter(i => i.has_math_error);
+      const mathErrors = (currentInvoice.active_items || []).filter(i => i.has_math_error);
       const errCount = mathErrors.length;
-      document.getElementById("kpiMathErrors").innerText = errCount;
+      const kpiErr = document.getElementById("kpiMathErrors");
+      if (kpiErr) kpiErr.innerText = errCount;
       const mathCard = document.getElementById("mathAlertCard");
       const savedBadge = document.getElementById("kpiMathSavedBadge");
 
       if (errCount > 0) {
-        mathCard.className = "bg-rose-950/40 border border-rose-500/50 rounded-xl p-3.5 shadow-lg transition";
+        if (mathCard) mathCard.className = "bg-rose-950/40 border border-rose-500/50 rounded-xl p-3.5 shadow-lg transition";
         const totalDiscrepancy = mathErrors.reduce((acc, curr) => acc + Math.abs(curr.math_discrepancy || 0), 0);
-        savedBadge.innerText = `₹${totalDiscrepancy.toFixed(2)} caught`;
-        savedBadge.className = "text-[10px] px-1.5 py-0.5 rounded bg-rose-600/30 text-rose-300 font-bold";
+        if (savedBadge) {
+          savedBadge.innerText = `₹${totalDiscrepancy.toFixed(2)} caught`;
+          savedBadge.className = "text-[10px] px-1.5 py-0.5 rounded bg-rose-600/30 text-rose-300 font-bold";
+        }
       } else {
-        mathCard.className = "bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-lg transition";
-        savedBadge.innerText = `0 errors`;
-        savedBadge.className = "text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400";
+        if (mathCard) mathCard.className = "bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-lg transition";
+        if (savedBadge) {
+          savedBadge.innerText = `0 errors`;
+          savedBadge.className = "text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400";
+        }
       }
 
       // Struck-Out Items
