@@ -126,8 +126,15 @@ def export_to_gstr1_json(
             "csamt": 0.0
         })
 
-    # Invoice metadata
-    invoice_num = str(raw.get("invoice_id") or raw.get("bill_id") or "INV-001")[:16]
+    # Invoice metadata (guaranteed <= 16 chars per CGST Rule 46(b))
+    raw_inv = str(raw.get("invoice_id") or raw.get("bill_number") or raw.get("bill_id") or "INV-001").strip()
+    if len(raw_inv) > 16:
+        if len(raw_inv) >= 32 and all(c in "0123456789abcdefABCDEF" for c in raw_inv):
+            invoice_num = f"INV-{raw_inv[:8].upper()}"
+        else:
+            invoice_num = raw_inv[:16]
+    else:
+        invoice_num = raw_inv
     # Format date as DD-MM-YYYY
     raw_date = raw.get("normalized_date_iso") or "2026-10-31"
     if "-" in raw_date and len(raw_date.split("-")) == 3:

@@ -432,3 +432,4 @@ def get_demo_login_response() -> Dict[str, Any]:
         "merchant_gstins": profile.get("merchant_gstins", []),
         "default_gstin": profile.get("default_gstin")
     }
+

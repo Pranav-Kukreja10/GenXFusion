@@ -320,9 +320,21 @@ class AuditedInvoiceResponse(BaseModel):
     @model_validator(mode="after")
     def sync_response_fields(self) -> AuditedInvoiceResponse:
         if not self.invoice_id and self.bill_id:
-            self.invoice_id = self.bill_id
+            if len(self.bill_id) > 16:
+                self.invoice_id = f"INV-{self.bill_id[:8].upper()}"
+            else:
+                self.invoice_id = self.bill_id.replace("_", "-")[:16]
+        elif self.invoice_id:
+            cleaned = self.invoice_id.replace("_", "-").replace(" ", "-")
+            if len(cleaned) >= 32 and all(c in "0123456789abcdefABCDEF" for c in cleaned):
+                self.invoice_id = f"INV-{cleaned[:8].upper()}"
+            else:
+                self.invoice_id = cleaned[:16]
+
         if not self.bill_number and self.invoice_id:
             self.bill_number = self.invoice_id
+        elif self.bill_number:
+            self.bill_number = self.bill_number.replace("_", "-")[:16]
         if not self.items and self.active_items:
             self.items = self.active_items
         elif not self.active_items and self.items:

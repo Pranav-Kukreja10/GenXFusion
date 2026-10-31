@@ -343,10 +343,35 @@ def _save_registry(data: Dict[str, Any]):
             pass
 
 
+def sanitize_rule_46b_invoice_number(invoice_num: Optional[str], default_prefix: str = "INV") -> str:
+    """
+    Cleans and guarantees an invoice number strictly satisfies CGST Rule 46(b):
+    - Non-empty
+    - Max 16 characters
+    - Only alphanumeric, '/' and '-'
+    """
+    if not invoice_num:
+        return f"{default_prefix}-0001"
+    
+    clean = str(invoice_num).strip().upper().replace("_", "-").replace(" ", "-")
+    # Replace any non-alphanumeric, non-slash, non-dash characters with dash
+    clean = re.sub(r"[^A-Z0-9/\-]", "-", clean)
+    clean = re.sub(r"-+", "-", clean).strip("-/")
+    
+    if len(clean) > 16:
+        # If it looks like a hex hash or long string, take first 8 chars with prefix
+        if len(clean) >= 32 and all(c in "0123456789ABCDEF" for c in clean):
+            clean = f"{default_prefix}-{clean[:8]}"
+        else:
+            clean = clean[:16]
+    
+    return clean or f"{default_prefix}-0001"
+
+
 def generate_next_sequential_invoice_number(supplier_key: str, financial_year: str) -> str:
     """
     Generates the next valid sequential invoice number for a given supplier in a financial year.
-    Format: INV/{short_fy}/{seq:04d} e.g. INV/26-27/0001
+    Format: INV/{short_fy}/{seq:04d} e.g. INV/26-27/0001 (strictly <= 16 characters per CGST Rule 46(b))
     """
     with REGISTRY_LOCK:
         reg = _load_registry()
@@ -355,7 +380,14 @@ def generate_next_sequential_invoice_number(supplier_key: str, financial_year: s
         # Find matching records
         max_seq = 0
         sk_clean = supplier_key.strip().upper() if supplier_key else "DEFAULT"
-        fy_clean = financial_year.strip()
+        fy_clean = financial_year.strip() if financial_year else "2026-27"
+        
+        # Convert financial year to short 5-character format (e.g. 2026-27 -> 26-27, 2026-2027 -> 26-27)
+        if "-" in fy_clean:
+            parts = fy_clean.split("-")
+            short_fy = f"{parts[0][-2:]}-{parts[1][-2:]}"
+        else:
+            short_fy = fy_clean[-5:] if len(fy_clean) >= 5 else fy_clean
         
         for r in records:
             if r.get("supplier_key", "").upper() == sk_clean and r.get("financial_year", "") == fy_clean:
@@ -371,7 +403,10 @@ def generate_next_sequential_invoice_number(supplier_key: str, financial_year: s
                         pass
         
         next_seq = max_seq + 1
-        return f"INV/{fy_clean}/{next_seq:04d}"
+        inv_str = f"INV/{short_fy}/{next_seq:04d}"
+        if len(inv_str) > 16:
+            inv_str = inv_str[:16]
+        return inv_str
 
 
 def check_and_register_invoice_number(
@@ -525,10 +560,24 @@ def validate_invoice_compliance(
     financial_year = get_indian_financial_year(effective_iso)
 
     # 4. Invoice Number & Rule 46(b)
-    inv_num = str(invoice_data.get("invoice_id") or invoice_data.get("bill_id") or "")
+    raw_inv = str(invoice_data.get("invoice_id") or invoice_data.get("bill_number") or "").strip()
+    if not raw_inv:
+        b_id = str(invoice_data.get("bill_id") or "").strip()
+        inv_num = f"INV-{b_id[:8].upper()}" if (b_id and len(b_id) > 16) else (b_id or "INV-0001")
+    elif len(raw_inv) > 16:
+        if len(raw_inv) >= 32 and all(c in "0123456789abcdefABCDEF" for c in raw_inv):
+            inv_num = f"INV-{raw_inv[:8].upper()}"
+        else:
+            inv_num = raw_inv[:16]
+    else:
+        inv_num = raw_inv
+
+    inv_num = inv_num.replace("_", "-").replace(" ", "-")
     r46 = validate_rule_46b_invoice_number(inv_num)
     if not r46["is_valid"]:
         warnings.append(f"Invoice Number: {r46['error_reason']}.")
+    elif raw_inv and len(raw_inv) > 16:
+        warnings.append(f"Invoice Number: Formatted to CGST Rule 46(b) 16-character limit ('{inv_num}').")
 
     # 5. Buyer GSTIN & Supply Mode (B2B vs B2CL vs B2CS)
     b_gstin = buyer_gstin or invoice_data.get("buyer_gstin") or ""

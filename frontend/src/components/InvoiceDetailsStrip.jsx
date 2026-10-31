@@ -319,19 +319,56 @@ export default function InvoiceDetailsStrip({ invoice, onInvoiceChange }) {
           </div>
 
           <div>
-            <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-              Invoice Number (Rule 46(b))
-            </label>
-            <input
-              type="text"
-              value={invoice?.invoice_id || invoice?.bill_number || ''}
-              onChange={(e) => {
-                handleFieldChange('invoice_id', e.target.value);
-                handleFieldChange('bill_number', e.target.value);
-              }}
-              placeholder="e.g. INV/2026-27/0001"
-              className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-[15px] font-mono font-medium text-slate-900 dark:text-slate-100 tabular-nums focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[12px] font-medium text-slate-500 dark:text-slate-400">
+                Invoice Number (Rule 46(b))
+              </label>
+              <span className={`text-[11px] font-mono font-medium ${
+                (invoice?.invoice_id || '').length > 16
+                  ? 'text-red-500 font-bold'
+                  : (invoice?.invoice_id || '').length >= 14
+                  ? 'text-amber-500'
+                  : 'text-slate-400'
+              }`}>
+                {(invoice?.invoice_id || invoice?.bill_number || '').length}/16
+              </span>
+            </div>
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                maxLength={16}
+                value={invoice?.invoice_id || invoice?.bill_number || ''}
+                onChange={(e) => {
+                  const val = e.target.value.slice(0, 16);
+                  handleFieldChange('invoice_id', val);
+                  handleFieldChange('bill_number', val);
+                }}
+                placeholder="e.g. INV/26-27/0001"
+                className={`w-full min-h-[42px] bg-white dark:bg-slate-900 border ${
+                  (invoice?.invoice_id || '').length > 16
+                    ? 'border-red-500 dark:border-red-500 focus:ring-red-500'
+                    : 'border-slate-300 dark:border-slate-700 focus:ring-emerald-500'
+                } rounded-lg px-3 py-2 text-[15px] font-mono font-medium text-slate-900 dark:text-slate-100 tabular-nums focus:outline-hidden focus:ring-2`}
+              />
+              {(invoice?.invoice_id || '').length > 16 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const trimmed = (invoice.invoice_id || '').slice(0, 16);
+                    handleFieldChange('invoice_id', trimmed);
+                    handleFieldChange('bill_number', trimmed);
+                  }}
+                  className="absolute right-2 px-2 py-0.5 rounded text-[11px] font-semibold bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-950/80 dark:hover:bg-red-900 dark:text-red-300 border border-red-300 dark:border-red-700 transition cursor-pointer"
+                >
+                  Trim
+                </button>
+              )}
+            </div>
+            {(invoice?.invoice_id || '').length > 16 && (
+              <p className="mt-1 text-[11px] text-red-500 font-medium flex items-center justify-between">
+                <span>Exceeds CGST Rule 46(b) maximum 16-character limit.</span>
+              </p>
+            )}
           </div>
 
           <div>

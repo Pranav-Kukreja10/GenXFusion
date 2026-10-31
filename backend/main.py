@@ -537,7 +537,13 @@ def fallback_audit_and_calculate_invoice(
         final_payable_pakka_total=final_payable_pakka
     )
 
-    inv_num = getattr(raw_bill, "invoice_id", None) or bill_id
+    raw_inv_id = getattr(raw_bill, "invoice_id", None)
+    if raw_inv_id and len(str(raw_inv_id).strip()) <= 16:
+        inv_num = str(raw_inv_id).strip()
+    elif raw_inv_id and len(str(raw_inv_id).strip()) > 16:
+        inv_num = str(raw_inv_id).strip()[:16]
+    else:
+        inv_num = f"INV-{bill_id[:8].upper()}" if (bill_id and len(bill_id) > 16) else (bill_id or "INV-0001")
     store_addr = getattr(raw_bill, "store_address", None)
     raw_merchant = getattr(raw_bill, "merchant_name", None)
     merchant_name = raw_merchant.strip() if raw_merchant and raw_merchant.strip().lower() not in ("none", "null", "unknown", "") else None
@@ -854,7 +860,7 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
 
     return AuditedInvoiceResponse(
         bill_id=bill_id,
-        invoice_id=bill_id,
+        invoice_id=f"INV-{bill_id[:8].upper()}" if len(bill_id) > 16 else bill_id,
         detected_sector="TEXTILE",
         store_name_guess="Punjab Cloth & Readymade House",
         merchant_name="Punjab Cloth & Readymade House",
@@ -1539,10 +1545,11 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
             pos_state_code=pos_code
         )
 
+        inv_serial = f"INV-{bill_id[:8].upper()}" if len(bill_id) > 16 else bill_id
         return AuditedInvoiceResponse(
             bill_id=bill_id,
-            invoice_id=bill_id,
-            bill_number=bill_id,
+            invoice_id=inv_serial,
+            bill_number=inv_serial,
             detected_sector=sector,
             store_name_guess=store_name,
             merchant_name=store_name,

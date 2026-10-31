@@ -494,7 +494,11 @@ def audit_and_calculate_invoice(
         "merchant_name": merchant_name,
         "raw_date_written": raw_date_written,
         "normalized_date_iso": normalized_date_iso,
-        "invoice_id": raw_bill.invoice_id,
+        "invoice_id": (
+            str(raw_bill.invoice_id).strip()[:16]
+            if getattr(raw_bill, "invoice_id", None)
+            else (f"INV-{bill_id[:8].upper()}" if (bill_id and len(bill_id) > 16) else (bill_id or "INV-0001"))
+        ),
         "buyer_gstin": buyer_gstin,
         "items": [it.model_dump() for it in active_items],
         "place_of_supply": eff_pos,
@@ -531,8 +535,16 @@ def audit_and_calculate_invoice(
         extracted_supplier_gstin=eff_supp_gstin,
         supplier_state_code=eff_supp_state,
         supplier_state_name=supp_state_name,
-        invoice_id=raw_bill.invoice_id,
-        bill_number=raw_bill.invoice_id,
+        invoice_id=(
+            str(raw_bill.invoice_id).strip()[:16]
+            if getattr(raw_bill, "invoice_id", None)
+            else (f"INV-{bill_id[:8].upper()}" if (bill_id and len(bill_id) > 16) else (bill_id or "INV-0001"))
+        ),
+        bill_number=(
+            str(raw_bill.invoice_id).strip()[:16]
+            if getattr(raw_bill, "invoice_id", None)
+            else (f"INV-{bill_id[:8].upper()}" if (bill_id and len(bill_id) > 16) else (bill_id or "INV-0001"))
+        ),
         store_address=raw_bill.store_address,
         raw_date_written=raw_date_written,
         raw_date_text=raw_date_text,

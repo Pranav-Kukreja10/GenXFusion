@@ -1495,9 +1495,9 @@
       const modalAddrEl = document.getElementById("modalStoreAddress");
       if (modalAddrEl) modalAddrEl.innerText = storeAddr;
 
-      // Clean, un-truncated Invoice ID
-      let invId = currentInvoice.invoice_id;
-      if (!invId) {
+      // Clean, Rule 46(b) compliant Invoice ID (guaranteed <= 16 chars)
+      let invId = currentInvoice.invoice_id || currentInvoice.bill_number;
+      if (!invId || invId.length > 16) {
         const bId = (currentInvoice.bill_id || '001').toString();
         if (bId.startsWith("demo_textile")) invId = "PS-TEXTILE-1001";
         else if (bId.startsWith("demo_hardware")) invId = "PS-HDW-2002";
@@ -1505,9 +1505,10 @@
         else if (bId.startsWith("spenza")) invId = "PS-SPZ-7788";
         else if (bId.startsWith("radhekrishna") || bId.includes("406")) invId = "PS-BILL-406";
         else if (bId.startsWith("demo_")) invId = "PS-" + bId.replace("demo_", "").toUpperCase();
-        else if (bId.length > 12) invId = "PS-" + bId.slice(0, 8).toUpperCase();
-        else invId = "PS-" + bId.toUpperCase();
+        else if (bId.length > 12) invId = "INV-" + bId.slice(0, 8).toUpperCase();
+        else invId = "INV-" + bId.toUpperCase();
       }
+      if (invId.length > 16) invId = invId.slice(0, 16);
       document.getElementById("modalInvoiceId").innerText = invId;
 
       document.getElementById("modalSector").innerText = currentInvoice.detected_sector || 'HARDWARE';

@@ -40,9 +40,28 @@ export async function testConnection(customUrl) {
  */
 function normalizeInvoiceResponse(data) {
   if (!data || typeof data !== 'object') return data;
+  let invId = data.invoice_id || data.bill_number;
+  if (!invId) {
+    const bId = (data.bill_id || '').toString();
+    if (bId.length > 16) {
+      invId = `INV-${bId.slice(0, 8).toUpperCase()}`;
+    } else if (bId.length > 0) {
+      invId = bId;
+    } else {
+      invId = `INV-${Date.now().toString().slice(-4)}`;
+    }
+  } else if (invId.length > 16) {
+    if (invId.length >= 32 && /^[0-9a-fA-F]+$/.test(invId)) {
+      invId = `INV-${invId.slice(0, 8).toUpperCase()}`;
+    } else {
+      invId = invId.slice(0, 16);
+    }
+  }
+
   return {
     ...data,
-    invoice_id: data.invoice_id || data.bill_id || data.bill_number || `INV-${Date.now().toString().slice(-4)}`,
+    invoice_id: invId,
+    bill_number: invId,
     raw_image_base64: data.raw_image_base64 || data.raw_image_b64 || '',
     enhanced_image_base64: data.enhanced_image_base64 || data.enhanced_image_b64 || '',
     active_items: data.active_items || data.items || [],
@@ -287,12 +306,15 @@ export async function registerInvoiceNumberApi(supplierKey, invoiceNumber, finan
     // Fallback offline
   }
 
+  const fy = financialYear || '2026-27';
+  const shortFy = fy.includes('-') ? `${fy.split('-')[0].slice(-2)}-${fy.split('-')[1].slice(-2)}` : '26-27';
+
   return {
     is_unique: true,
     is_valid_format: Boolean(invoiceNumber && /^[a-zA-Z0-9\/-]{1,16}$/.test(invoiceNumber)),
-    financial_year: financialYear || '2026-27',
+    financial_year: fy,
     invoice_number: invoiceNumber,
-    next_suggested_invoice_number: `INV/${financialYear || '2026-27'}/0001`,
+    next_suggested_invoice_number: `INV/${shortFy}/0001`,
     error_reason: '',
   };
 }
@@ -315,12 +337,20 @@ export async function getNextInvoiceNumberApi(supplierKey, financialYear) {
     clearTimeout(id);
     if (res.ok) {
       const data = await res.json();
-      return data.next_invoice_number;
+      return { data, error: null };
     }
   } catch {
     // Fallback
   }
-  return `INV/${financialYear || '2026-27'}/0001`;
+  const fy = financialYear || '2026-27';
+  const shortFy = fy.includes('-') ? `${fy.split('-')[0].slice(-2)}-${fy.split('-')[1].slice(-2)}` : '26-27';
+  return {
+    data: {
+      financial_year: fy,
+      next_invoice_number: `INV/${shortFy}/0001`,
+    },
+    error: 'fallback',
+  };
 }
 
 

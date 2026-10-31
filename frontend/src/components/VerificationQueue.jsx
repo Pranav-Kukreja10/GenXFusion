@@ -55,7 +55,17 @@ export default function VerificationQueue({
           const code = doubt.code || doubt.field_type || 'DOUBT';
           const isLumpsum = code === 'UNALLOCATED_LUMPSUM_TOTAL' || code === 'MISSING_LINE_ITEM_PRICE';
           const isMath = code === 'MATH_DISCREPANCY' || doubt.has_math_error;
-          const isInvNum = code === 'DUPLICATE_FY_INVOICE_NUMBER' || code === 'MISSING_INVOICE_NUMBER';
+          const isInvNum =
+            code === 'DUPLICATE_FY_INVOICE_NUMBER' ||
+            code === 'MISSING_INVOICE_NUMBER' ||
+            code === 'INVALID_INVOICE_NUMBER' ||
+            code.includes('INVOICE_NUMBER') ||
+            (doubt.message && (
+              doubt.message.toLowerCase().includes('invoice number') ||
+              doubt.message.toLowerCase().includes('rule 46(b)') ||
+              doubt.message.toLowerCase().includes('too long') ||
+              doubt.message.toLowerCase().includes('16 characters')
+            ));
 
           return (
             <div
