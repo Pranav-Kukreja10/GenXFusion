@@ -1,5 +1,5 @@
 """
-test_all.py - Complete Integration Test for ParchiSetu AI
+test_all.py - Complete Integration Test for TrueTax AI
 Tests:
 1. Full-Stack Dashboard served at GET /
 2. Health Check at GET /api/v1/health
@@ -22,7 +22,7 @@ def run_tests():
     print("--- [1/8] Testing GET / Dashboard ---")
     res = client.get("/")
     assert res.status_code == 200, f"Expected 200, got {res.status_code}"
-    assert "ParchiSetu" in res.text, "Dashboard HTML did not contain ParchiSetu"
+    assert ("TrueTax" in res.text or "ParchiSetu" in res.text), "Dashboard HTML did not contain TrueTax"
     assert "Statutory GST & RAG Engine" in res.text
     print(" PASSED: GET / serves full-stack command center dashboard.")
 

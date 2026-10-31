@@ -202,7 +202,7 @@ def test_gstr1_export():
 
 
 if __name__ == "__main__":
-    print("\n--- RUNNING PARCHISETU AI LANE 1 BACKEND VERIFICATION ---")
+    print("\n--- RUNNING TRUETAX AI LANE 1 BACKEND VERIFICATION ---")
     test_health()
     test_image_preprocessor()
     test_parse_mock_invoice()

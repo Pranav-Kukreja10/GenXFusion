@@ -9,7 +9,7 @@ const ThemeContext = createContext({
 export function ThemeProvider({ children }) {
   const [darkMode, setDarkMode] = useState(() => {
     try {
-      const saved = localStorage.getItem('parchisetu_theme') || localStorage.getItem('truetax_theme');
+      const saved = localStorage.getItem('truetax_theme') || localStorage.getItem('parchisetu_theme');
       if (saved) return saved === 'dark';
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
     } catch {

@@ -1,11 +1,11 @@
 import { DEMO_PRESETS, COMMON_HSN_CODES } from '../utils/mockPresets';
 import { recalculateInvoice as localRecalculate, generateGstr1Payload } from '../utils/gstCalculator';
 
-const STORAGE_KEY = 'parchisetu_api_base_url';
+const STORAGE_KEY = 'truetax_api_base_url';
 export const DEFAULT_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 export function getApiBaseUrl() {
-  const custom = localStorage.getItem(STORAGE_KEY);
+  const custom = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('parchisetu_api_base_url');
   if (custom && (custom.includes('localhost:8000') || custom.includes('127.0.0.1:8000'))) {
     // Migrate hardcoded host URL to relative path to leverage Vite proxy or same-origin
     return '/api/v1';
@@ -358,10 +358,11 @@ export async function getNextInvoiceNumberApi(supplierKey, financialYear) {
 // 8. SQLite + JWT Authentication & Multi-GSTIN Profile API
 // ============================================================================
 
-const AUTH_TOKEN_KEY = 'parchisetu_jwt_token';
+const AUTH_TOKEN_KEY = 'truetax_jwt_token';
+const LEGACY_AUTH_TOKEN_KEY = 'parchisetu_jwt_token';
 
 export function getAuthToken() {
-  return localStorage.getItem(AUTH_TOKEN_KEY) || '';
+  return localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(LEGACY_AUTH_TOKEN_KEY) || '';
 }
 
 export function setAuthToken(token) {
@@ -369,11 +370,13 @@ export function setAuthToken(token) {
     localStorage.setItem(AUTH_TOKEN_KEY, token);
   } else {
     localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
   }
 }
 
 export function clearAuthToken() {
   localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
 }
 
 function getAuthHeaders() {

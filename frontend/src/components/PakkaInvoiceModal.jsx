@@ -158,7 +158,7 @@ export default function PakkaInvoiceModal({
               <div className="text-right">
                 <p className="font-bold uppercase text-slate-800">Original Kacha Slip Reference:</p>
                 <p className="font-mono text-slate-700">Vernacular Receipt Date: {invoice.raw_date_written || '31/10/26'}</p>
-                <p className="font-mono text-emerald-800 font-semibold">Audited via ParchiSetu Deterministic Engine</p>
+                <p className="font-mono text-emerald-800 font-semibold">Audited via TrueTax Deterministic Engine</p>
               </div>
             </div>
 
@@ -304,7 +304,7 @@ export default function PakkaInvoiceModal({
                   We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
                 </p>
                 <p className="mt-1 text-emerald-800 font-semibold">
-                  Audited & Validated by ParchiSetu AI Vision Engine.
+                  Audited & Validated by TrueTax AI Vision Engine.
                 </p>
               </div>
 

@@ -12,7 +12,8 @@ import {
 
 const AuthContext = createContext(null);
 
-const ACTIVE_GSTIN_STORAGE_KEY = 'parchisetu_active_gstin_id';
+const ACTIVE_GSTIN_STORAGE_KEY = 'truetax_active_gstin_id';
+const LEGACY_GSTIN_STORAGE_KEY = 'parchisetu_active_gstin_id';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -43,7 +44,7 @@ export function AuthProvider({ children }) {
           setUser(u);
           setMerchantGstins(branches);
 
-          const savedGstinId = localStorage.getItem(ACTIVE_GSTIN_STORAGE_KEY);
+          const savedGstinId = localStorage.getItem(ACTIVE_GSTIN_STORAGE_KEY) || localStorage.getItem(LEGACY_GSTIN_STORAGE_KEY);
           const active = resolveActiveGstin(branches, savedGstinId ? Number(savedGstinId) : null);
           setActiveGstin(active);
           setLoading(false);
@@ -134,6 +135,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     clearAuthToken();
     localStorage.removeItem(ACTIVE_GSTIN_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_GSTIN_STORAGE_KEY);
     setUser(null);
     setMerchantGstins([]);
     setActiveGstin(null);

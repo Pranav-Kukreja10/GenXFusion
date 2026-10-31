@@ -1,6 +1,6 @@
 """
-ParchiSetu AI — SQLite + JWT Auth & Multi-GSTIN Merchant Profile System
-Provides zero-config SQLite storage in data/parchisetu.db, PBKDF2 password hashing,
+TrueTax AI — SQLite + JWT Auth & Multi-GSTIN Merchant Profile System
+Provides zero-config SQLite storage in data/truetax.db, PBKDF2 password hashing,
 RFC-7519 compliant HS256 JWT tokens, and multi-state GSTIN branch management.
 """
 
@@ -15,8 +15,8 @@ from typing import Optional, Dict, Any, List
 from pathlib import Path
 from gst_validator import validate_gstin, INDIAN_STATES
 
-DB_PATH = Path("data") / "parchisetu.db"
-JWT_SECRET = os.getenv("JWT_SECRET", "parchisetu_fintech_production_secret_key_2026")
+DB_PATH = Path("data") / "truetax.db" if (Path("data") / "truetax.db").exists() else Path("data") / "parchisetu.db"
+JWT_SECRET = os.getenv("JWT_SECRET", "truetax_fintech_production_secret_key_2026")
 JWT_ALGORITHM = "HS256"
 DEFAULT_EXPIRY_SECONDS = 30 * 24 * 3600  # 30 days
 
@@ -166,7 +166,7 @@ def init_db():
 
 def _seed_demo_account(cursor: sqlite3.Cursor, conn: sqlite3.Connection):
     """Pre-loads verified demo account with 3 multi-state GSTIN profiles (Punjab, MP, Delhi)."""
-    cursor.execute("SELECT id FROM users WHERE email_or_phone = 'demo@parchisetu.in';")
+    cursor.execute("SELECT id FROM users WHERE email_or_phone IN ('demo@truetax.in', 'demo@parchisetu.in');")
     row = cursor.fetchone()
 
     demo_user_id = None
@@ -176,7 +176,7 @@ def _seed_demo_account(cursor: sqlite3.Cursor, conn: sqlite3.Connection):
         cursor.execute("""
             INSERT INTO users (email_or_phone, password_hash, full_name, contact_phone, default_business_name, created_at)
             VALUES (?, ?, ?, ?, ?, ?);
-        """, ("demo@parchisetu.in", pwd_hash, "Sandeep Goyal (Demo Merchant)", "9876543210", "ParchiSetu Enterprises", now_iso))
+        """, ("demo@truetax.in", pwd_hash, "Sandeep Goyal (Demo Merchant)", "9876543210", "TrueTax Enterprises", now_iso))
         demo_user_id = cursor.lastrowid
         conn.commit()
     else:
@@ -186,7 +186,7 @@ def _seed_demo_account(cursor: sqlite3.Cursor, conn: sqlite3.Connection):
     demo_branches = [
         {
             "gstin": "03AAEPG1807C1ZM",
-            "trade_name": "ParchiSetu Textiles & Readymade — Ludhiana HQ",
+            "trade_name": "TrueTax Textiles & Readymade — Ludhiana HQ",
             "state_code": "03",
             "state_name": "Punjab",
             "branch_address": "Shop 42, Chaura Bazar, Near Clock Tower, Ludhiana, Punjab - 141008",
@@ -206,7 +206,7 @@ def _seed_demo_account(cursor: sqlite3.Cursor, conn: sqlite3.Connection):
         },
         {
             "gstin": "07AAECG1807C1Z5",
-            "trade_name": "ParchiSetu Corporate Hub — Delhi Branch",
+            "trade_name": "TrueTax Corporate Hub — Delhi Branch",
             "state_code": "07",
             "state_name": "Delhi",
             "branch_address": "F-Block, Connaught Place, New Delhi, Delhi - 110001",
@@ -416,7 +416,7 @@ def get_demo_login_response() -> Dict[str, Any]:
     init_db()
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, email_or_phone FROM users WHERE email_or_phone = 'demo@parchisetu.in';")
+        cursor.execute("SELECT id, email_or_phone FROM users WHERE email_or_phone IN ('demo@truetax.in', 'demo@parchisetu.in');")
         row = cursor.fetchone()
         if not row:
             raise RuntimeError("Demo account could not be initialized.")
@@ -432,4 +432,3 @@ def get_demo_login_response() -> Dict[str, Any]:
         "merchant_gstins": profile.get("merchant_gstins", []),
         "default_gstin": profile.get("default_gstin")
     }
-

@@ -57,23 +57,24 @@ export default function Header({
           <div className="flex items-center gap-3 shrink-0">
             <Link
               to="/"
-              className="flex items-center gap-2.5 shrink-0 group rounded-xl p-1"
-              aria-label="ParchiSetu AI Home"
+              className="flex items-center gap-2.5 shrink-0 group rounded-xl p-1 focus-visible:ring-2 focus-visible:ring-emerald-500"
+              aria-label="TrueTax AI Home"
+              title="TrueTax AI Home"
             >
-              <div className="h-9 w-9 rounded-xl bg-slate-900 dark:bg-emerald-600 flex items-center justify-center text-white shadow-xs transition-colors">
+              <div className="h-9 w-9 rounded-xl bg-[#059669] dark:bg-emerald-600 flex items-center justify-center text-white shadow-sm ring-2 ring-emerald-500/20 group-hover:bg-emerald-700 transition-colors shrink-0">
                 <ShieldCheck className="h-5 w-5 stroke-[2.2]" />
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[17px] font-bold tracking-tight text-slate-900 dark:text-white">
-                    ParchiSetu <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">AI</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    TrueTax <span className="text-[#059669] dark:text-emerald-400 font-black">AI</span>
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-700">
-                    v1.0
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.5 rounded font-mono">
+                    #25
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
-                  Statutory GST &amp; Multi-Branch Engine
+                  Vernacular OCR &amp; GST Command Center
                 </p>
               </div>
             </Link>
@@ -224,7 +225,7 @@ export default function Header({
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-xs font-semibold cursor-pointer shadow-2xs"
               aria-label="Merchant Account Settings"
             >
-              <div className="h-5 w-5 rounded-full bg-slate-900 dark:bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
+              <div className="h-5 w-5 rounded-full bg-[#059669] dark:bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
                 {user?.full_name ? user.full_name[0].toUpperCase() : 'M'}
               </div>
               <span className="hidden sm:inline truncate max-w-[120px]">

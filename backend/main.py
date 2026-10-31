@@ -1,5 +1,5 @@
 """
-main.py - Bharat GST Vision Engine / ParchiSetu AI (Lane 1 Backend)
+main.py - Bharat GST Vision Engine / TrueTax AI (Lane 1 Backend)
 FastAPI application for Vernacular OCR Handwritten Invoice-to-GST Formatter.
 
 Endpoints:
@@ -28,7 +28,7 @@ load_dotenv()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-logger = logging.getLogger("parchsetu_main")
+logger = logging.getLogger("truetax_main")
 
 # Internal Lane 1 Modules
 from schemas import (
@@ -898,7 +898,7 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
 # ============================================================================
 
 app = FastAPI(
-    title="ParchiSetu AI - Lane 1 Backend & AI Vision Gateway",
+    title="TrueTax AI - Lane 1 Backend & AI Vision Gateway",
     description="Vernacular OCR Handwritten Invoice-to-GST Formatter (Problem Statement #25)",
     version="1.0.0"
 )
@@ -952,7 +952,7 @@ async def root():
             },
         )
     return {
-        "service": "ParchiSetu AI - Bharat GST Vision Engine (Lane 1 & 2)",
+        "service": "TrueTax AI - Bharat GST Vision Engine (Lane 1 & 2)",
         "status": "online",
         "documentation": "/docs",
         "health_check": "/api/v1/health",
@@ -1010,7 +1010,7 @@ async def api_login(payload: Dict[str, Any] = Body(...)):
     email_or_phone = str(payload.get("email_or_phone", "")).strip().lower()
     password = str(payload.get("password", "")).strip()
 
-    if demo_mode or email_or_phone in ("demo", "demo@parchisetu.in", "9876543210"):
+    if demo_mode or email_or_phone in ("demo", "demo@truetax.in", "demo@parchisetu.in", "9876543210"):
         return auth_db.get_demo_login_response()
 
     if not email_or_phone or not password:
@@ -1183,7 +1183,7 @@ async def health_check():
     api_key_set = bool(os.getenv("GEMINI_API_KEY") and os.getenv("GEMINI_API_KEY") != "your_key_here")
     return {
         "status": "healthy",
-        "service": "ParchiSetu AI - Lane 1 AI Vision Gateway",
+        "service": "TrueTax AI - Lane 1 AI Vision Gateway",
         "gemini_api_configured": api_key_set,
         "model_cascade": MODEL_FALLBACK_CASCADE,
         "caching_enabled": False,

@@ -9,7 +9,7 @@ from hsn_matcher import match_hsn_item, search_hsn_catalog, hsn_catalog
 from math_auditor import audit_and_calculate_invoice
 from gst_validator import validate_gstin, INDIAN_STATES
 
-class TestComprehensiveParchiSetuSuite(unittest.TestCase):
+class TestComprehensiveTrueTaxSuite(unittest.TestCase):
 
     def test_01_catalog_loaded_properly(self):
         """Verify 240+ HSN records loaded into memory with lookups."""

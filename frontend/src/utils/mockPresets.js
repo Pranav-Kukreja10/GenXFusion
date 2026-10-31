@@ -61,7 +61,7 @@ function generateReceiptSvg(title, items, isEnhanced = false) {
     <text x="30" y="470" font-family="monospace" font-size="14" font-weight="bold" fill="${ink}">TOTAL AMOUNT:</text>
     <text x="370" y="470" font-family="monospace" font-size="15" font-weight="bold" fill="${ink}" text-anchor="end">KACHA TOTAL</text>
     <text x="200" y="520" font-family="monospace" font-size="10" fill="${ink}" text-anchor="middle" opacity="0.7">** SIGNATURE NOT REQUIRED - ESTIMATE ONLY **</text>
-    <text x="200" y="540" font-family="monospace" font-size="9" fill="${ink}" text-anchor="middle" opacity="0.5">Scanned by ParchiSetu AI OpenCV CLAHE</text>
+    <text x="200" y="540" font-family="monospace" font-size="9" fill="${ink}" text-anchor="middle" opacity="0.5">Scanned by TrueTax AI OpenCV CLAHE</text>
   </svg>`;
 }
 
