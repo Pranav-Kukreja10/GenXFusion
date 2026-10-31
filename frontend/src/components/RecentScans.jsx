@@ -3,12 +3,12 @@ import {
   FileText,
   Clock,
   ArrowRight,
-  Receipt,
   CheckCircle2,
   AlertTriangle,
   XCircle,
 } from 'lucide-react';
 import { loadRecentScans } from '../utils/profileStorage';
+import ReceiptEmptyState from './ReceiptEmptyState';
 
 export default function RecentScans({ onSelectScan, onViewAll }) {
   const [scans, setScans] = useState(loadRecentScans());
@@ -61,20 +61,11 @@ export default function RecentScans({ onSelectScan, onViewAll }) {
 
       {/* Scans List or Empty State */}
       {scans.length === 0 ? (
-        /* Empty State */
-        <div className="py-8 text-center space-y-3">
-          <div className="mx-auto h-14 w-14 rounded-2xl bg-[#FAF8F5] dark:bg-zinc-800/80 border border-[#E5E0D8] dark:border-zinc-700 flex items-center justify-center text-slate-400">
-            <Receipt className="h-7 w-7 stroke-[1.5]" />
-          </div>
-          <div className="max-w-xs mx-auto">
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              No recent scans yet
-            </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Scan a kacha bill or select a demo receipt above to start your GST audit log.
-            </p>
-          </div>
-        </div>
+        <ReceiptEmptyState
+          title="No recent scans yet"
+          subtitle="Scan a kacha bill or select a demo receipt above to start your GST audit log."
+          className="py-6"
+        />
       ) : (
         /* List of Last 5 Scans */
         <div className="space-y-2">

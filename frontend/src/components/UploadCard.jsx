@@ -16,8 +16,8 @@ import { compressImage } from '../utils/compressor';
 /**
  * UploadCard Component
  * 
- * Houses the bill dropzone and converts to <ScanConversion /> during active scanning,
- * transitioning the temporary (kacha) bill into an audited (pakka) tax invoice.
+ * Houses the bill dropzone and converts to <ScanConversion /> during active scanning.
+ * Enhanced with 3D desktop cursor tilt, gentle cloud float, and marching dashed border.
  */
 export default function UploadCard({
   onScanImage,
@@ -37,7 +37,9 @@ export default function UploadCard({
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [tiltStyle, setTiltStyle] = useState({});
 
+  const cardRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -56,6 +58,35 @@ export default function UploadCard({
     onDone: onScanConversionDone,
     isDemo: isDemo,
   });
+
+  // Desktop 3D Card Tilt towards cursor (max 3deg, disabled on touch and reduced motion)
+  const handleMouseMoveTilt = (e) => {
+    if (prefersReducedMotion || isScanning) return;
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+      return;
+    }
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+
+    const maxTilt = 3;
+    const rotateY = (x / (rect.width / 2)) * maxTilt;
+    const rotateX = -(y / (rect.height / 2)) * maxTilt;
+
+    setTiltStyle({
+      transform: `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`,
+      transition: 'transform 80ms ease-out',
+    });
+  };
+
+  const handleMouseLeaveTilt = () => {
+    setTiltStyle({
+      transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
+      transition: 'transform 250ms ease-out',
+    });
+  };
 
   // Automatically start scanning when file is added
   const handleProcessFile = async (file) => {
@@ -142,8 +173,11 @@ export default function UploadCard({
         className="hidden"
       />
 
-      {/* Main Upload Dropzone Card (~640px Max Width) */}
+      {/* Main Upload Dropzone Card (~640px Max Width) with Desktop Tilt */}
       <div
+        ref={cardRef}
+        onMouseMove={handleMouseMoveTilt}
+        onMouseLeave={handleMouseLeaveTilt}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -162,6 +196,7 @@ export default function UploadCard({
         style={{
           boxShadow:
             '0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.02)',
+          ...tiltStyle,
         }}
       >
         {/* =================================================================== */}
@@ -201,7 +236,7 @@ export default function UploadCard({
             <button
               type="button"
               onClick={handleRetry}
-              className="inline-flex items-center gap-2 bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer mt-1"
+              className="btn-tactile inline-flex items-center gap-2 bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-xl transition-all shadow-xs cursor-pointer mt-1"
             >
               <RefreshCw className="h-4 w-4" />
               <span>Try Again</span>
@@ -227,7 +262,7 @@ export default function UploadCard({
               <button
                 type="button"
                 onClick={onViewDashboard}
-                className="inline-flex items-center gap-2 bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="btn-tactile inline-flex items-center gap-2 bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <span>Open in Dashboard</span>
                 <ArrowRight className="h-4 w-4" />
@@ -235,7 +270,7 @@ export default function UploadCard({
               <button
                 type="button"
                 onClick={handleRetry}
-                className="inline-flex items-center gap-1.5 border border-[#E7E2DA] dark:border-[#232B3A] bg-white dark:bg-[#131822] text-slate-700 dark:text-slate-300 hover:text-emerald-600 font-medium text-xs sm:text-sm px-3.5 py-2.5 rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
+                className="btn-tactile inline-flex items-center gap-1.5 border border-[#E7E2DA] dark:border-[#232B3A] bg-white dark:bg-[#131822] text-slate-700 dark:text-slate-300 hover:text-emerald-600 font-medium text-xs sm:text-sm px-3.5 py-2.5 rounded-xl transition-all shadow-2xs cursor-pointer"
               >
                 <span>Scan Another</span>
               </button>
@@ -246,7 +281,7 @@ export default function UploadCard({
               <button
                 type="button"
                 onClick={onReplayAnimation}
-                className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 font-medium cursor-pointer transition-colors pt-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1"
+                className="btn-tactile inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 font-medium cursor-pointer transition-colors pt-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1"
               >
                 <RotateCcw className="h-3 w-3" />
                 <span>Replay animation</span>
@@ -255,13 +290,13 @@ export default function UploadCard({
           </div>
         ) : (
           /* =================================================================== */
-          /* STATE 4: IDLE & DRAG-OVER STATE                                     */
+          /* STATE 4: IDLE & DRAG-OVER STATE (Gentle floating cloud icon)        */
           /* =================================================================== */
           <div className="flex flex-col items-center text-center">
-            {/* Cloud Upload Icon in Emerald Circle */}
+            {/* Cloud Upload Icon in Emerald Circle with gentle 3s float */}
             <div
-              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-[#059669] dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 shadow-inner ring-4 ring-emerald-50 dark:ring-emerald-900/20 transition-transform duration-200 ${
-                isDragOver ? 'scale-110 -translate-y-1' : 'group-hover:scale-105'
+              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-[#059669] dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 shadow-inner ring-4 ring-emerald-50 dark:ring-emerald-900/20 transition-transform duration-200 animate-float-gentle ${
+                isDragOver ? 'scale-110 -translate-y-1' : ''
               }`}
             >
               <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8" />
@@ -275,12 +310,12 @@ export default function UploadCard({
               JPG, PNG, WEBP
             </p>
 
-            {/* Two Action Buttons: Camera (Solid) & Browse File (Outlined) */}
+            {/* Two Action Buttons: Camera (Solid) & Browse File (Outlined) with 96% press */}
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <button
                 type="button"
                 onClick={() => cameraInputRef.current?.click()}
-                className="bg-[#059669] hover:bg-[#047857] text-white font-semibold text-[clamp(0.8125rem,1vw,0.9375rem)] px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all duration-150 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="btn-tactile bg-[#059669] hover:bg-[#047857] text-white font-semibold text-[clamp(0.8125rem,1vw,0.9375rem)] px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <Camera className="h-4 w-4" />
                 <span>Camera</span>
@@ -289,7 +324,7 @@ export default function UploadCard({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-white dark:bg-[#131822] border border-[#059669] dark:border-emerald-500 text-[#059669] dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-semibold text-[clamp(0.8125rem,1vw,0.9375rem)] px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-150 cursor-pointer active:scale-95 shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="btn-tactile bg-white dark:bg-[#131822] border border-[#059669] dark:border-emerald-500 text-[#059669] dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-semibold text-[clamp(0.8125rem,1vw,0.9375rem)] px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-150 cursor-pointer shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <FolderOpen className="h-4 w-4" />
                 <span>Browse File</span>
@@ -301,7 +336,7 @@ export default function UploadCard({
               <button
                 type="button"
                 onClick={onTryDemo}
-                className="text-xs text-[#059669] dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-semibold underline underline-offset-2 hover:no-underline cursor-pointer transition-colors mt-3 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1"
+                className="btn-tactile text-xs text-[#059669] dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-semibold underline underline-offset-2 hover:no-underline cursor-pointer transition-colors mt-3 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1"
               >
                 Try a demo bill
               </button>
@@ -315,7 +350,7 @@ export default function UploadCard({
         <button
           type="button"
           onClick={onViewDashboard}
-          className="w-full bg-[#1E293B] hover:bg-[#0F172A] dark:bg-[#131822] dark:hover:bg-[#1B2230] text-white border border-transparent dark:border-[#232B3A] font-semibold text-[clamp(0.8125rem,1vw,0.9375rem)] py-3 sm:py-3.5 px-6 rounded-xl shadow-md transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="btn-tactile w-full bg-[#1E293B] hover:bg-[#0F172A] dark:bg-[#131822] dark:hover:bg-[#1B2230] text-white border border-transparent dark:border-[#232B3A] font-semibold text-[clamp(0.8125rem,1vw,0.9375rem)] py-3 sm:py-3.5 px-6 rounded-xl shadow-md transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <span>View Dashboard</span>
           <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-150" />

@@ -21,6 +21,7 @@ import { computeRowGST, roundToPaise } from '../utils/gstCalculations';
  * - Row strike-out / restore toggle (statutory paper pen scratches excluded from taxable turnover).
  * - Accessible CustomDropdowns (no native <select>).
  * - Live math check with instant "Apply audited total" button.
+ * - Smooth row collapse on delete (250ms) and green flash on fix.
  */
 export default function LineItemRow({
   item,
@@ -34,8 +35,11 @@ export default function LineItemRow({
   onHover,
   onLeaveHover,
   isInterState = false,
+  style = {},
 }) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [justFixed, setJustFixed] = useState(false);
 
   const isStruck = Boolean(item.is_struck_out || item.struck_out);
 
@@ -75,12 +79,32 @@ export default function LineItemRow({
   // Alternatives list
   const alternatives = item.top_3_alternatives || item.hsn_alternatives || [];
 
+  // Smooth delete collapse handler
+  const handleDelete = () => {
+    setIsDeleting(true);
+    setTimeout(() => {
+      onDelete(index);
+    }, 220);
+  };
+
+  // Fix handler with green flash animation
+  const handleFix = () => {
+    setJustFixed(true);
+    onFixError(index);
+    setTimeout(() => setJustFixed(false), 700);
+  };
+
   return (
     <tr
+      style={style}
       onMouseEnter={() => onHover && onHover(index)}
       onMouseLeave={() => onLeaveHover && onLeaveHover()}
-      className={`group transition-all duration-150 border-b border-slate-200/80 dark:border-slate-800/80 ${
-        isStruck
+      className={`group border-b border-slate-200/80 dark:border-slate-800/80 transition-all duration-300 ${
+        isDeleting
+          ? 'opacity-0 scale-y-0 max-h-0 pointer-events-none'
+          : justFixed
+          ? 'animate-row-flash-green border-l-4 border-l-emerald-500'
+          : isStruck
           ? 'bg-slate-100/60 dark:bg-slate-900/40 opacity-60'
           : isMismatch
           ? 'border-l-4 border-l-red-600 bg-red-50/50 dark:bg-red-950/20'
@@ -98,90 +122,79 @@ export default function LineItemRow({
 
           {/* Confidence dot with % tooltip */}
           <div
-            className="relative cursor-help"
+            className="relative"
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
-            aria-label={`${confidencePercent}% OCR confidence`}
           >
             <span
-              className={`block h-2 w-2 rounded-full ${confidenceDotColor} ring-2 ring-white dark:ring-slate-900`}
+              className={`h-2.5 w-2.5 rounded-full inline-block ${confidenceDotColor} cursor-help ring-2 ring-white dark:ring-slate-900 shadow-2xs`}
+              aria-label={`OCR Confidence: ${confidencePercent}%`}
             />
+
             {showTooltip && (
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 z-40 bg-slate-900 text-white text-[11px] font-mono px-2 py-0.5 rounded shadow-lg whitespace-nowrap pointer-events-none tabular-nums">
-                {confidencePercent}% confidence
+              <div
+                className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 z-30 bg-slate-900 dark:bg-slate-800 text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-lg whitespace-nowrap pointer-events-none animate-fadeIn"
+                role="tooltip"
+              >
+                {confidencePercent}% OCR Confidence
               </div>
             )}
           </div>
         </div>
       </td>
 
-      {/* 2. Vernacular OCR Text & Normalized Product Name */}
+      {/* 2. Vernacular OCR & Normalized Goods */}
       <td className="py-3 px-3 align-top min-w-[240px] space-y-1.5">
-        {/* Vernacular OCR chip with ScanText icon */}
-        {(item.raw_text || item.raw_text_on_paper) && (
-          <div className="flex items-center gap-1.5">
-            <span
-              className={`inline-flex items-center gap-1.5 text-xs font-mono px-2 py-0.5 rounded-md border max-w-full truncate ${
-                isStruck
-                  ? 'line-through text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700'
-                  : 'bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-medium'
-              }`}
-            >
-              <ScanText className="h-3 w-3 text-slate-400 shrink-0" />
-              <span className="truncate">&quot;{item.raw_text || item.raw_text_on_paper}&quot;</span>
+        {/* Monospace Raw Vernacular OCR Chip */}
+        {item.raw_text_on_paper && (
+          <div className="inline-flex items-center gap-1.5 bg-[#FAF8F5] dark:bg-slate-800/80 border border-[#E7E2DA] dark:border-slate-700 rounded-md px-2 py-0.5 text-xs font-mono text-slate-700 dark:text-slate-300 max-w-full">
+            <ScanText className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="truncate max-w-[260px] italic">
+              &quot;{item.raw_text_on_paper}&quot;
             </span>
           </div>
         )}
 
-        {/* Normalized Editable Product Name */}
+        {/* Normalized Goods Input */}
         <div>
           <input
             type="text"
-            value={item.product_name_normalized ?? item.product_name ?? ''}
-            onChange={(e) => onItemChange(index, 'product_name_normalized', e.target.value)}
-            placeholder="Product / Item Description"
+            value={item.product_name_normalized || ''}
             disabled={isStruck}
-            className={`w-full min-h-[42px] px-3 py-1.5 text-[15px] font-medium rounded-lg border transition-colors ${
-              isStruck
-                ? 'line-through text-slate-400 dark:text-slate-600 bg-transparent border-transparent cursor-not-allowed'
-                : 'text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-emerald-500'
+            onChange={(e) => onItemChange(index, 'product_name_normalized', e.target.value)}
+            className={`w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-[15px] font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 shadow-2xs disabled:opacity-50 ${
+              isStruck ? 'line-through text-slate-400' : ''
             }`}
-            aria-label="Product Name"
+            placeholder="Commodity / Item description"
+            aria-label="Normalized Product Description"
           />
         </div>
-
-        {/* Category Description or Statutory Note */}
-        {(item.category_description || item.hsn_description || item.item_sector) && (
-          <div className="text-xs text-slate-500 dark:text-slate-400 font-normal px-1 truncate max-w-[320px]">
-            {item.category_description || item.hsn_description || item.item_sector}
-          </div>
-        )}
       </td>
 
-      {/* 3. Quantity & Standard UQC */}
-      <td className="py-3 px-3 align-top w-48 space-y-1">
+      {/* 3. Quantity & Standardized UQC Unit */}
+      <td className="py-3 px-3 align-top w-40 space-y-1.5">
         <div className="flex items-center gap-1.5">
           <input
             type="number"
             step="any"
-            min="0.01"
+            min="0"
             value={item.quantity ?? 1}
             disabled={isStruck}
             onChange={(e) => onItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-            className="w-20 min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-[15px] font-mono font-medium text-slate-900 dark:text-slate-100 text-right focus:outline-hidden focus:ring-2 focus:ring-emerald-500 tabular-nums disabled:opacity-50"
-            aria-label="Quantity"
+            className="w-16 min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-[15px] font-mono font-medium text-slate-900 dark:text-slate-100 text-right focus:outline-hidden focus:ring-2 focus:ring-emerald-500 tabular-nums disabled:opacity-50"
+            aria-label="Item Quantity"
           />
 
-          <div className="w-24">
+          <div className="flex-1 min-w-[70px]">
             <CustomDropdown
-              value={item.standard_uqc || item.unit_uqc || 'PCS'}
+              value={item.unit_uqc || item.standard_uqc || 'PCS'}
               options={UQC_OPTIONS}
               disabled={isStruck}
               onChange={(val) => {
-                onItemChange(index, 'standard_uqc', val);
                 onItemChange(index, 'unit_uqc', val);
+                onItemChange(index, 'standard_uqc', val);
               }}
-              ariaLabel="Select Unit of Quantity (UQC)"
+              ariaLabel="Select Statutory UQC Unit"
             />
           </div>
         </div>
@@ -211,15 +224,15 @@ export default function LineItemRow({
 
         {/* Math Check: Mismatch Action or Audited Status */}
         {isMismatch ? (
-          <div className="bg-red-50 dark:bg-red-950/50 border border-red-300 dark:border-red-900 text-red-950 dark:text-red-200 rounded-lg p-2 text-xs space-y-1.5">
+          <div className="bg-red-50 dark:bg-red-950/50 border border-red-300 dark:border-red-900 text-red-950 dark:text-red-200 rounded-lg p-2 text-xs space-y-1.5 transition-all duration-300">
             <div className="flex items-center gap-1 font-semibold text-red-700 dark:text-red-300">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
               <span className="tabular-nums">Slip ₹{writtenTotal.toFixed(2)} ≠ Calc ₹{auditedTaxable.toFixed(2)}</span>
             </div>
             <button
               type="button"
-              onClick={() => onFixError(index)}
-              className="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded-md px-2 py-1 text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
+              onClick={handleFix}
+              className="btn-tactile w-full bg-red-600 hover:bg-red-700 text-white rounded-md px-2 py-1 text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
               title={`Apply audited rate ₹${auditedTaxable.toFixed(2)}`}
             >
               <Check className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -244,7 +257,7 @@ export default function LineItemRow({
             type="button"
             disabled={isStruck}
             onClick={() => onOpenHsnSearch(index)}
-            className="min-h-[42px] px-3 py-1.5 inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg font-mono text-xs font-semibold shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+            className="btn-tactile min-h-[42px] px-3 py-1.5 inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg font-mono text-xs font-semibold shadow-2xs transition-all cursor-pointer disabled:opacity-50"
             title="Search HSN Master Directory"
             aria-label={`HSN ${item.hsn_code || '1101'}`}
           >
@@ -330,7 +343,7 @@ export default function LineItemRow({
           <button
             type="button"
             onClick={() => onToggleStrikeOut && onToggleStrikeOut(index)}
-            className={`p-2 rounded-lg transition-colors cursor-pointer ${
+            className={`btn-tactile p-2 rounded-lg transition-colors cursor-pointer ${
               isStruck
                 ? 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
                 : 'text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40'
@@ -344,8 +357,8 @@ export default function LineItemRow({
           {/* Delete Row Button */}
           <button
             type="button"
-            onClick={() => onDelete(index)}
-            className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
+            onClick={handleDelete}
+            className="btn-tactile text-slate-400 hover:text-red-600 dark:hover:text-red-400 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
             title="Delete line item"
             aria-label={`Delete ${item.product_name_normalized || 'item'}`}
           >

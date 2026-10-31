@@ -429,19 +429,32 @@ export default function VisualInspector({
               </div>
             )}
 
-            {/* Table Row Hover Highlight Overlay */}
+            {/* Table Row Hover Highlight Overlay with Animated Outline Stroke */}
             {hoveredRowIndex !== null && overlayTopPercent !== null && (
               <div
-                className="absolute left-6 right-6 border-2 border-emerald-400 bg-emerald-400/20 rounded pointer-events-none transition-all duration-200 z-10 flex items-center justify-between px-3 py-1 shadow-md"
+                className="absolute left-6 right-6 rounded pointer-events-none transition-all duration-200 z-10 flex items-center justify-between px-3 py-1 shadow-md bg-emerald-400/15"
                 style={{
                   top: `${overlayTopPercent}%`,
                   height: '42px',
                 }}
               >
-                <span className="text-[10px] font-mono font-bold text-white bg-slate-900/90 px-1.5 py-0.5 rounded shadow">
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+                  <rect
+                    x="1"
+                    y="1"
+                    width="99%"
+                    height="94%"
+                    rx="4"
+                    fill="none"
+                    stroke="#10B981"
+                    strokeWidth="2"
+                    className="animate-stroke-march"
+                  />
+                </svg>
+                <span className="relative z-10 text-[10px] font-mono font-bold text-white bg-slate-900/90 px-1.5 py-0.5 rounded shadow">
                   Row #{hoveredRowIndex + 1}
                 </span>
-                <span className="text-[10px] font-mono text-emerald-200 bg-emerald-950/80 px-1.5 py-0.5 rounded">
+                <span className="relative z-10 text-[10px] font-mono font-bold text-emerald-200 bg-emerald-950/90 px-1.5 py-0.5 rounded border border-emerald-500/40">
                   Active Line
                 </span>
               </div>

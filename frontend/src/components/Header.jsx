@@ -9,9 +9,7 @@ import {
   Check,
   Plus,
   RefreshCw,
-  Sparkles,
   ArrowLeft,
-  Sparkle,
   FileCheck2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -19,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Header({
   invoice,
   onLoadPreset,
-  onOpenSettings,
+  onOpenSettings: _onOpenSettings,
   onOpenAuth,
   onQuickFillHeader,
   isRecalculating,
@@ -28,7 +26,7 @@ export default function Header({
   onScanNewBill,
 }) {
   const navigate = useNavigate();
-  const { user, merchantGstins, activeGstin, switchActiveGstin, isAuthenticated } = useAuth();
+  const { user, merchantGstins, activeGstin, switchActiveGstin } = useAuth();
   const [isGstinMenuOpen, setIsGstinMenuOpen] = useState(false);
 
   const handleScanClick = () => {
@@ -78,7 +76,7 @@ export default function Header({
             <button
               type="button"
               onClick={handleScanClick}
-              className="hidden md:inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+              className="hidden md:inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer btn-tactile"
             >
               <ArrowLeft className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Scan Bill</span>
@@ -93,7 +91,7 @@ export default function Header({
                 <button
                   type="button"
                   onClick={() => setIsGstinMenuOpen((prev) => !prev)}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100 transition-colors text-xs font-medium cursor-pointer shadow-2xs"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100 transition-colors text-xs font-medium cursor-pointer shadow-2xs btn-tactile"
                   aria-label="Active Merchant GSTIN Branch"
                 >
                   <Building2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -194,7 +192,7 @@ export default function Header({
             <button
               type="button"
               onClick={onToggleDarkMode}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer btn-tactile"
               title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               aria-label="Toggle theme"
             >
@@ -209,7 +207,7 @@ export default function Header({
             <button
               type="button"
               onClick={onOpenAuth}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-xs font-semibold cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-xs font-semibold cursor-pointer shadow-2xs btn-tactile"
               aria-label="Merchant Account Settings"
             >
               <div className="h-5 w-5 rounded-full bg-[#059669] dark:bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">

@@ -17,7 +17,7 @@ export default function Toast({ toasts, onDismiss }) {
         return (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-center justify-between gap-3 p-3.5 rounded-xl border shadow-lg transition-all animate-fadeIn ${
+            className={`pointer-events-auto relative overflow-hidden flex items-center justify-between gap-3 p-3.5 rounded-xl border shadow-lg transition-all animate-toast-slide-in ${
               isSuccess
                 ? 'bg-emerald-50 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-100'
                 : isError
@@ -50,7 +50,7 @@ export default function Toast({ toasts, onDismiss }) {
                   toast.action.onClick();
                   onDismiss(toast.id);
                 }}
-                className="shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
+                className="shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer btn-tactile"
               >
                 {toast.action.label || 'Undo'}
               </button>
@@ -59,11 +59,27 @@ export default function Toast({ toasts, onDismiss }) {
             <button
               type="button"
               onClick={() => onDismiss(toast.id)}
-              className="shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              className="shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer btn-tactile"
               aria-label="Dismiss toast"
             >
               <X className="h-3.5 w-3.5" />
             </button>
+
+            {/* Countdown Progress Bar */}
+            <div
+              className={`absolute bottom-0 left-0 h-0.5 ${
+                isSuccess
+                  ? 'bg-emerald-500/80 dark:bg-emerald-400/80'
+                  : isError
+                  ? 'bg-red-500/80 dark:bg-red-400/80'
+                  : isWarning
+                  ? 'bg-amber-500/80 dark:bg-amber-400/80'
+                  : 'bg-emerald-600/80'
+              } animate-toast-progress`}
+              style={{
+                animationDuration: toast.action ? '6000ms' : '4000ms',
+              }}
+            />
           </div>
         );
       })}

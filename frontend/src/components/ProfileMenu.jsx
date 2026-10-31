@@ -86,7 +86,7 @@ export default function ProfileMenu({
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-label="User profile menu"
-        className={`h-9 w-9 rounded-full flex items-center justify-center shadow-xs transition-transform active:scale-95 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-[#12151C] cursor-pointer ${
+        className={`h-9 w-9 rounded-full flex items-center justify-center shadow-xs transition-transform active:scale-95 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-[#12151C] cursor-pointer btn-tactile ${
           isAuthenticated
             ? 'bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs'
             : 'bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 font-bold'

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertTriangle,
-  CheckCircle2,
   Wand2,
   FileBadge,
   Scissors,
@@ -10,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import { computeLiveTotals } from '../utils/gstCalculations';
+import ConfettiBurst from './ConfettiBurst';
 
 export default function AlertBar({
   invoice,
@@ -17,6 +17,7 @@ export default function AlertBar({
   onRestoreStruckItem,
 }) {
   const [isStruckModalOpen, setIsStruckModalOpen] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const activeItems = invoice?.active_items || [];
   const struckOutItems = invoice?.struck_out_items || [];
@@ -25,6 +26,15 @@ export default function AlertBar({
 
   const totals = computeLiveTotals(activeItems, struckOutItems, buyerState, sellerState);
   const issues = totals.issues;
+
+  // Trigger confetti burst only when issues go from > 0 to 0
+  const prevIssueCountRef = useRef(issues.length);
+  useEffect(() => {
+    if (prevIssueCountRef.current > 0 && issues.length === 0) {
+      setShowConfetti(true);
+    }
+    prevIssueCountRef.current = issues.length;
+  }, [issues.length]);
 
   // Extract dynamic rule chips (e.g. Packaged/Branded Wheat Flour 5% GST, Garments > 1k 12% GST, Salt Exempt 0%)
   const dynamicRules = [];
@@ -51,13 +61,16 @@ export default function AlertBar({
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2.5 relative">
+      {/* Lightweight Confetti Burst (fires when issues drop to 0) */}
+      {showConfetti && <ConfettiBurst onComplete={() => setShowConfetti(false)} />}
+
       {/* =================================================================== */}
       {/* 1. Main Status Bar: Amber Alert or Green All Clear                  */}
       {/* =================================================================== */}
       {issues.length > 0 ? (
         <div
-          className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 rounded-2xl p-3.5 sm:p-4 transition-all shadow-xs animate-fadeIn"
+          className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 rounded-2xl p-3.5 sm:p-4 transition-all duration-300 shadow-xs animate-fadeIn"
           role="alert"
           aria-live="polite"
         >
@@ -94,7 +107,7 @@ export default function AlertBar({
             <button
               type="button"
               onClick={onFixAll}
-              className="inline-flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-extrabold px-3.5 py-2 rounded-xl text-xs shadow-xs transition-all active:scale-95 shrink-0 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500"
+              className="btn-tactile inline-flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-extrabold px-3.5 py-2 rounded-xl text-xs shadow-xs transition-all shrink-0 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500"
               aria-label={`Fix all ${issues.length} rate mismatches`}
             >
               <Wand2 className="h-3.5 w-3.5" />
@@ -104,25 +117,33 @@ export default function AlertBar({
         </div>
       ) : (
         <div
-          className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-2 shadow-xs animate-fadeIn"
+          className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-2 shadow-xs transition-all duration-400"
           role="status"
           aria-live="polite"
         >
           <div className="flex items-center gap-2.5">
+            {/* SVG Checkmark with Self-Drawing Stroke Animation */}
             <div className="h-7 w-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-              <CheckCircle2 className="h-4 w-4 stroke-[2.2]" />
+              <svg className="h-4 w-4 stroke-[2.6]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M5 13l4 4L19 7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="animate-checkmark-draw"
+                />
+              </svg>
             </div>
             <div>
               <p className="text-xs font-extrabold text-emerald-950 dark:text-emerald-100">
                 All checks passed
               </p>
               <p className="text-[11px] text-emerald-700 dark:text-emerald-300">
-                Line item arithmetic, HSN chapters & tax rates match GSTN Portal rules.
+                Line item arithmetic, HSN chapters &amp; tax rates match GSTN Portal rules.
               </p>
             </div>
           </div>
 
-          <span className="text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-white dark:bg-zinc-800 px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-700">
+          <span className="text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-white dark:bg-zinc-800 px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-700 shadow-2xs">
             100% Audited
           </span>
         </div>
@@ -154,7 +175,7 @@ export default function AlertBar({
             <button
               type="button"
               onClick={() => setIsStruckModalOpen(true)}
-              className="text-emerald-700 dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1 cursor-pointer focus-visible:ring-1 focus-visible:ring-emerald-600 rounded px-1"
+              className="btn-tactile text-emerald-700 dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1 cursor-pointer focus-visible:ring-1 focus-visible:ring-emerald-600 rounded px-1"
               aria-label="View excluded struck-out receipt items"
             >
               <Eye className="h-2.5 w-2.5" />
@@ -165,76 +186,80 @@ export default function AlertBar({
       </div>
 
       {/* =================================================================== */}
-      {/* 3. Struck-out Items Modal / Drawer                                  */}
+      {/* Modal: View & Restore Excluded Struck-Out Items                     */}
       {/* =================================================================== */}
       {isStruckModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fadeIn"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="struck-items-title"
+          aria-labelledby="struck-modal-title"
         >
-          <div className="bg-white dark:bg-[#131822] border border-[#E7E2DA] dark:border-[#232B3A] rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E7E2DA] dark:border-zinc-800">
+          <div className="bg-white dark:bg-[#131822] border border-[#E7E2DA] dark:border-[#232B3A] rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
-                  <Scissors className="h-4 w-4" />
-                </div>
-                <h3 id="struck-items-title" className="text-sm font-extrabold text-slate-900 dark:text-white">
+                <Scissors className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <h3 id="struck-modal-title" className="font-bold text-slate-900 dark:text-white text-sm">
                   Excluded Struck-Out Items ({struckOutItems.length})
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsStruckModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
-                aria-label="Close dialog"
+                className="btn-tactile p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+                aria-label="Close modal"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              These items were physically crossed out or marked as cancelled on the paper bill. They are excluded from your GST taxable total to prevent over-reporting.
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              The AI vision model detected pen cut marks or cancellations on these handwritten lines. They are automatically excluded from taxable sales turnover under GST Rule 46.
             </p>
 
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {struckOutItems.map((st, idx) => (
+            <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar">
+              {struckOutItems.map((struck, idx) => (
                 <div
                   key={idx}
-                  className="bg-[#FAF8F5] dark:bg-zinc-800/60 border border-[#E7E2DA] dark:border-zinc-700 rounded-xl p-3 flex items-center justify-between gap-2"
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700/60 text-xs"
                 >
-                  <div>
-                    <p className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 line-through text-red-500">
-                      {st.raw_text_on_paper || st.raw_text || 'Crossed out item'}
-                    </p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      {st.reason || 'Paper receipt strike-through line'}
-                    </p>
+                  <div className="space-y-0.5 min-w-0 pr-2">
+                    <div className="font-mono text-slate-500 line-through truncate">
+                      {struck.raw_text_on_paper || struck.raw_text || 'Struck item'}
+                    </div>
+                    <div className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">
+                      Omitted from GST Ledger
+                    </div>
                   </div>
 
-                  {onRestoreStruckItem && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onRestoreStruckItem(idx);
-                        if (struckOutItems.length <= 1) setIsStruckModalOpen(false);
-                      }}
-                      className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95 shadow-2xs cursor-pointer shrink-0"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      <span>Restore</span>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-mono font-bold text-slate-600 dark:text-slate-300">
+                      ₹{(struck.written_line_total || struck.total || 0).toFixed(2)}
+                    </span>
+                    {onRestoreStruckItem && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onRestoreStruckItem(idx);
+                          setIsStruckModalOpen(false);
+                        }}
+                        className="btn-tactile inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
+                        title="Include back in active taxable items"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        <span>Restore</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-1 flex justify-end">
               <button
                 type="button"
                 onClick={() => setIsStruckModalOpen(false)}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold cursor-pointer"
+                className="btn-tactile px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs cursor-pointer"
               >
                 Done
               </button>

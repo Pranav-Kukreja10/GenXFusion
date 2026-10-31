@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Receipt } from 'lucide-react';
 import { useBills } from '../context/BillsContext';
@@ -7,6 +7,22 @@ import { computeLiveTotals } from '../utils/gstCalculations';
 export default function BillSwitcher({ currentInvoiceId }) {
   const navigate = useNavigate();
   const { bills } = useBills();
+  const containerRef = useRef(null);
+  const tabRefs = useRef({});
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+
+  useEffect(() => {
+    const activeEl = tabRefs.current[currentInvoiceId];
+    if (activeEl && containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const tabRect = activeEl.getBoundingClientRect();
+      setIndicatorStyle({
+        left: tabRect.left - containerRect.left + containerRef.current.scrollLeft,
+        width: tabRect.width,
+        opacity: 1,
+      });
+    }
+  }, [currentInvoiceId, bills]);
 
   const handleSelectTab = (billId) => {
     navigate(`/dashboard/${billId}`);
@@ -27,7 +43,20 @@ export default function BillSwitcher({ currentInvoiceId }) {
         <span className="hidden xl:inline">Open Bills:</span>
       </span>
 
-      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[420px]">
+      <div
+        ref={containerRef}
+        className="relative flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[420px]"
+      >
+        {/* Sliding Pill Indicator */}
+        <div
+          className="absolute top-0 bottom-0 bg-white dark:bg-zinc-900 rounded-lg shadow-2xs ring-1 ring-emerald-500/30 transition-all duration-250 ease-out pointer-events-none"
+          style={{
+            transform: `translateX(${indicatorStyle.left}px)`,
+            width: `${indicatorStyle.width}px`,
+            opacity: indicatorStyle.opacity,
+          }}
+        />
+
         {bills.map((bill) => {
           const isActive = currentInvoiceId === bill.invoice_id;
           const totals = computeLiveTotals(bill.active_items || []);
@@ -38,14 +67,17 @@ export default function BillSwitcher({ currentInvoiceId }) {
           return (
             <button
               key={bill.invoice_id}
+              ref={(el) => {
+                if (el) tabRefs.current[bill.invoice_id] = el;
+              }}
               type="button"
               role="tab"
               aria-selected={isActive}
               onClick={() => handleSelectTab(bill.invoice_id)}
-              className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 text-xs ${
+              className={`relative z-10 px-2.5 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 text-xs btn-tactile ${
                 isActive
-                  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs font-extrabold ring-1 ring-emerald-500/30'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-zinc-900/50'
+                  ? 'text-slate-900 dark:text-white font-extrabold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-zinc-900/40'
               }`}
               title={`${bill.invoice_id} (${bill.merchant_name || 'Store'}): ${
                 isAudited ? 'All checks passed' : `${totals.issueCount} issue needs review`
@@ -77,7 +109,7 @@ export default function BillSwitcher({ currentInvoiceId }) {
         <button
           type="button"
           onClick={handleAddBill}
-          className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-zinc-900 transition-colors cursor-pointer shrink-0"
+          className="relative z-10 p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-zinc-900 transition-colors cursor-pointer shrink-0 btn-tactile"
           title="Add a bill / scan new receipt (navigates to scan page)"
           aria-label="Scan New Bill (+)"
         >
