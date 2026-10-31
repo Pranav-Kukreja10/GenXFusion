@@ -41,7 +41,7 @@ from schemas import (
     GSTR1ExportRequest,
 )
 from image_preprocessor import preprocess_bill_image, compute_sha256
-from vision_router import parse_bill_with_gemini, ocr_cache, MODEL_FALLBACK_CASCADE
+from vision_router import parse_bill_with_gemini, MODEL_FALLBACK_CASCADE
 from gstr1_exporter import export_to_gstr1_json
 from gst_validator import (
     validate_gstin,
@@ -68,12 +68,12 @@ except ImportError:
         logger.info("ℹ️ External 'hsn_matcher' not found. Using built-in high-accuracy fallback HSN matcher.")
 
 try:
-    from math_auditor import audit_and_calculate_invoice
+    from math_auditor import audit_and_calculate_invoice, detect_doubts
     EXTERNAL_MATH_AVAILABLE = True
     logger.info("✅ External Teammate 2 'math_auditor' found and imported.")
 except ImportError:
     try:
-        from backend.math_auditor import audit_and_calculate_invoice
+        from backend.math_auditor import audit_and_calculate_invoice, detect_doubts
         EXTERNAL_MATH_AVAILABLE = True
         logger.info("✅ External Teammate 2 'backend.math_auditor' found and imported.")
     except ImportError:
@@ -357,28 +357,67 @@ def fallback_audit_and_calculate_invoice(
             continue
 
         # 2. Extract and infer unit price if missing
+        raw_text_on_paper = str(getattr(item, "raw_text_on_paper", None) or getattr(item, "raw_text", "") or "")
         qty = float(item.quantity) if item.quantity > 0 else 1.0
         written_total = float(item.written_line_total)
         written_taxable_sum += written_total
 
-        if item.unit_price is not None and item.unit_price > 0:
-            unit_price = float(item.unit_price)
-        else:
+        unit_price = float(item.unit_price) if (item.unit_price is not None and item.unit_price > 0) else None
+        ocr_self_healed_note: Optional[str] = None
+
+        # Algebraic Self-Healing Step A: Rupee Slash Notation ("/-" -> Qty 2 misread)
+        has_slash_tail = any(s in raw_text_on_paper for s in ["/-", "/2", "/=", "।-", "₹"]) or ("/-" in (item.raw_quantity or ""))
+        is_at_slash = bool(re.search(r"@\s*[-–]?\s*\d+\s*/", raw_text_on_paper))
+        if qty == 2.0:
+            if unit_price is not None and abs(unit_price - written_total) < 1.0 and written_total > 0:
+                qty = 1.0
+                unit_price = written_total
+                ocr_self_healed_note = "Self-healed: Rupee slash '/-' misread as quantity 2 -> corrected to Qty 1.0"
+            elif (has_slash_tail or is_at_slash) and (unit_price is None or abs(unit_price - written_total) < 1.0):
+                qty = 1.0
+                unit_price = written_total
+                ocr_self_healed_note = "Self-healed: Rupee slash '/-' misread as quantity 2 -> corrected to Qty 1.0"
+
+        # Algebraic Self-Healing Step B: Hindi Unit Digit Merge ("2 बोरा" -> Qty 21)
+        if unit_price is not None and unit_price > 0 and qty > 1.0 and not ocr_self_healed_note:
+            expected_int_qty = round(written_total / unit_price)
+            if expected_int_qty > 0 and abs((expected_int_qty * unit_price) - written_total) < 0.50:
+                if str(int(qty)).startswith(str(expected_int_qty)) and qty != float(expected_int_qty):
+                    ocr_self_healed_note = (
+                        f"Self-healed: Unit merge misread (read Qty {qty}) -> "
+                        f"algebraically corrected to Qty {expected_int_qty:.1f}"
+                    )
+                    qty = float(expected_int_qty)
+
+        # Missing unit price inference
+        if unit_price is None or unit_price <= 0:
             unit_price = round(written_total / qty, 2)
+            if not ocr_self_healed_note:
+                ocr_self_healed_note = f"Inferred unit price: ₹{unit_price:.2f} (Total ₹{written_total:.2f} / Qty {qty})"
 
         # 3. Calculate audited math
         audited_line_total = round(qty * unit_price, 2)
         math_discrepancy = round(written_total - audited_line_total, 2)
         has_math_error = abs(math_discrepancy) > 0.50
+        if ocr_self_healed_note and abs(math_discrepancy) <= 0.50:
+            has_math_error = False
+            math_discrepancy = 0.0
 
         # 4. Match HSN and GST Slab
+        written_hsn = getattr(item, "written_hsn_code", None)
+        sug_hsn = getattr(item, "suggested_hsn_4digit", None)
+        sug_slab = getattr(item, "suggested_gst_slab", None)
+
         if EXTERNAL_HSN_AVAILABLE:
             try:
                 hsn_info = match_hsn_item(
                     product_name_normalized=item.product_name_normalized,
-                    raw_text=item.raw_text_on_paper,
+                    raw_text=raw_text_on_paper,
                     item_sector=raw_bill.detected_sector,
-                    unit_price=unit_price
+                    unit_price=unit_price,
+                    written_hsn_code=written_hsn,
+                    suggested_hsn_4digit=sug_hsn,
+                    suggested_gst_slab=sug_slab
                 )
             except Exception as e:
                 logger.warning(f"External HSN matcher failed: {e}. Using fallback.")
@@ -386,14 +425,14 @@ def fallback_audit_and_calculate_invoice(
                     item.product_name_normalized,
                     raw_bill.detected_sector,
                     unit_price,
-                    item.raw_text_on_paper
+                    raw_text_on_paper
                 )
         else:
             hsn_info = fallback_match_hsn(
                 item.product_name_normalized,
                 raw_bill.detected_sector,
                 unit_price,
-                item.raw_text_on_paper
+                raw_text_on_paper
             )
 
         gst_rate = float(hsn_info["gst_rate"])
@@ -412,8 +451,8 @@ def fallback_audit_and_calculate_invoice(
             AuditedLineItem(
                 row_id=idx,
                 line_number=idx,
-                raw_text=item.raw_text_on_paper,
-                raw_text_on_paper=item.raw_text_on_paper,
+                raw_text=raw_text_on_paper,
+                raw_text_on_paper=raw_text_on_paper,
                 product_name_normalized=item.product_name_normalized,
                 quantity=qty,
                 raw_unit=item.raw_quantity,
@@ -437,6 +476,13 @@ def fallback_audit_and_calculate_invoice(
                 confidence=float(item.confidence_score),
                 confidence_score=float(item.confidence_score),
                 tax_rule_note=hsn_info.get("tax_rule_note"),
+                ocr_self_healed_note=ocr_self_healed_note,
+                written_hsn_code=written_hsn,
+                suggested_hsn_4digit=sug_hsn,
+                suggested_gst_slab=sug_slab,
+                cbic_schedule=hsn_info.get("cbic_schedule"),
+                statutory_chapter_note=hsn_info.get("statutory_chapter_note"),
+                rag_citation=hsn_info.get("rag_citation"),
                 top_3_alternatives=hsn_info.get("top_3_alternatives", []),
                 hsn_alternatives=hsn_info.get("top_3_alternatives", [])
             )
@@ -468,38 +514,101 @@ def fallback_audit_and_calculate_invoice(
 
     inv_num = getattr(raw_bill, "invoice_id", None) or bill_id
     store_addr = getattr(raw_bill, "store_address", None)
+    raw_merchant = getattr(raw_bill, "merchant_name", None)
+    merchant_name = raw_merchant.strip() if raw_merchant and raw_merchant.strip().lower() not in ("none", "null", "unknown", "") else None
+    store_name_guess = merchant_name
+
     supp_gstin = getattr(raw_bill, "supplier_gstin", None)
-    supp_val = validate_gstin(supp_gstin) if supp_gstin else {"is_valid": False}
-    supp_state = supp_val["state_code"] if supp_val.get("is_valid") else "03"
-    supp_state_name = supp_val["state_name"] if supp_val.get("is_valid") else "Punjab"
+    if supp_gstin and str(supp_gstin).strip().lower() in ("none", "null", ""):
+        supp_gstin = None
+    supp_val = validate_gstin(supp_gstin) if supp_gstin else {"is_valid": False, "state_code": None, "state_name": None}
+    supp_state = supp_val["state_code"] if supp_val.get("is_valid") else None
+    supp_state_name = INDIAN_STATES.get(supp_state) if supp_state else None
+
+    raw_date = getattr(raw_bill, "raw_date_written", None) or getattr(raw_bill, "raw_date_text", None)
+    if raw_date and str(raw_date).strip().lower() not in ("none", "null", "", "today"):
+        raw_date_written = str(raw_date).strip()
+        raw_date_text = raw_date_written
+        normalized_date_iso = raw_date_written
+        date_source = "EXTRACTED_FROM_RECEIPT"
+    else:
+        raw_date_written = None
+        raw_date_text = None
+        normalized_date_iso = None
+        date_source = "MISSING_ON_PAPER_REQUIRES_INPUT"
+
+    written_subtotal = float(getattr(raw_bill, "written_subtotal", None) or 0.0)
+    try:
+        from math_auditor import detect_doubts
+        pending_doubts = detect_doubts(
+            raw_bill=raw_bill,
+            active_items=active_items,
+            written_grand_total=written_grand_total,
+            written_subtotal=written_subtotal,
+            supp_val=supp_val,
+            eff_supp_gstin=supp_gstin,
+            normalized_date_iso=normalized_date_iso,
+            merchant_name=merchant_name,
+        )
+    except Exception:
+        pending_doubts = []
+
+    is_100_percent_compliant = (
+        len([d for d in pending_doubts if d.severity == "BLOCKING"]) == 0
+        and supp_gstin is not None
+        and supp_val.get("is_valid", False)
+        and normalized_date_iso is not None
+        and len(active_items) > 0
+        and audited_taxable_total > 0
+    )
+
+    compliance_audit = validate_invoice_compliance({
+        "supplier_gstin": supp_gstin,
+        "merchant_name": merchant_name,
+        "raw_date_written": raw_date_written,
+        "normalized_date_iso": normalized_date_iso,
+        "invoice_id": inv_num,
+        "items": [it.model_dump() for it in active_items],
+        "place_of_supply": supp_state,
+        "supplier_state": supp_state,
+    })
 
     return AuditedInvoiceResponse(
         bill_id=bill_id,
         invoice_id=inv_num,
+        bill_number=inv_num,
         detected_sector=raw_bill.detected_sector,
-        store_name_guess=raw_bill.merchant_name or "Bharat Kacha Dukaan",
-        merchant_name=raw_bill.merchant_name or "Bharat Kacha Dukaan",
+        store_name_guess=store_name_guess,
+        merchant_name=merchant_name,
         store_address=store_addr,
-        supplier_gstin=supp_gstin or "03AAEPG1807C1ZM",
+        supplier_gstin=supp_gstin,
+        extracted_supplier_gstin=supp_gstin,
         supplier_state_code=supp_state,
         supplier_state_name=supp_state_name,
         place_of_supply_state_code=supp_state,
         place_of_supply_state_name=supp_state_name,
         is_inter_state=False,
+        supply_type="B2CS",
         supply_type_b2b="B2CS",
         customer_name=raw_bill.customer_name,
         customer_phone=raw_bill.customer_phone,
         customer_address=raw_bill.customer_address,
         extra_charges=extra_charges,
         discount_amount=discount_amount,
-        raw_date_written=raw_bill.raw_date_written or "Today",
-        normalized_date_iso="2026-10-31",
+        raw_date_written=raw_date_written,
+        raw_date_text=raw_date_text,
+        normalized_date_iso=normalized_date_iso,
+        date_source=date_source,
+        is_100_percent_compliant=is_100_percent_compliant,
+        pending_doubts=pending_doubts,
+        compliance_audit=compliance_audit,
         model_used=model_used,
         cache_hit=cache_hit,
         raw_image_b64=raw_image_b64,
         enhanced_image_b64=enhanced_image_b64,
         enhanced_image_base64=enhanced_image_b64,
         active_items=active_items,
+        items=active_items,
         struck_out_items=struck_out_items,
         summary=summary
     )
@@ -773,7 +882,12 @@ app.add_middleware(
 )
 
 
+FRONTEND_DIST_DIR = Path("frontend/dist") if Path("frontend/dist").exists() else Path("backend/../frontend/dist")
 STATIC_DIR = Path("static") if Path("static").exists() else Path("backend/static")
+
+if FRONTEND_DIST_DIR.exists() and (FRONTEND_DIST_DIR / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIST_DIR / "assets")), name="react_assets")
+
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
@@ -784,10 +898,28 @@ if STATIC_DIR.exists():
 
 @app.get("/")
 async def root():
-    """Serves the full ParchiSetu AI Command Center dashboard at GET /."""
+    """Serves the frontend application: compiled Vite React app if available, else static dashboard."""
+    # 1. Priority: Compiled Vite React Production App
+    if FRONTEND_DIST_DIR.exists() and (FRONTEND_DIST_DIR / "index.html").exists():
+        return FileResponse(
+            str(FRONTEND_DIST_DIR / "index.html"),
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
+    # 2. Fallback: Vanilla JS static dashboard
     index_file = STATIC_DIR / "index.html"
     if index_file.exists():
-        return FileResponse(str(index_file))
+        return FileResponse(
+            str(index_file),
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
     return {
         "service": "ParchiSetu AI - Bharat GST Vision Engine (Lane 1 & 2)",
         "status": "online",
@@ -859,7 +991,7 @@ async def health_check():
         "service": "ParchiSetu AI - Lane 1 AI Vision Gateway",
         "gemini_api_configured": api_key_set,
         "model_cascade": MODEL_FALLBACK_CASCADE,
-        "cached_bills_count": ocr_cache.count(),
+        "caching_enabled": False,
         "teammate_integrations": {
             "hsn_matcher": "external" if EXTERNAL_HSN_AVAILABLE else "built-in fallback",
             "math_auditor": "external" if EXTERNAL_MATH_AVAILABLE else "built-in fallback"
@@ -906,7 +1038,7 @@ async def parse_invoice(
         raw_bill, model_used, cache_hit = parse_bill_with_gemini(
             pil_image=pil_image,
             sha256_hash=sha256_hash,
-            bypass_cache=bypass_cache,
+            bypass_cache=True,
             api_key=api_key
         )
 
@@ -967,11 +1099,16 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
         raw_image_b64 = payload.get("raw_image_b64")
         enhanced_image_b64 = payload.get("enhanced_image_b64") or payload.get("enhanced_image_base64")
 
-        # Resolve Supplier GSTIN and State
-        supplier_gstin = payload.get("supplier_gstin") or "03AAEPG1807C1ZM"
-        supp_val = validate_gstin(supplier_gstin)
-        supplier_state = supp_val["state_code"] if supp_val["is_valid"] else str(payload.get("supplier_state_code") or "03").zfill(2)
-        supplier_state_name = INDIAN_STATES.get(supplier_state, "Punjab")
+        # Resolve Merchant Name (Zero Silent Autofill)
+        raw_store = payload.get("merchant_name") or payload.get("store_name_guess")
+        store_name = raw_store.strip() if raw_store and raw_store.strip().lower() not in ("none", "null", "unknown", "", "unspecified store") else None
+
+        # Resolve Supplier GSTIN and State (Zero Silent Autofill)
+        raw_gstin = payload.get("supplier_gstin") or payload.get("extracted_supplier_gstin")
+        supplier_gstin = raw_gstin.strip() if raw_gstin and raw_gstin.strip().lower() not in ("none", "null", "") else None
+        supp_val = validate_gstin(supplier_gstin) if supplier_gstin else {"is_valid": False, "state_code": None, "state_name": None}
+        supplier_state = supp_val["state_code"] if supp_val.get("is_valid") else payload.get("supplier_state_code")
+        supplier_state_name = INDIAN_STATES.get(supplier_state) if supplier_state else None
 
         # Resolve Buyer GSTIN and Supply Mode
         buyer_gstin = payload.get("buyer_gstin")
@@ -981,11 +1118,17 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
         buyer_state_name = INDIAN_STATES.get(buyer_state) if buyer_state else None
 
         # Resolve Place of Supply (POS) and Inter-State Tax Mode
-        pos_code = str(payload.get("place_of_supply_state_code") or supplier_state).zfill(2)
-        pos_name = INDIAN_STATES.get(pos_code, "Punjab")
+        raw_pos = payload.get("place_of_supply_state_code") or supplier_state
+        pos_code = str(raw_pos).zfill(2) if raw_pos else None
+        pos_name = INDIAN_STATES.get(pos_code) if pos_code else None
 
-        # Statutory IGST Rule: Inter-State when Supplier State != Place of Supply State
-        is_inter_state = (supplier_state != pos_code)
+        # Statutory IGST Rule (Section 7 of IGST Act): Inter-State when Supplier State != Place of Supply State
+        if supplier_state and pos_code:
+            is_inter_state = bool(supplier_state != pos_code)
+        elif payload.get("is_inter_state") is not None:
+            is_inter_state = bool(payload.get("is_inter_state"))
+        else:
+            is_inter_state = False
 
         raw_active_items = payload.get("active_items", [])
         raw_struck_items = payload.get("struck_out_items", [])
@@ -1016,7 +1159,13 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
             raw_text = item.get("raw_text") or product_name
 
             if EXTERNAL_HSN_AVAILABLE:
-                hsn_info = match_hsn_item(product_name, raw_text, sector, unit_price)
+                hsn_info = match_hsn_item(
+                    product_name,
+                    raw_text,
+                    sector,
+                    unit_price,
+                    written_hsn_code=item.get("written_hsn_code") or item.get("hsn_code")
+                )
             else:
                 hsn_info = fallback_match_hsn(product_name, sector, unit_price, raw_text)
 
@@ -1116,7 +1265,7 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
         # Struck out items
         struck_items = [
             StruckOutItem(
-                row_id=st.get("row_id"),
+                row_id=int(st.get("row_id") or 0),
                 raw_text=st.get("raw_text", ""),
                 written_line_total=float(st.get("written_line_total", 0.0)),
                 reason=st.get("reason", "Crossed out on receipt")
@@ -1143,13 +1292,55 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
             final_payable_pakka_total=final_payable_pakka
         )
 
+        # Date resolution (Zero Silent Autofill)
+        raw_date = payload.get("raw_date_written") or payload.get("raw_date_text")
+        normalized_date = payload.get("normalized_date_iso") or raw_date
+        if not normalized_date or str(normalized_date).strip().lower() in ("none", "null", "", "today"):
+            normalized_date = None
+            date_source = "MISSING_ON_PAPER_REQUIRES_INPUT"
+        else:
+            date_source = "USER_ENTERED" if not raw_date else "EXTRACTED_FROM_RECEIPT"
+
+        # Strict Doubt Detection
+        dummy_bill = RawVisionBill(
+            detected_sector=sector,
+            merchant_name=store_name,
+            supplier_gstin=supplier_gstin,
+            raw_date_written=raw_date,
+            written_grand_total=written_grand_total,
+            written_subtotal=float(payload.get("written_subtotal") or 0.0),
+        )
+        try:
+            from math_auditor import detect_doubts
+            pending_doubts = detect_doubts(
+                raw_bill=dummy_bill,
+                active_items=audited_active,
+                written_grand_total=written_grand_total,
+                written_subtotal=float(payload.get("written_subtotal") or 0.0),
+                supp_val=supp_val,
+                eff_supp_gstin=supplier_gstin,
+                normalized_date_iso=normalized_date,
+                merchant_name=store_name,
+            )
+        except Exception:
+            pending_doubts = []
+
+        is_100_percent_compliant = (
+            len([d for d in pending_doubts if d.severity == "BLOCKING"]) == 0
+            and supplier_gstin is not None
+            and supp_val.get("is_valid", False)
+            and normalized_date is not None
+            and len(audited_active) > 0
+            and audited_taxable_total > 0
+        )
+
         # Run compliance audit
         compliance_audit = validate_invoice_compliance(
             invoice_data={
                 "merchant_name": store_name,
                 "store_name_guess": store_name,
                 "raw_date_written": raw_date,
-                "normalized_date_iso": payload.get("normalized_date_iso") or "2026-10-31",
+                "normalized_date_iso": normalized_date,
                 "active_items": [i.model_dump() for i in audited_active],
                 "supplier_state_code": supplier_state,
                 "place_of_supply_state_code": pos_code,
@@ -1162,10 +1353,12 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
         return AuditedInvoiceResponse(
             bill_id=bill_id,
             invoice_id=bill_id,
+            bill_number=bill_id,
             detected_sector=sector,
             store_name_guess=store_name,
             merchant_name=store_name,
             supplier_gstin=supplier_gstin,
+            extracted_supplier_gstin=supplier_gstin,
             supplier_state_code=supplier_state,
             supplier_state_name=supplier_state_name,
             buyer_gstin=buyer_gstin,
@@ -1174,6 +1367,7 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
             place_of_supply_state_code=pos_code,
             place_of_supply_state_name=pos_name,
             is_inter_state=is_inter_state,
+            supply_type=supply_mode,
             supply_type_b2b=supply_mode,
             customer_name=customer_name,
             customer_phone=customer_phone,
@@ -1181,14 +1375,19 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
             extra_charges=extra_charges,
             discount_amount=discount_amount,
             raw_date_written=raw_date,
-            normalized_date_iso=payload.get("normalized_date_iso") or "2026-10-31",
+            raw_date_text=raw_date,
+            normalized_date_iso=normalized_date,
+            date_source=date_source,
+            is_100_percent_compliant=is_100_percent_compliant,
+            pending_doubts=pending_doubts,
             compliance_audit=compliance_audit,
             model_used="deterministic-recalc",
-            cache_hit=True,
+            cache_hit=False,
             raw_image_b64=raw_image_b64,
             enhanced_image_b64=enhanced_image_b64,
             enhanced_image_base64=enhanced_image_b64,
             active_items=audited_active,
+            items=audited_active,
             struck_out_items=struck_items,
             summary=summary
         )
@@ -1210,7 +1409,7 @@ async def export_gstr1(payload: Dict[str, Any] = Body(...)):
     """
     try:
         invoice_content = payload.get("invoice") or payload
-        gstin = payload.get("supplier_gstin") or payload.get("gstin") or invoice_content.get("supplier_gstin") or "03AAEPG1807C1ZM"
+        gstin = payload.get("supplier_gstin") or payload.get("gstin") or invoice_content.get("supplier_gstin") or "URP"
         fp = payload.get("fp") or payload.get("tax_period") or "102026"
         pos = payload.get("pos_code") or payload.get("pos") or invoice_content.get("place_of_supply_state_code") or "03"
         buyer_gstin = payload.get("buyer_gstin") or invoice_content.get("buyer_gstin")
@@ -1226,6 +1425,35 @@ async def export_gstr1(payload: Dict[str, Any] = Body(...)):
     except Exception as e:
         logger.error(f"Failed to export GSTR-1 JSON: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"GSTR-1 Export Failed: {str(e)}")
+
+
+@app.get("/{full_path:path}")
+async def spa_fallback(full_path: str):
+    """SPA fallback route for React Router navigation (e.g. /dashboard, /scan)."""
+    # Exclude API endpoints and static mounts from SPA fallback
+    if full_path.startswith(("api/", "api", "docs", "redoc", "openapi.json", "static/", "assets/", "health")):
+        raise HTTPException(status_code=404, detail="Endpoint not found")
+
+    if FRONTEND_DIST_DIR.exists() and (FRONTEND_DIST_DIR / "index.html").exists():
+        return FileResponse(
+            str(FRONTEND_DIST_DIR / "index.html"),
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
+    index_file = STATIC_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(
+            str(index_file),
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
+    raise HTTPException(status_code=404, detail="Page not found")
 
 
 if __name__ == "__main__":

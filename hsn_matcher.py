@@ -3,13 +3,14 @@ hsn_matcher.py - PyTorch / Hybrid Vector HSN Matcher
 Part of ParchiSetu AI / Bharat GST Vision Engine (Lane 2).
 
 Features:
-1. Loads 100+ Indian items across 6 sectors from data/hsn_master.csv.
+1. Loads 250+ Indian items & 99 CBIC Chapter heads from data/hsn_master.csv.
 2. Uses sentence-transformers (all-MiniLM-L6-v2) if PyTorch is installed.
-3. Built-in fast TF-IDF / Token N-Gram / SequenceMatcher hybrid vector engine that
-   runs in <2ms with zero dependencies if PyTorch is offline or downloading.
-4. Sector chapter-head fallback if confidence < 0.55 (TEXTILE->6203, GROCERY->1101, etc.).
-5. Automatic conditional Indian GST slab upgrade (Garment > ₹1000 5%->12%, Footwear > ₹1000 12%->18%).
-6. Exposes match_hsn_item and search_hsn_catalog.
+3. Fast TF-IDF / Token N-Gram / SequenceMatcher hybrid vector engine (<2ms).
+4. Rule 1: Priority for explicit written HSN code (paper or OCR) -> 0.99 confidence.
+5. Rule 2: Priority checks for Cement (2523, 28%), Tiles (6907, 18%), Wood/Timber (4407/4412, 18%), Furniture (9403, 18%), Fertilizer (3102, 5%).
+6. Rule 3: Dynamic LLM fallback for random unseen items using suggested_hsn_4digit and suggested_gst_slab.
+7. Rule 4: Conditional ₹1,000 threshold for Apparel (5%->12%) and Footwear (12%->18%).
+8. Rule 5: Statutory CBIC RAG citations (cbic_schedule + statutory_chapter_note).
 """
 
 from __future__ import annotations
@@ -53,6 +54,7 @@ SECTOR_DEFAULT_CHAPTERS: Dict[str, Tuple[str, str, float]] = {
 # ============================================================================
 CBIC_SCHEDULES: Dict[float, str] = {
     0.0: "Exempt Notification No. 2/2017-CT(Rate)",
+    3.0: "Special Schedule (1.5% CGST + 1.5% SGST) - Gold/Jewellery",
     5.0: "Schedule I (2.5% CGST + 2.5% SGST) - CBIC Notification 1/2017-CT(Rate)",
     12.0: "Schedule II (6% CGST + 6% SGST) - CBIC Notification 1/2017-CT(Rate)",
     18.0: "Schedule III (9% CGST + 9% SGST) - CBIC Notification 1/2017-CT(Rate)",
@@ -60,31 +62,60 @@ CBIC_SCHEDULES: Dict[float, str] = {
 }
 
 STATUTORY_CHAPTER_MAP: Dict[str, str] = {
+    "01": "Chapter 01 (Live Animals)",
+    "02": "Chapter 02 (Meat & Edible Meat Offal)",
+    "03": "Chapter 03 (Fish & Aquatic Invertebrates)",
+    "04": "Chapter 04 (Dairy Produce, Eggs, Natural Honey, Milk)",
+    "07": "Chapter 07 (Edible Vegetables, Certain Roots & Tubers)",
+    "08": "Chapter 08 (Edible Fruit & Nuts, Citrus, Melons)",
+    "09": "Chapter 09 (Coffee, Tea, Mate & Spices)",
     "10": "Chapter 10 (Cereals): Rice, wheat, foodgrains",
     "11": "Chapter 11 (Products of Milling Industry): Wheat flour, atta, maida, suji",
+    "12": "Chapter 12 (Oil Seeds, Grains, Seeds & Fruit)",
     "15": "Chapter 15 (Animal/Vegetable Fats & Oils): Edible cooking oil, mustard oil, ghee",
     "17": "Chapter 17 (Sugars & Sugar Confectionery): Refined sugar, jaggery",
-    "19": "Chapter 19 (Preparations of Cereals/Flour): Biscuits, bakery products",
-    "21": "Chapter 21 (Miscellaneous Edible Preparations): Spices, tea, coffee, sauces",
+    "18": "Chapter 18 (Cocoa & Cocoa Preparations, Chocolates)",
+    "19": "Chapter 19 (Preparations of Cereals/Flour): Biscuits, bakery products, noodles",
+    "20": "Chapter 20 (Preparations of Vegetables, Fruit, Nuts): Jams, juices",
+    "21": "Chapter 21 (Miscellaneous Edible Preparations): Spices, tea, sauces",
+    "22": "Chapter 22 (Beverages, Spirits & Vinegar): Packaged water, aerated drinks",
+    "24": "Chapter 24 (Tobacco & Manufactured Tobacco Substitutes, Pan Masala)",
     "25": "Chapter 25 (Salt, Sulphur, Earths, Stone, Lime & Cement): Portland cement under Heading 2523",
+    "27": "Chapter 27 (Mineral Fuels, Oils & Products of Distillation): Lubricants, LPG",
     "30": "Chapter 30 (Pharmaceutical Products): Medicaments & formulations under Heading 3004",
     "31": "Chapter 31 (Fertilizers): Mineral or chemical fertilizers under Heading 3102",
     "32": "Chapter 32 (Tanning, Dyeing Extracts, Paints & Varnishes): Heading 3208",
+    "33": "Chapter 33 (Essential Oils, Perfumery, Cosmetics, Toilet Preparations)",
     "34": "Chapter 34 (Soap, Organic Surface-Active Agents, Detergents): Soaps & cleaning agents",
+    "38": "Chapter 38 (Miscellaneous Chemical Products): Agrochemicals, insecticides",
     "39": "Chapter 39 (Plastics & Articles thereof): PVC pipes, plastic fittings",
+    "40": "Chapter 40 (Rubber & Articles thereof): Tyres, tubes",
     "44": "Chapter 44 (Wood & Articles of Wood): Sawn timber, plywood & panels under Heading 4407/4412",
+    "48": "Chapter 48 (Paper & Paperboard, Articles of Paper Pulp)",
     "52": "Chapter 52 (Cotton): Cotton yarn & woven unstitched fabric under Heading 5208",
+    "54": "Chapter 54 (Man-made Filaments, Synthetic Fabrics)",
+    "55": "Chapter 55 (Man-made Staple Fibres)",
     "61": "Chapter 61 (Articles of Apparel, Knitted or Crocheted): T-shirts, hosiery",
     "62": "Chapter 62 (Articles of Apparel, Not Knitted): Readymade suits, shirts, trousers under Heading 6203/6204",
     "63": "Chapter 63 (Other Made Up Textile Articles): Curtains, bedsheets, blankets",
     "64": "Chapter 64 (Footwear, Gaiters & Parts): Footwear under Heading 6402/6403",
     "68": "Chapter 68 (Articles of Stone, Plaster, Cement): Granite & marble slabs under Heading 6802",
     "69": "Chapter 69 (Ceramic Products): Ceramic flags, paving, vitrified & wall tiles under Heading 6907",
+    "70": "Chapter 70 (Glass & Glassware)",
+    "71": "Chapter 71 (Natural/Cultured Pearls, Precious Stones, Gold & Jewellery)",
     "72": "Chapter 72 (Iron & Steel): TMT bars, steel rods, sariya",
     "73": "Chapter 73 (Articles of Iron or Steel): Screws, nuts, bolts, sanitaryware",
-    "84": "Chapter 84 (Nuclear Reactors, Boilers, Machinery): Pumps, mechanical appliances",
+    "74": "Chapter 74 (Copper & Articles thereof): Copper pipes, utensils",
+    "76": "Chapter 76 (Aluminium & Articles thereof): Aluminium sections, foil",
+    "82": "Chapter 82 (Tools, Implements, Cutlery)",
+    "83": "Chapter 83 (Miscellaneous Articles of Base Metal): Locks, padlocks, hinges",
+    "84": "Chapter 84 (Nuclear Reactors, Boilers, Machinery): Pumps, computers, printers",
     "85": "Chapter 85 (Electrical Machinery & Equipment): Wires, cables, switches, LED lamps under Heading 8539/8544",
+    "87": "Chapter 87 (Vehicles other than Railway, Automobile Parts)",
+    "90": "Chapter 90 (Optical, Photographic, Medical/Surgical Instruments)",
     "94": "Chapter 94 (Furniture, Bedding, Mattresses): Wooden/metal furniture, sofas under Heading 9403",
+    "95": "Chapter 95 (Toys, Games & Sports Requisites)",
+    "96": "Chapter 96 (Miscellaneous Manufactured Articles): Pens, stationary, brooms",
     "99": "Chapter 99 (Services & Sundry Goods): General sundry merchandise",
 }
 
@@ -123,6 +154,8 @@ class HSNMasterCatalog:
     def __init__(self, csv_path: Path = CSV_PATH):
         self.csv_path = csv_path
         self.records: List[Dict[str, Any]] = []
+        self.hsn_lookup: Dict[str, Dict[str, Any]] = {}
+        self.chapter_lookup: Dict[str, Dict[str, Any]] = {}
         self.use_neural = False
         self.neural_model = None
         self.embeddings = None
@@ -139,8 +172,9 @@ class HSNMasterCatalog:
             with open(self.csv_path, mode="r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    self.records.append({
-                        "hsn_code": str(row["hsn_code"]).strip(),
+                    hsn = str(row["hsn_code"]).strip()
+                    rec = {
+                        "hsn_code": hsn,
                         "sector": str(row["sector"]).strip().upper(),
                         "description": str(row["description"]).strip(),
                         "hinglish_aliases": str(row.get("hinglish_aliases", "")).strip().lower(),
@@ -148,7 +182,14 @@ class HSNMasterCatalog:
                         "has_price_threshold": str(row.get("has_price_threshold", "False")).strip().lower() == "true",
                         "threshold_amount": float(row.get("threshold_amount", 0.0)),
                         "above_threshold_gst_rate": float(row.get("above_threshold_gst_rate", row.get("base_gst_rate", 18.0))),
-                    })
+                        "default_uqc": str(row.get("default_uqc", "PCS")).strip(),
+                        "cbic_schedule": str(row.get("cbic_schedule", "")).strip(),
+                    }
+                    self.records.append(rec)
+                    self.hsn_lookup[hsn] = rec
+                    ch = hsn[:2]
+                    if ch not in self.chapter_lookup:
+                        self.chapter_lookup[ch] = rec
             logger.info(f"Loaded {len(self.records)} HSN records from {self.csv_path}")
         except Exception as e:
             logger.error(f"Error loading HSN CSV: {e}. Loading internal seed dataset.")
@@ -170,7 +211,7 @@ class HSNMasterCatalog:
             ("6402", "FOOTWEAR_UTENSILS", "Footwear & Slippers", "chappal shoes sandals joota slippers", 12.0, True, 1000, 18.0),
         ]
         for hsn, sec, desc, aliases, base, has_th, th, above in seeds:
-            self.records.append({
+            rec = {
                 "hsn_code": hsn,
                 "sector": sec,
                 "description": desc,
@@ -179,7 +220,14 @@ class HSNMasterCatalog:
                 "has_price_threshold": has_th,
                 "threshold_amount": th,
                 "above_threshold_gst_rate": above,
-            })
+                "default_uqc": "PCS",
+                "cbic_schedule": CBIC_SCHEDULES.get(base, "Statutory Schedule"),
+            }
+            self.records.append(rec)
+            self.hsn_lookup[hsn] = rec
+            ch = hsn[:2]
+            if ch not in self.chapter_lookup:
+                self.chapter_lookup[ch] = rec
 
     def _init_engine(self) -> None:
         """Attempt to load sentence-transformers / PyTorch; fallback cleanly if absent."""
@@ -205,20 +253,15 @@ class HSNMasterCatalog:
         doc_text = f"{record['description']} {record['hinglish_aliases']}".lower()
         doc_tokens = set(re.findall(r"\w+", doc_text))
 
-        # Token intersection
         overlap = q_tokens.intersection(doc_tokens)
         token_score = len(overlap) / len(q_tokens) if q_tokens else 0.0
 
-        # Exact sub-string presence boost
         sub_boost = 0.0
         for token in q_tokens:
             if len(token) > 2 and token in doc_text:
                 sub_boost += 0.2
 
-        # Sequence matcher ratio
         seq_ratio = difflib.SequenceMatcher(None, query.lower(), record["description"].lower()).ratio()
-
-        # Sector alignment bonus
         sector_bonus = 0.15 if record["sector"] == sector.upper() else 0.0
 
         total_score = (token_score * 0.5) + (seq_ratio * 0.3) + min(sub_boost, 0.4) + sector_bonus
@@ -241,18 +284,107 @@ class HSNMasterCatalog:
         scored.sort(key=lambda x: x[0], reverse=True)
         return [item[1] for item in scored[:limit]]
 
+    def _finalize_match(
+        self,
+        top_rec: Dict[str, Any],
+        unit_price: float,
+        confidence: float,
+        ranked: Optional[List[Tuple[float, Dict[str, Any]]]] = None,
+        rule_prefix: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Calculates conditional GST slab thresholds, generates CBIC RAG, and builds alternatives."""
+        has_th = top_rec.get("has_price_threshold", False)
+        th_amt = float(top_rec.get("threshold_amount", 0.0))
+        base_rate = float(top_rec.get("base_gst_rate", 18.0))
+        above_rate = float(top_rec.get("above_threshold_gst_rate", base_rate))
+        sector = str(top_rec.get("sector", "GENERAL")).upper()
+        hsn_code = str(top_rec.get("hsn_code", "9999"))
+
+        rule_note: Optional[str] = None
+        if has_th and th_amt > 0 and unit_price > th_amt:
+            final_gst_rate = above_rate
+            if sector in ("TEXTILE", "TEXTILES") or hsn_code.startswith(("61", "62", "63")):
+                rule_note = f"Garment > ₹{int(th_amt):,}: Auto-upgraded from {int(base_rate)}% to {int(above_rate)}% GST"
+            elif sector in ("FOOTWEAR_UTENSILS", "FOOTWEAR_AUTO") or hsn_code.startswith("64"):
+                rule_note = f"Footwear > ₹{int(th_amt):,}: Auto-upgraded from {int(base_rate)}% to {int(above_rate)}% GST"
+            else:
+                rule_note = f"Price > ₹{int(th_amt):,}: Upgraded to {int(above_rate)}% GST"
+        elif has_th and th_amt > 0:
+            final_gst_rate = base_rate
+            if sector in ("TEXTILE", "TEXTILES") or hsn_code.startswith(("61", "62", "63")):
+                rule_note = f"Garment <= ₹{int(th_amt):,}: Standard {int(base_rate)}% GST applied"
+            elif sector in ("FOOTWEAR_UTENSILS", "FOOTWEAR_AUTO") or hsn_code.startswith("64"):
+                rule_note = f"Footwear <= ₹{int(th_amt):,}: Standard {int(base_rate)}% GST applied"
+            else:
+                rule_note = f"Standard <= ₹{int(th_amt):,}: {int(base_rate)}% GST applied"
+        else:
+            final_gst_rate = base_rate
+
+        if rule_prefix:
+            rule_note = f"{rule_prefix} | {rule_note}" if rule_note else rule_prefix
+
+        # Top 3 Alternatives for UI dropdown
+        alternatives: List[Dict[str, Any]] = []
+        seen_hsns = {hsn_code}
+
+        alternatives.append({
+            "hsn_code": hsn_code,
+            "label": f"{hsn_code} - {top_rec.get('description', '')} ({final_gst_rate}%)",
+            "gst_rate": final_gst_rate
+        })
+
+        if ranked:
+            for _, cand in ranked:
+                c_hsn = str(cand.get("hsn_code", ""))
+                if c_hsn and c_hsn not in seen_hsns:
+                    seen_hsns.add(c_hsn)
+                    c_rate = cand.get("above_threshold_gst_rate", cand.get("base_gst_rate", 18.0)) if cand.get("has_price_threshold") and unit_price > cand.get("threshold_amount", 0.0) else cand.get("base_gst_rate", 18.0)
+                    alternatives.append({
+                        "hsn_code": c_hsn,
+                        "label": f"{c_hsn} - {cand.get('description', '')} ({float(c_rate)}%)",
+                        "gst_rate": float(c_rate)
+                    })
+                if len(alternatives) >= 3:
+                    break
+
+        rag = build_rag_citation(
+            hsn_code=hsn_code,
+            category_description=top_rec.get("description", "General Merchandise"),
+            gst_rate=final_gst_rate,
+            confidence=confidence,
+            rule_note=rule_note
+        )
+
+        return {
+            "hsn_code": hsn_code,
+            "category_description": top_rec.get("description", "General Merchandise"),
+            "gst_rate": final_gst_rate,
+            "tax_rule_note": rule_note,
+            "cbic_schedule": rag["cbic_schedule"],
+            "statutory_chapter_note": rag["statutory_chapter_note"],
+            "rag_citation": rag,
+            "top_3_alternatives": alternatives,
+            "confidence": confidence,
+        }
+
     def match_item(
         self,
         product_name_normalized: str,
         raw_text: str = "",
         item_sector: str = "GENERAL",
-        unit_price: float = 0.0
+        unit_price: float = 0.0,
+        written_hsn_code: Optional[str] = None,
+        suggested_hsn_4digit: Optional[str] = None,
+        suggested_gst_slab: Optional[float] = None
     ) -> Dict[str, Any]:
         """
-        Matches a normalized item name against HSN catalog:
-        Returns top match, top 3 alternatives, dynamic GST rate with threshold notes, and confidence.
+        Matches an item against the HSN catalog using:
+        1. Explicit written HSN priority.
+        2. Priority keywords (Tiles, Cement, Timber, Furniture, Fertilizer).
+        3. Neural / Hybrid vector scoring.
+        4. Dynamic LLM suggested HSN fallback for random items.
         """
-        # Handle calling convention flexibility:
+        # Calling convention flexibility
         if isinstance(raw_text, str) and isinstance(item_sector, (int, float)):
             unit_price = float(item_sector)
             item_sector = raw_text
@@ -265,6 +397,33 @@ class HSNMasterCatalog:
         combined_lower = combined_query.lower()
         sector_upper = (item_sector or "GENERAL").upper()
 
+        # Rule 1: Priority for explicit written HSN code on invoice/paper
+        clean_written_hsn = None
+        if written_hsn_code:
+            m = re.search(r"\b(\d{4,8})\b", str(written_hsn_code))
+            if m:
+                clean_written_hsn = m.group(1)
+
+        if not clean_written_hsn:
+            hsn_match = re.search(r"\b(?:hsn|acs|hsn/sac|code)[:\s]*(\d{4,8})\b", combined_lower)
+            if hsn_match:
+                clean_written_hsn = hsn_match.group(1)
+
+        if clean_written_hsn:
+            matched_rec = self.hsn_lookup.get(clean_written_hsn) or self.hsn_lookup.get(clean_written_hsn[:4])
+            if not matched_rec and clean_written_hsn[:2] in self.chapter_lookup:
+                matched_rec = dict(self.chapter_lookup[clean_written_hsn[:2]])
+                matched_rec["hsn_code"] = clean_written_hsn[:4]
+            if matched_rec:
+                top_rec = dict(matched_rec)
+                top_rec["hsn_code"] = clean_written_hsn[:4]
+                return self._finalize_match(
+                    top_rec=top_rec,
+                    unit_price=unit_price,
+                    confidence=0.99,
+                    rule_prefix=f"Statutory Written HSN {clean_written_hsn[:4]}"
+                )
+
         # Priority Check 1: Ceramic Tiles, Vitrified, Spenza, Kajaria, Flooring
         # Must ALWAYS map to HSN 6907 (18% GST), NEVER to 2523 (Cement 28%)
         is_tile_query = any(k in combined_lower for k in [
@@ -272,107 +431,97 @@ class HSNMasterCatalog:
             "onyx", "plano", "marbonite", "kajaria", "somany", "nitco", "honey onyx", "vista plano"
         ])
         if is_tile_query:
-            rag = build_rag_citation("6907", "Ceramic Flags, Paving, Hearth or Wall Tiles, Vitrified Tiles", 18.0, 0.98, "Ceramic & Vitrified Tiles (18% GST)")
-            return {
+            top_rec = self.hsn_lookup.get("6907") or {
                 "hsn_code": "6907",
-                "category_description": "Ceramic Flags, Paving, Hearth or Wall Tiles, Vitrified Tiles",
-                "gst_rate": 18.0,
-                "tax_rule_note": "Ceramic & Vitrified Tiles (18% GST)",
-                "cbic_schedule": rag["cbic_schedule"],
-                "statutory_chapter_note": rag["statutory_chapter_note"],
-                "rag_citation": rag,
-                "top_3_alternatives": [
-                    {"hsn_code": "6907", "label": "6907 - Ceramic & Vitrified Tiles (18%)", "gst_rate": 18.0},
-                    {"hsn_code": "6802", "label": "6802 - Granite & Marble Slabs (18%)", "gst_rate": 18.0},
-                    {"hsn_code": "6910", "label": "6910 - Ceramic Sanitaryware (18%)", "gst_rate": 18.0},
-                ],
-                "confidence": 0.98,
+                "sector": "HARDWARE",
+                "description": "Ceramic Flags, Paving, Hearth or Wall Tiles, Vitrified Tiles",
+                "base_gst_rate": 18.0,
+                "has_price_threshold": False,
+                "threshold_amount": 0.0,
+                "above_threshold_gst_rate": 18.0,
             }
+            return self._finalize_match(top_rec, unit_price, confidence=0.98, rule_prefix="Ceramic & Vitrified Tiles (18% GST)")
 
-        # Priority Check: Portland Cement / JK Cement / Ultratech / Ambuja / सीमेंट / सिमेंट (28% GST)
+        # Priority Check 2: Portland Cement / JK Cement / Ultratech / Ambuja / सीमेंट / सिमेंट (28% GST)
         is_cement_query = any(k in combined_lower for k in [
             "cement", "सीमेंट", "सिमेंट", "ultratech", "ambuja", "acc cement", "jk cement",
             "grey cement", "portland", "2523"
         ]) and not is_tile_query
         if is_cement_query:
-            rag = build_rag_citation("2523", "Portland Cement, Aluminous Cement, Slag Cement", 28.0, 0.98, "Portland Cement (28% GST: 14% CGST + 14% SGST)")
-            return {
+            top_rec = self.hsn_lookup.get("2523") or {
                 "hsn_code": "2523",
-                "category_description": "Portland Cement, Aluminous Cement, Slag Cement",
-                "gst_rate": 28.0,
-                "tax_rule_note": "Standard Portland Cement (28% GST: 14% CGST + 14% SGST)",
-                "cbic_schedule": rag["cbic_schedule"],
-                "statutory_chapter_note": rag["statutory_chapter_note"],
-                "rag_citation": rag,
-                "top_3_alternatives": [
-                    {"hsn_code": "2523", "label": "2523 - Portland Cement (28%)", "gst_rate": 28.0},
-                    {"hsn_code": "3506", "label": "3506 - Tile Adhesive (18%)", "gst_rate": 18.0},
-                    {"hsn_code": "3214", "label": "3214 - Wall Putty (18%)", "gst_rate": 18.0},
-                ],
-                "confidence": 0.98,
+                "sector": "HARDWARE",
+                "description": "Portland Cement, Aluminous Cement, Slag Cement",
+                "base_gst_rate": 28.0,
+                "has_price_threshold": False,
+                "threshold_amount": 0.0,
+                "above_threshold_gst_rate": 28.0,
             }
+            return self._finalize_match(top_rec, unit_price, confidence=0.98, rule_prefix="Standard Portland Cement (28% GST)")
 
-        # Priority Check 2: Furniture / Sofa / Chair / Table / Bed / Almirah
+        # Priority Check 3: Furniture / Sofa / Chair / Table / Bed / Almirah
         is_furniture_query = any(k in combined_lower for k in [
             "sofa", "chair", "table", "bed", "almirah", "furniture", "wardrobe", "stool", "cabinet", "dining"
         ])
         if is_furniture_query:
-            rag = build_rag_citation("9403", "Furniture, Sofas, Wooden & Metal Articles", 18.0, 0.95, "Furniture Articles (18% GST)")
-            return {
+            top_rec = self.hsn_lookup.get("9403") or {
                 "hsn_code": "9403",
-                "category_description": "Furniture, Sofas, Wooden & Metal Articles",
-                "gst_rate": 18.0,
-                "tax_rule_note": "Furniture Articles (18% GST)",
-                "cbic_schedule": rag["cbic_schedule"],
-                "statutory_chapter_note": rag["statutory_chapter_note"],
-                "rag_citation": rag,
-                "top_3_alternatives": [
-                    {"hsn_code": "9403", "label": "9403 - Furniture & Sofas (18%)", "gst_rate": 18.0},
-                    {"hsn_code": "4412", "label": "4412 - Plywood & Timber Boards (18%)", "gst_rate": 18.0},
-                ],
-                "confidence": 0.95,
+                "sector": "HARDWARE",
+                "description": "Furniture, Sofas, Wooden & Metal Articles",
+                "base_gst_rate": 18.0,
+                "has_price_threshold": False,
+                "threshold_amount": 0.0,
+                "above_threshold_gst_rate": 18.0,
             }
+            return self._finalize_match(top_rec, unit_price, confidence=0.95, rule_prefix="Furniture Articles (18% GST)")
 
-        # Priority Check 3: Timber / Wood / Plywood / Lakkad / NEW KHAN Timber / Sona Timber
+        # Priority Check 4: Timber / Wood / Plywood / Lakkad / NEW KHAN Timber / Sona Timber
         is_timber_query = any(k in combined_lower for k in [
             "timber", "wood", "plywood", "lakkad", "lakdi", "sona timber", "khan timber",
             "plank", "teak", "sagwan", "sunmica", "board", "blockboard", "ply"
         ]) or ("timber" in sector_upper or "wood" in sector_upper)
         if is_timber_query and not any(c in combined_lower for c in ["cement", "सीमेंट"]):
-            rag = build_rag_citation("4407", "Wood, Timber, Plywood & Veneered Panels", 18.0, 0.96, "Wood & Timber Products (18% GST)")
-            return {
+            top_rec = self.hsn_lookup.get("4407") or self.hsn_lookup.get("4412") or {
                 "hsn_code": "4407",
-                "category_description": "Wood, Timber, Plywood & Veneered Panels",
-                "gst_rate": 18.0,
-                "tax_rule_note": "Wood & Timber Products (18% GST)",
-                "cbic_schedule": rag["cbic_schedule"],
-                "statutory_chapter_note": rag["statutory_chapter_note"],
-                "rag_citation": rag,
-                "top_3_alternatives": [
-                    {"hsn_code": "4407", "label": "4407 - Sawn Timber & Wood (18%)", "gst_rate": 18.0},
-                    {"hsn_code": "4412", "label": "4412 - Plywood & Veneered Panels (18%)", "gst_rate": 18.0},
-                    {"hsn_code": "9403", "label": "9403 - Wooden Furniture (18%)", "gst_rate": 18.0},
-                ],
-                "confidence": 0.96,
+                "sector": "HARDWARE",
+                "description": "Wood, Timber, Plywood & Veneered Panels",
+                "base_gst_rate": 18.0,
+                "has_price_threshold": False,
+                "threshold_amount": 0.0,
+                "above_threshold_gst_rate": 18.0,
             }
+            return self._finalize_match(top_rec, unit_price, confidence=0.96, rule_prefix="Wood & Timber Products (18% GST)")
 
-        # Priority Check 4: Sona / Urea / Fertilizer / Khad (if Agri/Bora)
+        # Priority Check 5: Fertilizer / Urea / DAP / Khad
         is_agri_khad = any(k in combined_lower for k in ["urea", "fertilizer", "khad", "dap", "iffco"])
         if is_agri_khad:
-            rag = build_rag_citation("3102", "Mineral or Chemical Fertilizers, Urea", 5.0, 0.92, "Agricultural Fertilizer / Urea (5% GST)")
-            return {
+            top_rec = self.hsn_lookup.get("3102") or {
                 "hsn_code": "3102",
-                "category_description": "Mineral or Chemical Fertilizers, Urea",
-                "gst_rate": 5.0,
-                "tax_rule_note": "Agricultural Fertilizer / Urea (5% GST)",
-                "cbic_schedule": rag["cbic_schedule"],
-                "statutory_chapter_note": rag["statutory_chapter_note"],
-                "rag_citation": rag,
-                "top_3_alternatives": [
-                    {"hsn_code": "3102", "label": "3102 - Urea & Nitrogenous Fertilizers (5%)", "gst_rate": 5.0},
-                ],
-                "confidence": 0.92,
+                "sector": "GROCERY",
+                "description": "Mineral or Chemical Fertilizers, Urea",
+                "base_gst_rate": 5.0,
+                "has_price_threshold": False,
+                "threshold_amount": 0.0,
+                "above_threshold_gst_rate": 5.0,
             }
+            return self._finalize_match(top_rec, unit_price, confidence=0.92, rule_prefix="Agricultural Fertilizer / Urea (5% GST)")
+
+        # Priority Check 6: Unstitched Fabric / Thaan / Kapda (flat 5% GST)
+        is_unstitched_cloth = any(k in combined_lower for k in [
+            "thaan", "than", "kapda", "fabric", "poplin", "rubia", "cambric", "sut", "cotton cloth",
+            "astar", "lining", "unstitched"
+        ])
+        if is_unstitched_cloth and not any(k in combined_lower for k in ["suit", "lehnga", "shirt", "pant", "jeans"]):
+            top_rec = self.hsn_lookup.get("5208") or {
+                "hsn_code": "5208",
+                "sector": "TEXTILES",
+                "description": "Woven Fabrics of Cotton, Unstitched Cloth / Thaan",
+                "base_gst_rate": 5.0,
+                "has_price_threshold": False,
+                "threshold_amount": 0.0,
+                "above_threshold_gst_rate": 5.0,
+            }
+            return self._finalize_match(top_rec, unit_price, confidence=0.95, rule_prefix="Unstitched Fabric (Flat 5% GST)")
 
         best_score = 0.0
         ranked: List[Tuple[float, Dict[str, Any]]] = []
@@ -399,8 +548,47 @@ class HSNMasterCatalog:
             ranked.sort(key=lambda x: x[0], reverse=True)
             best_score = ranked[0][0] if ranked else 0.0
 
-        # 3. Chapter Fallback if confidence < 0.55
+        # Rule 3: Dynamic LLM fallback for random unseen items when similarity < 0.55
         if best_score < 0.55:
+            clean_sug_hsn = None
+            if suggested_hsn_4digit:
+                sm = re.search(r"\b(\d{4})\b", str(suggested_hsn_4digit))
+                if sm:
+                    clean_sug_hsn = sm.group(1)
+
+            if clean_sug_hsn and clean_sug_hsn in self.hsn_lookup:
+                top_rec = dict(self.hsn_lookup[clean_sug_hsn])
+                if suggested_gst_slab is not None and float(suggested_gst_slab) in (0.0, 3.0, 5.0, 12.0, 18.0, 28.0):
+                    top_rec["base_gst_rate"] = float(suggested_gst_slab)
+                confidence = 0.88
+                return self._finalize_match(top_rec, unit_price, confidence, ranked, rule_prefix="Vision LLM Grounded")
+
+            elif clean_sug_hsn and clean_sug_hsn[:2] in self.chapter_lookup:
+                top_rec = dict(self.chapter_lookup[clean_sug_hsn[:2]])
+                top_rec["hsn_code"] = clean_sug_hsn
+                if suggested_gst_slab is not None and float(suggested_gst_slab) in (0.0, 3.0, 5.0, 12.0, 18.0, 28.0):
+                    top_rec["base_gst_rate"] = float(suggested_gst_slab)
+                confidence = 0.82
+                return self._finalize_match(top_rec, unit_price, confidence, ranked, rule_prefix="Vision LLM Chapter Head")
+
+            elif clean_sug_hsn and len(clean_sug_hsn) == 4:
+                rate = float(suggested_gst_slab) if suggested_gst_slab in (0.0, 3.0, 5.0, 12.0, 18.0, 28.0) else 18.0
+                top_rec = {
+                    "hsn_code": clean_sug_hsn,
+                    "sector": sector_upper,
+                    "description": product_name_normalized or "Specialized Merchandise",
+                    "hinglish_aliases": "",
+                    "base_gst_rate": rate,
+                    "has_price_threshold": clean_sug_hsn.startswith(("61", "62", "63", "64")),
+                    "threshold_amount": 1000.0 if clean_sug_hsn.startswith(("61", "62", "63", "64")) else 0.0,
+                    "above_threshold_gst_rate": 12.0 if clean_sug_hsn.startswith(("61", "62", "63")) else (18.0 if clean_sug_hsn.startswith("64") else rate),
+                    "default_uqc": "PCS",
+                    "cbic_schedule": CBIC_SCHEDULES.get(rate, "Statutory Schedule"),
+                }
+                confidence = 0.78
+                return self._finalize_match(top_rec, unit_price, confidence, ranked, rule_prefix="Vision LLM Statutory Classification")
+
+            # Standard Sector Default Fallback
             default_hsn, default_desc, default_rate = SECTOR_DEFAULT_CHAPTERS.get(
                 sector_upper,
                 ("9999", "General Merchandise", 18.0)
@@ -416,74 +604,11 @@ class HSNMasterCatalog:
                 "above_threshold_gst_rate": 12.0 if sector_upper in ("TEXTILE", "TEXTILES") else (18.0 if sector_upper in ("FOOTWEAR_UTENSILS", "FOOTWEAR_AUTO") else default_rate),
             }
             confidence = 0.60
+            return self._finalize_match(top_rec, unit_price, confidence, ranked, rule_prefix="Sector Default Classification")
         else:
             top_rec = ranked[0][1]
             confidence = min(0.99, max(0.70, round(best_score, 2)))
-
-        # 4. Conditional GST Slab Calculation (₹1,000 threshold rule)
-        has_th = top_rec["has_price_threshold"]
-        th_amt = top_rec["threshold_amount"]
-        base_rate = float(top_rec["base_gst_rate"])
-        above_rate = float(top_rec["above_threshold_gst_rate"])
-
-        rule_note: Optional[str] = None
-        if has_th and th_amt > 0 and unit_price > th_amt:
-            final_gst_rate = above_rate
-            if top_rec["sector"] in ("TEXTILE", "TEXTILES") or top_rec["hsn_code"].startswith(("61", "62", "63")):
-                rule_note = f"Garment > ₹{int(th_amt):,}: Auto-upgraded from {int(base_rate)}% to {int(above_rate)}% GST"
-            elif top_rec["sector"] in ("FOOTWEAR_UTENSILS", "FOOTWEAR_AUTO") or top_rec["hsn_code"].startswith("64"):
-                rule_note = f"Footwear > ₹{int(th_amt):,}: Auto-upgraded from {int(base_rate)}% to {int(above_rate)}% GST"
-            else:
-                rule_note = f"Price > ₹{int(th_amt):,}: Upgraded to {int(above_rate)}% GST"
-        elif has_th and th_amt > 0:
-            final_gst_rate = base_rate
-            rule_note = f"Standard <= ₹{int(th_amt):,}: {int(base_rate)}% GST applied"
-        else:
-            final_gst_rate = base_rate
-
-        # 5. Top 3 Alternatives for UI dropdown
-        alternatives: List[Dict[str, Any]] = []
-        seen_hsns = {top_rec["hsn_code"]}
-
-        # Add top matched record
-        alternatives.append({
-            "hsn_code": top_rec["hsn_code"],
-            "label": f"{top_rec['hsn_code']} - {top_rec['description']} ({final_gst_rate}%)",
-            "gst_rate": final_gst_rate
-        })
-
-        for _, cand in ranked:
-            c_hsn = cand["hsn_code"]
-            if c_hsn not in seen_hsns:
-                seen_hsns.add(c_hsn)
-                c_rate = cand["above_threshold_gst_rate"] if cand["has_price_threshold"] and unit_price > cand["threshold_amount"] else cand["base_gst_rate"]
-                alternatives.append({
-                    "hsn_code": c_hsn,
-                    "label": f"{c_hsn} - {cand['description']} ({c_rate}%)",
-                    "gst_rate": float(c_rate)
-                })
-            if len(alternatives) >= 3:
-                break
-
-        rag = build_rag_citation(
-            hsn_code=top_rec["hsn_code"],
-            category_description=top_rec["description"],
-            gst_rate=final_gst_rate,
-            confidence=confidence,
-            rule_note=rule_note
-        )
-
-        return {
-            "hsn_code": top_rec["hsn_code"],
-            "category_description": top_rec["description"],
-            "gst_rate": final_gst_rate,
-            "tax_rule_note": rule_note,
-            "cbic_schedule": rag["cbic_schedule"],
-            "statutory_chapter_note": rag["statutory_chapter_note"],
-            "rag_citation": rag,
-            "top_3_alternatives": alternatives,
-            "confidence": confidence,
-        }
+            return self._finalize_match(top_rec, unit_price, confidence, ranked)
 
 
 # Global HSN catalog instance
@@ -494,9 +619,12 @@ def match_hsn_item(
     product_name_normalized: str,
     raw_text: str = "",
     item_sector: str = "GENERAL",
-    unit_price: float = 0.0
+    unit_price: float = 0.0,
+    written_hsn_code: Optional[str] = None,
+    suggested_hsn_4digit: Optional[str] = None,
+    suggested_gst_slab: Optional[float] = None
 ) -> Dict[str, Any]:
-    """Exposed entrypoint for Lane 1 & main.py."""
+    """Exposed entrypoint for Lane 1, main.py & math_auditor."""
     if isinstance(raw_text, str) and isinstance(item_sector, (int, float)):
         unit_price = float(item_sector)
         item_sector = raw_text
@@ -508,7 +636,10 @@ def match_hsn_item(
         product_name_normalized=product_name_normalized,
         raw_text=raw_text,
         item_sector=item_sector,
-        unit_price=unit_price
+        unit_price=unit_price,
+        written_hsn_code=written_hsn_code,
+        suggested_hsn_4digit=suggested_hsn_4digit,
+        suggested_gst_slab=suggested_gst_slab
     )
 
 

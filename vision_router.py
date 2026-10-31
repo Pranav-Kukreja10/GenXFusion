@@ -27,13 +27,13 @@ load_dotenv()
 logger = logging.getLogger("vision_router")
 logging.basicConfig(level=logging.INFO)
 
-CACHE_FILE_PATH = Path("ocr_cache.json")
-
 # Model fallback cascade order
 MODEL_FALLBACK_CASCADE = [
     "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
     "gemini-3.1-flash-lite",
-    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
 ]
 
 VERNACULAR_OCR_SYSTEM_PROMPT = """
@@ -53,7 +53,10 @@ You are Bharat GST Vision Engine (ParchiSetu AI), an expert vernacular OCR intel
 5. Extract Extra Charges & Discounts at Bottom:
    - `extra_charges`: Cartage, freight, kiraya, tempo, or loading charges added below subtotal (e.g. "+360", "Kiraya: 360")
    - `discount_amount`: Any cash discount or "less" deducted from total (e.g. "Less: 400", "-400")
-6. Extract each line item with exact handwritten text, normalized English product name, quantity, unit, unit price, and written total.
+6. Extract each line item with exact handwritten text, normalized English product name, quantity, unit, unit price, and written total:
+   - `written_hsn_code`: If printed or written on paper (e.g. in "HSN/ACS" column like "2523"), extract the exact 4 or 6-digit code. If not written on paper, set null.
+   - `suggested_hsn_4digit`: 4-digit GST HSN prediction for this product (e.g. "2523" for cement, "6907" for ceramic/vitrified tiles, "4412" for plywood/timber, "6204" for readymade suits/lehnga, "5208" for cotton fabric, "3004" for medicines, "8539" for LED bulbs, "8471" for computers, "1006" for rice, "1101" for atta, "1512" for cooking oil).
+   - `suggested_gst_slab`: Statutory Indian GST rate slab applicable to this product category: strictly one of 0.0, 3.0, 5.0, 12.0, 18.0, 28.0.
 7. Detect Struck-Out / Cancelled items: Set `is_struck_out: true` for any line item that has pen lines drawn through it, crossed out, or has "(cut)" / "(kat)" next to it.
 8. Assess confidence score (0.0 to 1.0) based on ink clarity and handwriting legibility.
 
@@ -90,76 +93,29 @@ You are Bharat GST Vision Engine (ParchiSetu AI), an expert vernacular OCR intel
 - In `written_line_total`, extract the EXACT number written on the paper at the right margin.
 - DO NOT multiply `quantity * unit_price` if the shopkeeper wrote a different number (e.g. if receipt says "3 x 45 = 120", you MUST set `written_line_total = 120.0`). Our downstream audit engine will catch calculation mistakes.
 - If no unit price is written and only a line total exists, set `unit_price: null`.
+
+### STRICT ZERO-HALLUCINATION & ZERO-AUTOFILL MANDATE:
+- NO INVENTED STORE NAMES: If a receipt does NOT have a merchant name printed, stamped, or written on it, set `merchant_name = null`. NEVER default to a fake or guessed store name!
+- NO INVENTED GSTIN: If a receipt does NOT have an explicit 15-character GSTIN written on it, set `supplier_gstin = null`. NEVER default to a demo or state GSTIN!
+- NO INVENTED DATES: Only extract a date if a full calendar date (e.g., DD/MM/YYYY, DD/MM/YY, DD-MM-YYYY) is physically written on the paper slip. If no date is written, set `raw_date_written = null`. NEVER guess or substitute today's date! DO NOT confuse 1-2 digit slip numbers, table numbers, or serial numbers with dates.
+- RIGHT-TO-LEFT (URDU/ARABIC) & MULTI-LAYOUT TABLE SUPPORT:
+  * Many Indian cash memos place the Quantity column on the far right and the Amount column on the far left. Mentally detect column headers or layout structure.
+  * In many cash memos or bills, multiple item rows are listed without individual row prices, but a single consolidated lumpsum total is written at the bottom or side in the Amount column.
+  * Extract only the numbers physically written on each row into `unit_price` and `written_line_total`. If a row has NO price written next to it, set `unit_price = null` and `written_line_total = 0.0`.
+  * ALWAYS capture the bottom, side, or subtotal written in the Amount column into `written_grand_total` and `written_subtotal`!
 """
-
-
-class OCRDiskCache:
-    """Simple thread-safe JSON disk cache for OCR extractions keyed by SHA-256."""
-
-    def __init__(self, cache_path: Path = CACHE_FILE_PATH):
-        self.cache_path = cache_path
-        self._cache: Dict[str, Dict[str, Any]] = {}
-        self._load_cache()
-
-    def _load_cache(self) -> None:
-        if self.cache_path.exists():
-            try:
-                with open(self.cache_path, "r", encoding="utf-8-sig") as f:
-                    self._cache = json.load(f)
-                logger.info(f"Loaded {len(self._cache)} cached OCR entries from {self.cache_path}")
-            except Exception as e:
-                logger.warning(f"Failed to read OCR cache: {e}. Starting fresh.")
-                self._cache = {}
-        else:
-            self._cache = {}
-
-    def get(self, sha256_hash: str) -> Optional[Dict[str, Any]]:
-        return self._cache.get(sha256_hash)
-
-    def set(self, sha256_hash: str, data: Dict[str, Any]) -> None:
-        self._cache[sha256_hash] = data
-        try:
-            with open(self.cache_path, "w", encoding="utf-8") as f:
-                json.dump(self._cache, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            logger.error(f"Failed to persist OCR cache to disk: {e}")
-
-    def count(self) -> int:
-        return len(self._cache)
-
-    def clear(self) -> None:
-        self._cache = {}
-        try:
-            if self.cache_path.exists():
-                os.remove(self.cache_path)
-            logger.info("Cleared OCR disk cache successfully.")
-        except Exception as e:
-            logger.warning(f"Error removing OCR cache file: {e}")
-
-
-# Global cache instance
-ocr_cache = OCRDiskCache()
 
 
 def parse_bill_with_gemini(
     pil_image: Image.Image,
-    sha256_hash: str,
-    bypass_cache: bool = False,
+    sha256_hash: Optional[str] = None,
+    bypass_cache: bool = True,
     api_key: Optional[str] = None
 ) -> Tuple[RawVisionBill, str, bool]:
     """
-    Routes an image through the multi-model cascade with caching:
-    Returns (raw_bill, model_used, cache_hit).
+    Routes an image directly and live through the multi-model cascade with zero caching:
+    Returns (raw_bill, model_used, cache_hit=False).
     """
-    # 1. Check SHA-256 cache
-    if not bypass_cache:
-        cached_entry = ocr_cache.get(sha256_hash)
-        if cached_entry:
-            logger.info(f"⚡ Cache Hit for hash {sha256_hash[:10]}... (0 API calls used)")
-            raw_bill = RawVisionBill.model_validate(cached_entry["data"])
-            model_used = cached_entry.get("model_used", "cached-gemini")
-            return raw_bill, model_used, True
-
     # Check API key
     resolved_key = api_key or os.getenv("GEMINI_API_KEY")
     if not resolved_key or resolved_key.strip() in ("", "your_key_here"):
@@ -180,9 +136,9 @@ def parse_bill_with_gemini(
 
     last_error: Optional[Exception] = None
 
-    # 2. Iterate through model fallback cascade
+    # Iterate through live model fallback cascade
     for model_name in MODEL_FALLBACK_CASCADE:
-        logger.info(f"Attempting vernacular OCR with model: {model_name}")
+        logger.info(f"Attempting live vernacular OCR with model: {model_name}")
         try:
             response = client.models.generate_content(
                 model=model_name,
@@ -204,7 +160,7 @@ def parse_bill_with_gemini(
             data = json.loads(response.text)
             parsed_bill = RawVisionBill.model_validate(data)
 
-            # 3. Confidence score check: If any line item has low confidence (< 0.72), escalate
+            # Confidence score check: If any line item has low confidence (< 0.72), escalate
             has_low_confidence = any(
                 item.confidence_score < 0.72 for item in parsed_bill.items
             )
@@ -215,12 +171,7 @@ def parse_bill_with_gemini(
                 )
                 continue
 
-            # Success - store in disk cache
-            ocr_cache.set(sha256_hash, {
-                "model_used": model_name,
-                "data": parsed_bill.model_dump()
-            })
-
+            # Pure live response (zero caching)
             return parsed_bill, model_name, False
 
         except Exception as e:

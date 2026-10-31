@@ -6,16 +6,29 @@ Features:
 1. Official 38 Indian State/UT GST Code Mapping (01 to 38 + 97/99).
 2. 15-character GSTIN structure, regex, PAN validation, and Entity Type extraction.
 3. Official Indian GSTN Modulo-36 Checksum verification algorithm.
-4. Compliance Readiness Auditor (checking mandatory invoice fields vs. paper extractions).
-5. Valid Demo GSTIN generation for instant judge demonstrations.
+4. Indian Financial Year (April 1 - March 31) & CGST Rule 46(b) invoice numbering.
+5. Persistent thread-safe FY invoice number registry (data/invoice_registry.json).
+6. B2B, B2CL, B2CS statutory classifier.
+7. Guarantees ZERO null (None) values in all returned dictionaries.
 """
 
 from __future__ import annotations
 import re
+import json
+import threading
+from datetime import datetime
+from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
+# Thread lock for invoice registry operations
+REGISTRY_LOCK = threading.Lock()
+REGISTRY_FILE_PATHS = [
+    Path("data/invoice_registry.json"),
+    Path("backend/data/invoice_registry.json")
+]
+
 # ============================================================================
-# 1. Official Indian State & Union Territory GST Code Map
+# 1. Official Indian State & Union Territory GST Code Map (38 Official Codes)
 # ============================================================================
 INDIAN_STATES: Dict[str, str] = {
     "01": "Jammu & Kashmir",
@@ -73,9 +86,9 @@ PAN_ENTITY_TYPES: Dict[str, str] = {
     "G": "Government Agency / Department",
 }
 
-# Modulo 36 Character Set
 CHARS_MOD36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 GSTIN_REGEX = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$")
+RULE_46B_REGEX = re.compile(r"^[a-zA-Z0-9/-]{1,16}$")
 
 
 # ============================================================================
@@ -85,18 +98,6 @@ GSTIN_REGEX = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]
 def compute_gstin_mod36_checksum(gstin_first_14: str) -> str:
     """
     Computes the standard Indian GSTN Modulo-36 check character for the 15th position.
-    
-    Algorithm:
-    - First 14 characters are mapped: 0-9 -> 0-9, A-Z -> 10-35.
-    - Multiplier alternates between 1 (for odd 1-based positions 1, 3, 5, 7, 9, 11, 13)
-      and 2 (for even 1-based positions 2, 4, 6, 8, 10, 12, 14).
-    - For each char:
-        product = char_val * multiplier
-        factor_sum = (product // 36) + (product % 36)
-    - Total sum is accumulated.
-    - remainder = total_sum % 36
-    - check_code = (36 - remainder) % 36
-    - Returns CHARS_MOD36[check_code]
     """
     cleaned = gstin_first_14.strip().upper()[:14]
     if len(cleaned) < 14:
@@ -124,6 +125,7 @@ def validate_gstin(gstin: Optional[str]) -> Dict[str, Any]:
     - State Code validity (01-38)
     - PAN extraction & Entity Type decoding
     - Official Modulo-36 check-digit verification
+    Guarantees non-null string outputs.
     """
     if not gstin or not isinstance(gstin, str):
         return {
@@ -132,7 +134,7 @@ def validate_gstin(gstin: Optional[str]) -> Dict[str, Any]:
             "state_code": "",
             "state_name": "",
             "pan": "",
-            "entity_type": "Unknown",
+            "entity_type": "",
             "checksum_valid": False,
             "expected_checksum": "",
             "error_reason": "GSTIN is missing or empty"
@@ -141,55 +143,57 @@ def validate_gstin(gstin: Optional[str]) -> Dict[str, Any]:
     clean_gstin = gstin.strip().upper().replace(" ", "").replace("-", "")
 
     if len(clean_gstin) != 15:
+        sc = clean_gstin[:2] if len(clean_gstin) >= 2 else ""
         return {
             "is_valid": False,
             "gstin": clean_gstin,
-            "state_code": clean_gstin[:2] if len(clean_gstin) >= 2 else "",
-            "state_name": INDIAN_STATES.get(clean_gstin[:2], "Invalid State Code"),
+            "state_code": sc,
+            "state_name": INDIAN_STATES.get(sc, ""),
             "pan": "",
-            "entity_type": "Unknown",
+            "entity_type": "",
             "checksum_valid": False,
             "expected_checksum": "",
             "error_reason": f"Expected 15 characters, got {len(clean_gstin)}"
         }
 
+    state_code = clean_gstin[:2]
+    pan = clean_gstin[2:12]
+    entity_code = clean_gstin[5]
+    entity_type = PAN_ENTITY_TYPES.get(entity_code, "Unspecified Entity")
+
     if not GSTIN_REGEX.match(clean_gstin):
         return {
             "is_valid": False,
             "gstin": clean_gstin,
-            "state_code": clean_gstin[:2],
-            "state_name": INDIAN_STATES.get(clean_gstin[:2], "Invalid State Code"),
-            "pan": clean_gstin[2:12],
-            "entity_type": PAN_ENTITY_TYPES.get(clean_gstin[5], "Unknown"),
+            "state_code": state_code,
+            "state_name": INDIAN_STATES.get(state_code, ""),
+            "pan": pan,
+            "entity_type": entity_type,
             "checksum_valid": False,
             "expected_checksum": "",
             "error_reason": "Regex pattern mismatch (Expected format: 22AAAAA0000A1Z5)"
         }
 
-    state_code = clean_gstin[:2]
     if state_code not in INDIAN_STATES:
         return {
             "is_valid": False,
             "gstin": clean_gstin,
             "state_code": state_code,
-            "state_name": "Unknown State Code",
-            "pan": clean_gstin[2:12],
-            "entity_type": PAN_ENTITY_TYPES.get(clean_gstin[5], "Unknown"),
+            "state_name": "",
+            "pan": pan,
+            "entity_type": entity_type,
             "checksum_valid": False,
             "expected_checksum": "",
             "error_reason": f"State Code '{state_code}' is not a valid Indian State/UT"
         }
 
     state_name = INDIAN_STATES[state_code]
-    pan = clean_gstin[2:12]
-    entity_code = clean_gstin[5]
-    entity_type = PAN_ENTITY_TYPES.get(entity_code, "Unspecified Entity")
 
     try:
         expected_check = compute_gstin_mod36_checksum(clean_gstin[:14])
         actual_check = clean_gstin[14]
         checksum_valid = (expected_check == actual_check)
-    except Exception as e:
+    except Exception:
         checksum_valid = False
         expected_check = ""
 
@@ -215,14 +219,13 @@ def validate_gstin(gstin: Optional[str]) -> Dict[str, Any]:
         "entity_type": entity_type,
         "checksum_valid": True,
         "expected_checksum": expected_check,
-        "error_reason": None
+        "error_reason": ""
     }
 
 
 def generate_valid_gstin(state_code: str = "03", entity_type: str = "P") -> str:
     """
     Generates a 100% valid Indian GSTIN with mathematically verified Mod-36 checksum.
-    Useful for demonstration and automated testing.
     """
     st = str(state_code).zfill(2)
     pan_prefix = "AAE"
@@ -239,86 +242,332 @@ def generate_valid_gstin(state_code: str = "03", entity_type: str = "P") -> str:
 
 
 # ============================================================================
-# 3. Invoice Compliance & Statutory Readiness Validator
+# 3. Financial Year (FY) & CGST Rule 46(b) Invoice Number Verification
+# ============================================================================
+
+def get_indian_financial_year(date_str: Optional[str] = None) -> str:
+    """
+    Determines the Indian Financial Year (April 1 to March 31).
+    E.g.:
+    '2026-10-31' -> '2026-27'
+    '2021-03-04' -> '2020-21'
+    '04/03/2021' -> '2020-21'
+    """
+    dt = None
+    if date_str and isinstance(date_str, str) and date_str.strip():
+        clean = date_str.strip()
+        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%d/%m/%y", "%d-%m-%y", "%Y/%m/%d"):
+            try:
+                dt = datetime.strptime(clean, fmt)
+                break
+            except ValueError:
+                continue
+
+    if dt is None:
+        dt = datetime.now()
+
+    year = dt.year
+    month = dt.month
+
+    if month >= 4:
+        start_year = year
+        end_year = year + 1
+    else:
+        start_year = year - 1
+        end_year = year
+
+    return f"{start_year}-{str(end_year)[-2:]}"
+
+
+def validate_rule_46b_invoice_number(invoice_num: Optional[str]) -> Dict[str, Any]:
+    """
+    Validates invoice number strictly per CGST Rule 46(b):
+    - Non-empty
+    - Max 16 characters
+    - Only alphanumeric, slash (/), and hyphen (-)
+    """
+    if not invoice_num or not isinstance(invoice_num, str):
+        return {
+            "is_valid": False,
+            "invoice_number": "",
+            "error_reason": "Invoice number is missing"
+        }
+
+    clean = invoice_num.strip()
+    if len(clean) == 0:
+        return {
+            "is_valid": False,
+            "invoice_number": "",
+            "error_reason": "Invoice number cannot be blank"
+        }
+
+    if len(clean) > 16:
+        return {
+            "is_valid": False,
+            "invoice_number": clean,
+            "error_reason": f"Exceeds CGST Rule 46(b) maximum length of 16 characters (length={len(clean)})"
+        }
+
+    if not RULE_46B_REGEX.match(clean):
+        return {
+            "is_valid": False,
+            "invoice_number": clean,
+            "error_reason": "Contains invalid characters. Rule 46(b) permits only alphanumeric, '/' and '-'"
+        }
+
+    return {
+        "is_valid": True,
+        "invoice_number": clean,
+        "error_reason": ""
+    }
+
+
+def _load_registry() -> Dict[str, Any]:
+    for path in REGISTRY_FILE_PATHS:
+        if path.exists():
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+    return {"records": []}
+
+
+def _save_registry(data: Dict[str, Any]):
+    for path in REGISTRY_FILE_PATHS:
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
+
+
+def generate_next_sequential_invoice_number(supplier_key: str, financial_year: str) -> str:
+    """
+    Generates the next valid sequential invoice number for a given supplier in a financial year.
+    Format: INV/{short_fy}/{seq:04d} e.g. INV/26-27/0001
+    """
+    with REGISTRY_LOCK:
+        reg = _load_registry()
+        records = reg.get("records", [])
+        
+        # Find matching records
+        max_seq = 0
+        sk_clean = supplier_key.strip().upper() if supplier_key else "DEFAULT"
+        fy_clean = financial_year.strip()
+        
+        for r in records:
+            if r.get("supplier_key", "").upper() == sk_clean and r.get("financial_year", "") == fy_clean:
+                num = str(r.get("invoice_number", ""))
+                # Try to extract trailing digits
+                m = re.search(r"(\d+)$", num)
+                if m:
+                    try:
+                        seq = int(m.group(1))
+                        if seq > max_seq:
+                            max_seq = seq
+                    except ValueError:
+                        pass
+        
+        next_seq = max_seq + 1
+        return f"INV/{fy_clean}/{next_seq:04d}"
+
+
+def check_and_register_invoice_number(
+    supplier_key: str,
+    financial_year: str,
+    invoice_number: str,
+    auto_register: bool = False
+) -> Dict[str, Any]:
+    """
+    Checks invoice number uniqueness within the Financial Year for the supplier.
+    If valid and unique, optionally registers it into data/invoice_registry.json.
+    """
+    r46 = validate_rule_46b_invoice_number(invoice_number)
+    sk = supplier_key.strip().upper() if supplier_key else "DEFAULT"
+    fy = financial_year.strip() if financial_year else get_indian_financial_year()
+    inv_num = r46["invoice_number"]
+
+    next_sugg = generate_next_sequential_invoice_number(sk, fy)
+
+    if not r46["is_valid"]:
+        return {
+            "is_unique": False,
+            "is_valid_format": False,
+            "financial_year": fy,
+            "invoice_number": inv_num,
+            "next_suggested_invoice_number": next_sugg,
+            "error_reason": r46["error_reason"]
+        }
+
+    with REGISTRY_LOCK:
+        reg = _load_registry()
+        records = reg.get("records", [])
+        
+        for r in records:
+            if r.get("supplier_key", "").upper() == sk and r.get("financial_year", "") == fy:
+                if str(r.get("invoice_number", "")).upper() == inv_num.upper():
+                    return {
+                        "is_unique": False,
+                        "is_valid_format": True,
+                        "financial_year": fy,
+                        "invoice_number": inv_num,
+                        "next_suggested_invoice_number": next_sugg,
+                        "error_reason": f"Invoice number '{inv_num}' has already been used in FY {fy}"
+                    }
+
+        if auto_register:
+            records.append({
+                "supplier_key": sk,
+                "financial_year": fy,
+                "invoice_number": inv_num,
+                "registered_at": datetime.now().isoformat()
+            })
+            reg["records"] = records
+            _save_registry(reg)
+
+    return {
+        "is_unique": True,
+        "is_valid_format": True,
+        "financial_year": fy,
+        "invoice_number": inv_num,
+        "next_suggested_invoice_number": next_sugg,
+        "error_reason": ""
+    }
+
+
+# ============================================================================
+# 4. Supply Type Classifier (B2B, B2CL, B2CS)
+# ============================================================================
+
+def classify_supply_type(
+    supplier_state_code: Optional[str],
+    pos_state_code: Optional[str],
+    buyer_gstin: Optional[str],
+    final_amount: float = 0.0
+) -> Dict[str, Any]:
+    """
+    Classifies invoice supply type according to statutory GST rules:
+    - B2B: Recipient possesses a valid 15-digit GSTIN.
+    - B2CL: Unregistered buyer, Inter-State supply, total invoice value > ₹2,50,000.
+    - B2CS: Unregistered buyer, intra-state OR inter-state <= ₹2,50,000.
+    """
+    s_state = str(supplier_state_code).strip() if supplier_state_code else ""
+    p_state = str(pos_state_code).strip() if pos_state_code else ""
+    
+    is_inter = bool(s_state and p_state and (s_state != p_state))
+    tax_type = "IGST" if is_inter else "CGST + SGST"
+
+    bg_val = validate_gstin(buyer_gstin)
+    if bg_val["is_valid"]:
+        supply_type = "B2B"
+    elif is_inter and final_amount > 250000.0:
+        supply_type = "B2CL"
+    else:
+        supply_type = "B2CS"
+
+    return {
+        "supply_type": supply_type,
+        "is_inter_state": is_inter,
+        "tax_type": tax_type
+    }
+
+
+# ============================================================================
+# 5. Full Invoice Compliance Auditor
 # ============================================================================
 
 def validate_invoice_compliance(
     invoice_data: Dict[str, Any],
     supplier_gstin: Optional[str] = None,
     buyer_gstin: Optional[str] = None,
-    pos_state_code: Optional[str] = "03"
+    pos_state_code: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Audits the invoice against statutory CBIC GST tax invoice rules (Rule 46 of CGST Rules):
     1. Mandatory Supplier GSTIN + Legal entity validation
-    2. Mandatory Date & Invoice ID
+    2. Mandatory Date & CGST Rule 46(b) Invoice Number
     3. Mandatory Place of Supply (POS) and State Name
-    4. Distinguishes B2B (with valid Buyer GSTIN) vs B2CS (Retail Consumer)
-    5. Flags missing or unextracted fields that require shopkeeper input
+    4. Distinguishes B2B vs B2CL vs B2CS
+    5. Checks Financial Year uniqueness
+    Guarantees non-null string outputs.
     """
     warnings: List[str] = []
     missing_fields: List[str] = []
 
     # 1. Supplier GSTIN
-    gstin_to_test = supplier_gstin or invoice_data.get("supplier_gstin")
+    gstin_to_test = supplier_gstin or invoice_data.get("supplier_gstin") or ""
     gstin_val = validate_gstin(gstin_to_test)
     if not gstin_val["is_valid"]:
         missing_fields.append("supplier_gstin")
         warnings.append(
-            f"Supplier GSTIN: {gstin_val.get('error_reason') or 'Not provided'}. Pakka Tax Invoice requires valid 15-char GSTIN."
+            f"Supplier GSTIN: {gstin_val.get('error_reason') or 'Not provided'}. Tax Invoice requires valid 15-char GSTIN."
         )
 
     # 2. Merchant / Shop Name
-    merchant = invoice_data.get("merchant_name") or invoice_data.get("store_name_guess")
-    if not merchant or merchant.strip().lower() in ("bharat kacha dukaan", "unknown", "none", ""):
+    merchant = invoice_data.get("merchant_name") or invoice_data.get("store_name_guess") or ""
+    if not merchant or merchant.strip().lower() in ("bharat kacha dukaan", "unknown", "none", "", "unspecified store", "indian dukaan store", "bharat store"):
         missing_fields.append("merchant_name")
-        warnings.append("Merchant Name missing or generic. Please confirm shop name.")
+        warnings.append("Merchant Name missing on receipt. Please enter shop name manually.")
 
-    # 3. Invoice Date
-    raw_date = invoice_data.get("raw_date_written")
-    iso_date = invoice_data.get("normalized_date_iso")
+    # 3. Invoice Date & Financial Year
+    raw_date = str(invoice_data.get("raw_date_written") or invoice_data.get("raw_date_text") or "")
+    iso_date = str(invoice_data.get("normalized_date_iso") or "")
     date_source = "EXTRACTED_FROM_PAPER"
+    effective_iso = iso_date or raw_date
     if not raw_date and not iso_date:
         missing_fields.append("normalized_date_iso")
         date_source = "MISSING_ON_PAPER_REQUIRES_INPUT"
-        warnings.append("Date was not detected on paper slip. Defaulted to today's date for compliance.")
+        effective_iso = ""
+        warnings.append("Date was not detected on paper slip. Requires user input.")
 
-    # 4. Buyer GSTIN & Supply Mode (B2B vs B2CS)
-    buyer_gstin_val = validate_gstin(buyer_gstin or invoice_data.get("buyer_gstin"))
-    if buyer_gstin_val["is_valid"]:
-        supply_mode = "B2B"
-        supply_label = f"B2B (Registered Recipient: {buyer_gstin_val['entity_type']})"
-    else:
-        supply_mode = "B2CS"
-        supply_label = "B2CS (Unregistered Consumer / Retail Cash Sale)"
+    financial_year = get_indian_financial_year(effective_iso)
 
-    # 5. Place of Supply (POS)
-    supplier_state = gstin_val.get("state_code") or invoice_data.get("supplier_state_code") or "03"
-    effective_pos = pos_state_code or invoice_data.get("place_of_supply_state_code") or supplier_state
-    is_inter_state = (supplier_state != effective_pos)
+    # 4. Invoice Number & Rule 46(b)
+    inv_num = str(invoice_data.get("invoice_id") or invoice_data.get("bill_id") or "")
+    r46 = validate_rule_46b_invoice_number(inv_num)
+    if not r46["is_valid"]:
+        warnings.append(f"Invoice Number: {r46['error_reason']}.")
 
-    pos_name = INDIAN_STATES.get(effective_pos, "Unknown State")
-    supplier_state_name = INDIAN_STATES.get(supplier_state, "Punjab")
+    # 5. Buyer GSTIN & Supply Mode (B2B vs B2CL vs B2CS)
+    b_gstin = buyer_gstin or invoice_data.get("buyer_gstin") or ""
+    buyer_gstin_val = validate_gstin(b_gstin)
 
-    # 6. Active Items RAG Verification Count
+    supplier_state = gstin_val.get("state_code") if gstin_val.get("is_valid") else str(invoice_data.get("supplier_state_code") or "")
+    effective_pos = str(pos_state_code or invoice_data.get("place_of_supply_state_code") or supplier_state or "")
+    final_amt = float(invoice_data.get("final_payable_pakka_total") or invoice_data.get("written_grand_total") or 0.0)
+
+    st_res = classify_supply_type(supplier_state, effective_pos, b_gstin, final_amt)
+    supply_mode = st_res["supply_type"]
+    is_inter_state = st_res["is_inter_state"]
+    tax_type = st_res["tax_type"]
+
+    pos_name = INDIAN_STATES.get(effective_pos, "")
+    supplier_state_name = INDIAN_STATES.get(supplier_state, "")
+
     active_items = invoice_data.get("active_items", [])
-    rag_citations_count = sum(1 for it in active_items if it.get("rag_citation") or it.get("hsn_code"))
+    rag_citations_count = sum(1 for it in active_items if (isinstance(it, dict) and (it.get("rag_citation") or it.get("hsn_code"))))
 
-    is_ready_for_gstr1 = len(missing_fields) == 0 and len(active_items) > 0
+    is_ready_for_gstr1 = len(missing_fields) == 0 and len(active_items) > 0 and r46["is_valid"]
 
     return {
         "is_ready_for_gstr1": is_ready_for_gstr1,
         "b2b_or_b2cs_mode": supply_mode,
-        "supply_type_label": supply_label,
+        "supply_type": supply_mode,
+        "supply_type_label": f"{supply_mode} ({'Registered Buyer' if supply_mode == 'B2B' else 'Retail Consumer'})",
         "is_inter_state": is_inter_state,
-        "tax_type": "IGST" if is_inter_state else "CGST + SGST",
+        "tax_type": tax_type,
+        "financial_year": financial_year,
+        "rule_46b_valid": r46["is_valid"],
+        "rule_46b_notes": r46["error_reason"],
         "supplier_gstin_audit": gstin_val,
         "buyer_gstin_audit": buyer_gstin_val,
         "supplier_state": {"code": supplier_state, "name": supplier_state_name},
         "place_of_supply": {"code": effective_pos, "name": pos_name},
         "date_audit": {
             "raw_date_written": raw_date,
-            "normalized_date_iso": iso_date or "2026-10-31",
+            "normalized_date_iso": effective_iso,
             "date_source": date_source
         },
         "missing_mandatory_fields": missing_fields,
