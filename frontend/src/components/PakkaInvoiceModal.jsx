@@ -3,12 +3,10 @@ import {
   X,
   Printer,
   FileCheck,
-  Building,
   QrCode,
-  ShieldCheck,
   Download,
 } from 'lucide-react';
-import { formatINR, numberToIndianRupees } from '../utils/numberToWords';
+import { numberToIndianRupees } from '../utils/numberToWords';
 
 export default function PakkaInvoiceModal({
   isOpen,
@@ -58,7 +56,7 @@ export default function PakkaInvoiceModal({
             <FileCheck className="h-5 w-5 text-emerald-400" />
             <div>
               <h3 className="text-sm font-bold tracking-tight">
-                Official Indian GST Tax Invoice (Pakka Bill)
+                Official Indian GST Tax Invoice
               </h3>
               <p className="text-[11px] text-slate-400">
                 Rule 46 CGST Rules, 2017 • Print-ready A4 layout

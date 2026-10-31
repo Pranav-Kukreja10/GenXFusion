@@ -4,15 +4,12 @@ import {
   UploadCloud,
   Layers,
   FileText,
-  Calendar,
-  Building,
-  Hash,
-  CheckCircle2,
+  Sliders,
   AlertCircle,
   Smartphone,
-  Sliders,
-  RefreshCw,
 } from 'lucide-react';
+import UploadCard from './UploadCard';
+import MetadataForm from './MetadataForm';
 import { compressImage } from '../utils/compressor';
 
 export default function ScannerDropzone({
@@ -21,68 +18,115 @@ export default function ScannerDropzone({
   onScanImage,
   isScanning,
   error,
+  hasScannedInvoice = true,
+  scanStep = 1,
+  onTriggerScan,
+  userProfile = null,
 }) {
   const [activeTab, setActiveTab] = useState('visual'); // 'visual' | 'metadata'
-  const [isDragging, setIsDragging] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(invoice?.raw_image_base64 || null);
   const [compressionStats, setCompressionStats] = useState(null);
+  const [bypassCache, setBypassCache] = useState(false);
   const [viewMode, setViewMode] = useState('enhanced'); // 'enhanced' | 'raw' | 'split'
   const [splitSliderPos, setSplitSliderPos] = useState(50);
-  const [bypassCache, setBypassCache] = useState(false);
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  const handleProcessFile = async (file) => {
+  const handleFileSelected = (file, dataUrl, stats) => {
+    setSelectedFile(file);
+    setPreviewUrl(dataUrl);
+    setCompressionStats(stats);
+  };
+
+  const handleClearFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setCompressionStats(null);
+  };
+
+  const handleTriggerScan = (forceBypass) => {
+    if (!previewUrl && !selectedFile) {
+      if (onTriggerScan) onTriggerScan(forceBypass);
+      return;
+    }
+    onScanImage(selectedFile, previewUrl, forceBypass);
+  };
+
+  const handleStage2QuickUpload = async (file) => {
     if (!file) return;
     try {
       const compressed = await compressImage(file, 1280, 0.72);
-      setCompressionStats({
-        originalFormatted: compressed.originalFormatted,
-        compressedFormatted: compressed.compressedFormatted,
-        savingsPercent: compressed.savingsPercent,
-      });
       onScanImage(compressed.file, compressed.dataUrl, bypassCache);
-    } catch (err) {
-      console.error('Image compression error:', err);
+    } catch {
       onScanImage(file, null, bypassCache);
     }
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleProcessFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleFileSelect = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      handleProcessFile(e.target.files[0]);
-    }
-  };
-
-  const handleMetadataChange = (field, val) => {
-    if (!invoice) return;
-    onInvoiceChange({
-      ...invoice,
-      [field]: val,
-    });
-  };
-
-  const rawImage = invoice?.raw_image_base64 || invoice?.enhanced_image_base64;
+  const rawImage = invoice?.raw_image_base64 || previewUrl;
   const enhancedImage = invoice?.enhanced_image_base64 || rawImage;
 
+  // =========================================================================
+  // STAGE 1: Centered Upload Card & Metadata Form
+  // =========================================================================
+  if (!hasScannedInvoice) {
+    return (
+      <div className="space-y-4">
+        {/* Upload Card with Rotate, Crop & Remove, and Scan Stepper */}
+        <UploadCard
+          selectedFile={selectedFile}
+          previewUrl={previewUrl}
+          onFileSelected={handleFileSelected}
+          onClearFile={handleClearFile}
+          isScanning={isScanning}
+          scanStep={scanStep}
+          onTriggerScan={handleTriggerScan}
+          bypassCache={bypassCache}
+          onToggleBypassCache={setBypassCache}
+          compressionStats={compressionStats}
+        />
+
+        {/* Bill Metadata Form */}
+        <MetadataForm
+          invoice={invoice}
+          onInvoiceChange={onInvoiceChange}
+          isAutoFilled={Boolean(invoice?.merchant_name && invoice?.raw_date_written)}
+          userProfile={userProfile}
+        />
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // STAGE 2: Left-Panel Visual Inspector & Metadata Card
+  // =========================================================================
   return (
-    <div className="bg-white dark:bg-[#12151C] border border-[#E5E0D8] dark:border-zinc-800 rounded-xl shadow-2xs overflow-hidden flex flex-col transition-colors">
-      
+    <div className="bg-white dark:bg-[#12151C] border border-[#E5E0D8] dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden flex flex-col transition-colors">
+      {/* Hidden File Inputs for quick in-dashboard re-capture */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => e.target.files && handleStage2QuickUpload(e.target.files[0])}
+        accept="image/*"
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={cameraInputRef}
+        onChange={(e) => e.target.files && handleStage2QuickUpload(e.target.files[0])}
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+      />
+
       {/* Panel Tab Header */}
       <div className="p-2 border-b border-[#E5E0D8] dark:border-zinc-800 bg-[#FAF8F5] dark:bg-zinc-900/50 flex items-center justify-between">
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setActiveTab('visual')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'visual'
                 ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-2xs'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -95,7 +139,7 @@ export default function ScannerDropzone({
           <button
             type="button"
             onClick={() => setActiveTab('metadata')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'metadata'
                 ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-2xs'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -115,93 +159,32 @@ export default function ScannerDropzone({
       </div>
 
       <div className="p-4 space-y-4">
-        
-        {/* Sleek Capture / Upload Box */}
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={handleDrop}
-          className={`border border-dashed rounded-xl p-3 text-center transition-all ${
-            isDragging
-              ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/30'
-              : 'border-[#D5CEC3] dark:border-zinc-700 bg-[#FCFBF9] dark:bg-zinc-900/30 hover:border-emerald-500'
-          }`}
-        >
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            accept="image/*"
-            className="hidden"
-          />
-          <input
-            type="file"
-            ref={cameraInputRef}
-            onChange={handleFileSelect}
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-          />
-
-          <div className="flex items-center justify-center gap-2">
+        {/* Quick Re-scan Strip */}
+        <div className="flex items-center justify-between bg-[#FAF8F5] dark:bg-zinc-900/60 p-2 rounded-lg border border-[#E5E0D8] dark:border-zinc-800">
+          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+            Re-capture receipt:
+          </span>
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}
               disabled={isScanning}
-              className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center gap-1 bg-[#059669] hover:bg-[#047857] text-white px-2.5 py-1 rounded-md text-[11px] font-bold shadow-2xs cursor-pointer disabled:opacity-50"
             >
-              <Smartphone className="h-3.5 w-3.5" />
+              <Smartphone className="h-3 w-3" />
               <span>Camera</span>
             </button>
-
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isScanning}
-              className="inline-flex items-center gap-1.5 bg-white dark:bg-zinc-800 border border-[#D5CEC3] dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-1 bg-white dark:bg-zinc-800 border border-[#D5CEC3] dark:border-zinc-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 px-2.5 py-1 rounded-md text-[11px] font-semibold shadow-2xs cursor-pointer disabled:opacity-50"
             >
-              <UploadCloud className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-              <span>Browse File</span>
+              <UploadCloud className="h-3 w-3 text-slate-500" />
+              <span>Browse</span>
             </button>
           </div>
-
-          {/* Low-End 4G Compression Banner */}
-          {compressionStats && (
-            <div className="mt-2 inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded text-[10px] font-medium animate-fadeIn">
-              <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>
-                Compressed <strong>{compressionStats.originalFormatted}</strong> →{' '}
-                <strong>{compressionStats.compressedFormatted}</strong> ({compressionStats.savingsPercent}% saved)
-              </span>
-            </div>
-          )}
-
-          {/* Quick Cache Bypass Checkbox */}
-          <div className="mt-2 text-center">
-            <label className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={bypassCache}
-                onChange={(e) => setBypassCache(e.target.checked)}
-                className="rounded border-slate-300 dark:border-zinc-700 text-emerald-600 focus:ring-emerald-500 h-3 w-3"
-              />
-              <span>Force Re-scan (Bypass Cache)</span>
-            </label>
-          </div>
         </div>
-
-        {/* Scan Progress Status */}
-        {isScanning && (
-          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3 text-center space-y-1">
-            <div className="flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              <span>Gemini Vision & OpenCV Preprocessing...</span>
-            </div>
-          </div>
-        )}
 
         {/* Error Notice */}
         {error && (
@@ -214,7 +197,6 @@ export default function ScannerDropzone({
         {/* Tab 1: Visual Inspector (CLAHE & Raw Photo) */}
         {activeTab === 'visual' && (
           <div className="space-y-2">
-            
             {/* View Mode Switcher */}
             <div className="flex items-center justify-between text-xs">
               <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1">
@@ -224,7 +206,7 @@ export default function ScannerDropzone({
                 <button
                   type="button"
                   onClick={() => setViewMode('raw')}
-                  className={`px-2 py-0.5 rounded font-semibold transition-colors ${
+                  className={`px-2 py-0.5 rounded font-semibold transition-colors cursor-pointer ${
                     viewMode === 'raw'
                       ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400'
@@ -235,7 +217,7 @@ export default function ScannerDropzone({
                 <button
                   type="button"
                   onClick={() => setViewMode('enhanced')}
-                  className={`px-2 py-0.5 rounded font-semibold transition-colors ${
+                  className={`px-2 py-0.5 rounded font-semibold transition-colors cursor-pointer ${
                     viewMode === 'enhanced'
                       ? 'bg-emerald-700 text-white shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400'
@@ -246,7 +228,7 @@ export default function ScannerDropzone({
                 <button
                   type="button"
                   onClick={() => setViewMode('split')}
-                  className={`px-2 py-0.5 rounded font-semibold transition-colors ${
+                  className={`px-2 py-0.5 rounded font-semibold transition-colors cursor-pointer ${
                     viewMode === 'split'
                       ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400'
@@ -345,7 +327,7 @@ export default function ScannerDropzone({
               <button
                 type="button"
                 onClick={() => setActiveTab('metadata')}
-                className="text-emerald-700 dark:text-emerald-400 font-semibold hover:underline"
+                className="text-emerald-700 dark:text-emerald-400 font-semibold hover:underline cursor-pointer"
               >
                 Edit Metadata →
               </button>
@@ -353,72 +335,24 @@ export default function ScannerDropzone({
           </div>
         )}
 
-        {/* Tab 2: Metadata Form */}
+        {/* Tab 2: Embedded Metadata Form */}
         {activeTab === 'metadata' && (
-          <div className="space-y-3 animate-fadeIn text-xs">
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-1">
-                <Building className="h-3 w-3" /> Store / Merchant Name:
-              </label>
-              <input
-                type="text"
-                value={invoice?.merchant_name || ''}
-                onChange={(e) => handleMetadataChange('merchant_name', e.target.value)}
-                placeholder="Merchant Name"
-                className="w-full bg-[#FAF8F5] dark:bg-zinc-800/80 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg px-2.5 py-1.5 font-semibold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-1">
-                  <Calendar className="h-3 w-3" /> Raw Written Date:
-                </label>
-                <input
-                  type="text"
-                  value={invoice?.raw_date_written || ''}
-                  onChange={(e) => handleMetadataChange('raw_date_written', e.target.value)}
-                  placeholder="e.g. 31/10/26"
-                  className="w-full bg-[#FAF8F5] dark:bg-zinc-800/80 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg px-2 py-1.5 font-mono text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-1">
-                  <Calendar className="h-3 w-3" /> ISO GST Date:
-                </label>
-                <input
-                  type="date"
-                  value={invoice?.normalized_date_iso || ''}
-                  onChange={(e) => handleMetadataChange('normalized_date_iso', e.target.value)}
-                  className="w-full bg-[#FAF8F5] dark:bg-zinc-800/80 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg px-2 py-1.5 font-mono text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-1">
-                <Hash className="h-3 w-3" /> Invoice ID:
-              </label>
-              <input
-                type="text"
-                value={invoice?.invoice_id || ''}
-                onChange={(e) => handleMetadataChange('invoice_id', e.target.value)}
-                placeholder="e.g. INV-2026-8841"
-                className="w-full bg-[#FAF8F5] dark:bg-zinc-800/80 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg px-2.5 py-1.5 font-mono font-semibold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
-              />
-            </div>
-
+          <div className="space-y-3">
+            <MetadataForm
+              invoice={invoice}
+              onInvoiceChange={onInvoiceChange}
+              isAutoFilled={true}
+              userProfile={userProfile}
+            />
             <button
               type="button"
               onClick={() => setActiveTab('visual')}
-              className="w-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-300 py-1.5 rounded-lg text-xs font-semibold transition-colors mt-2"
+              className="w-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-300 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
             >
               ← Back to Image Visualizer
             </button>
           </div>
         )}
-
       </div>
     </div>
   );

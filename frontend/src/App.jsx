@@ -1,27 +1,52 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import HeaderCommandBar from './components/HeaderCommandBar';
-import ScannerDropzone from './components/ScannerDropzone';
-import InvoiceEditorTable from './components/InvoiceEditorTable';
-import AuditAlertsCard from './components/AuditAlertsCard';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Header from './components/Header';
+import LandingPage from './components/LandingPage';
+import SummaryCards from './components/SummaryCards';
+import AlertBar from './components/AlertBar';
+import InvoiceDetailsStrip from './components/InvoiceDetailsStrip';
+import VisualInspector from './components/VisualInspector';
+import LedgerTable from './components/LedgerTable';
+import ActionBar from './components/ActionBar';
 import PakkaInvoiceModal from './components/PakkaInvoiceModal';
 import Gstr1Modal from './components/Gstr1Modal';
 import ApiSettingsModal from './components/ApiSettingsModal';
 import HsnSearchModal from './components/HsnSearchModal';
+import ProfileModal from './components/ProfileModal';
+import Toast from './components/Toast';
 import { DEMO_PRESETS } from './utils/mockPresets';
+import {
+  loadProfile,
+  addRecentScan,
+} from './utils/profileStorage';
 import {
   parseInvoiceApi,
   recalculateInvoiceApi,
   exportGstr1Api,
   testConnection,
 } from './services/api';
-import { Download, Printer, ShieldCheck } from 'lucide-react';
+import { Eye, X } from 'lucide-react';
 
 export default function App() {
+  // 2-Stage Progressive UI Flow State
+  const [hasScannedInvoice, setHasScannedInvoice] = useState(false);
+  const [scanStep, setScanStep] = useState(1); // 1: Shadow, 2: OCR, 3: HSN, 4: GST Audit
+  const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+
   const [invoice, setInvoice] = useState(DEMO_PRESETS[0].data);
   const [isScanning, setIsScanning] = useState(false);
+  const [scanSuccess, setScanSuccess] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [error, setError] = useState(null);
   const [backendStatus, setBackendStatus] = useState('offline');
+
+  // Profile & Toast States
+  const [profile, setProfile] = useState(loadProfile());
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  // Ref to Recent Scans section for scroll-to
+  const recentScansRef = useRef(null);
 
   // Dark / Light Theme state
   const [darkMode, setDarkMode] = useState(() => {
@@ -42,6 +67,19 @@ export default function App() {
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
+  // Toast Notification Helpers with Undo Action Support
+  const addToast = useCallback((message, type = 'success', title = '', action = null) => {
+    const id = Date.now().toString() + Math.random().toString(36).slice(2, 6);
+    setToasts((prev) => [...prev, { id, message, type, title, action }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, action ? 6000 : 4000);
+  }, []);
+
+  const dismissToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   // Modals state
   const [isPakkaModalOpen, setIsPakkaModalOpen] = useState(false);
   const [isGstr1ModalOpen, setIsGstr1ModalOpen] = useState(false);
@@ -50,7 +88,7 @@ export default function App() {
   const [hsnSearchRowIndex, setHsnSearchRowIndex] = useState(null);
   const [gstr1Data, setGstr1Data] = useState(null);
 
-  // Check backend health
+  // Check backend health on mount
   useEffect(() => {
     async function checkHealth() {
       const ok = await testConnection();
@@ -59,23 +97,69 @@ export default function App() {
     checkHealth();
   }, []);
 
+  // Listen for profile changes
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setProfile(loadProfile());
+    };
+    window.addEventListener('truetax_profile_updated', handleProfileUpdate);
+    return () => window.removeEventListener('truetax_profile_updated', handleProfileUpdate);
+  }, []);
+
   // Recalculate helper
   const triggerRecalculate = useCallback(async (currentInvoice) => {
     setIsRecalculating(true);
     try {
       const { data } = await recalculateInvoiceApi(currentInvoice);
       setInvoice(data);
+      return data;
     } catch (err) {
       console.error('Recalculate error:', err);
+      return currentInvoice;
     } finally {
       setIsRecalculating(false);
     }
   }, []);
 
-  // 1. Handle File / Photo Scan
+  // Record scan in Recent Scans log
+  const logScanRecord = (auditedInv) => {
+    const hasMathDiscrepancy = Boolean(
+      auditedInv.audit_alerts?.discrepancy_count > 0 ||
+      auditedInv.active_items?.some((it) => it.has_math_error)
+    );
+    const finalTotal =
+      auditedInv.summary?.final_payable_pakka_total ||
+      auditedInv.totals?.final_payable_pakka_total ||
+      auditedInv.active_items?.reduce((s, it) => s + (it.final_line_total_with_gst || 0), 0) ||
+      0;
+
+    addRecentScan({
+      id: `scan-${Date.now()}`,
+      invoice_id: auditedInv.invoice_id || `INV-${Date.now().toString().slice(-4)}`,
+      merchant_name: auditedInv.merchant_name || profile.businessName || 'General Store',
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      raw_date: auditedInv.raw_date_written || 'Today',
+      category: auditedInv.detected_sector || profile.businessCategory || 'Grocery',
+      total: finalTotal,
+      status: hasMathDiscrepancy ? 'Mismatch' : 'Verified',
+      status_note: hasMathDiscrepancy ? 'Math Discrepancy Audited' : 'Verified by GST Auditor',
+      item_count: auditedInv.active_items?.length || 0,
+      thumbnail: auditedInv.raw_image_base64 || auditedInv.enhanced_image_base64 || null,
+      full_data: auditedInv,
+    });
+  };
+
+  // 1. Handle File / Photo Scan with 4-Step Stepper
   const handleScanImage = async (fileBlob, previewDataUrl, bypassCache) => {
     setIsScanning(true);
+    setScanSuccess(false);
     setError(null);
+    setScanStep(1); // 1: Shadow Removal
+
+    const stepTimer1 = setTimeout(() => setScanStep(2), 250); // 2: OCR
+    const stepTimer2 = setTimeout(() => setScanStep(3), 550); // 3: HSN Matching
+    const stepTimer3 = setTimeout(() => setScanStep(4), 850); // 4: GST Audit
+
     try {
       const { data, isOfflineFallback, error: apiErr } = await parseInvoiceApi(
         fileBlob,
@@ -90,26 +174,85 @@ export default function App() {
       };
 
       if (isOfflineFallback && apiErr) {
-        setError(
-          `FastAPI backend offline (${apiErr}). Running local deterministic auditor.`
+        addToast(
+          `FastAPI offline (${apiErr}). Running local deterministic auditor.`,
+          'warning',
+          'Offline Fallback'
         );
       }
 
-      await triggerRecalculate(nextInvoice);
+      const audited = await triggerRecalculate(nextInvoice);
+      logScanRecord(audited);
+      setScanSuccess(true);
+      setTimeout(() => {
+        setHasScannedInvoice(true);
+      }, 1000);
+      addToast('Bill scanned and audited successfully!', 'success', 'Scan Complete');
     } catch (err) {
-      setError(`Failed to scan invoice: ${err.message}`);
+      setError(`Couldn't read this photo. Try again with better light.`);
+      setScanSuccess(false);
+      addToast(`Failed to scan invoice: ${err.message}`, 'error', 'Scan Error');
     } finally {
+      clearTimeout(stepTimer1);
+      clearTimeout(stepTimer2);
+      clearTimeout(stepTimer3);
       setIsScanning(false);
     }
   };
 
-  // 2. Load Demo Preset
-  const handleLoadPreset = async (preset) => {
+  // 2. Simulated Quick-Test Judge Demo Scan (4-step animation -> Stage 2)
+  const _handleQuickDemoScan = async (preset) => {
+    setIsScanning(true);
     setError(null);
-    await triggerRecalculate(preset.data);
+    setScanStep(1); // 1: Shadow Removal
+
+    await new Promise((r) => setTimeout(r, 180));
+    setScanStep(2); // 2: OCR
+
+    await new Promise((r) => setTimeout(r, 180));
+    setScanStep(3); // 3: HSN Matching
+
+    await new Promise((r) => setTimeout(r, 180));
+    setScanStep(4); // 4: GST Audit
+
+    await new Promise((r) => setTimeout(r, 180));
+
+    setInvoice(preset.data);
+    const audited = await triggerRecalculate(preset.data);
+    logScanRecord(audited);
+    setIsScanning(false);
+    setHasScannedInvoice(true);
+    addToast(`Loaded ${preset.title} demo invoice with live GST audit!`, 'success', 'Demo Slip Loaded');
   };
 
-  // 3. Edit Line Item Field
+  // 3. Load Demo Preset from switcher
+  const handleLoadPreset = async (preset) => {
+    setError(null);
+    setInvoice(preset.data);
+    const audited = await triggerRecalculate(preset.data);
+    logScanRecord(audited);
+    setHasScannedInvoice(true);
+    addToast(`Switched to ${preset.title}`, 'info');
+  };
+
+  // Load from Recent Scans card
+  const _handleSelectRecentScan = async (scanRecord) => {
+    if (scanRecord.full_data) {
+      setInvoice(scanRecord.full_data);
+      await triggerRecalculate(scanRecord.full_data);
+    } else {
+      // Find matching preset
+      const match = DEMO_PRESETS.find((p) => p.data.invoice_id === scanRecord.invoice_id);
+      if (match) {
+        setInvoice(match.data);
+        await triggerRecalculate(match.data);
+      }
+    }
+    setHasScannedInvoice(true);
+    addToast(`Loaded recent scan: ${scanRecord.invoice_id}`, 'info');
+  };
+
+  // 4. Edit Line Item Field
   const handleItemChange = async (index, field, value) => {
     if (!invoice?.active_items) return;
     const updatedItems = [...invoice.active_items];
@@ -123,14 +266,16 @@ export default function App() {
     await triggerRecalculate(nextInvoice);
   };
 
-  // 4. Fix Single Row Math Error
+  // 5. Fix Single Row Math Error
   const handleFixSingleMathError = async (index) => {
     if (!invoice?.active_items) return;
     const updatedItems = [...invoice.active_items];
     const item = updatedItems[index];
+    const auditedVal = item.audited_line_total ?? (Number(item.quantity || 0) * Number(item.unit_price || 0));
+    
     updatedItems[index] = {
       ...item,
-      written_line_total: item.audited_line_total,
+      written_line_total: auditedVal,
       has_math_error: false,
       math_discrepancy: 0,
     };
@@ -141,17 +286,21 @@ export default function App() {
     };
 
     await triggerRecalculate(nextInvoice);
+    addToast(`Applied audited total ₹${auditedVal} to row #${index + 1}!`, 'success');
   };
 
-  // 5. Auto-Fix All Math Errors
+  // 6. Auto-Fix All Math Errors
   const handleFixAllMathErrors = async () => {
     if (!invoice?.active_items) return;
-    const updatedItems = invoice.active_items.map((item) => ({
-      ...item,
-      written_line_total: item.audited_line_total,
-      has_math_error: false,
-      math_discrepancy: 0,
-    }));
+    const updatedItems = invoice.active_items.map((item) => {
+      const auditedVal = item.audited_line_total ?? (Number(item.quantity || 0) * Number(item.unit_price || 0));
+      return {
+        ...item,
+        written_line_total: auditedVal,
+        has_math_error: false,
+        math_discrepancy: 0,
+      };
+    });
 
     const nextInvoice = {
       ...invoice,
@@ -159,35 +308,37 @@ export default function App() {
     };
 
     await triggerRecalculate(nextInvoice);
+    addToast('All arithmetic discrepancies fixed to audited values!', 'success');
   };
 
-  // 6. Restore Struck-out Item
+  // 7. Restore Struck-out Item
   const handleRestoreStruckItem = async (struckIndex) => {
     const struckList = [...(invoice.struck_out_items || [])];
     const [restored] = struckList.splice(struckIndex, 1);
 
     const newItem = {
       line_number: (invoice.active_items || []).length + 1,
-      raw_text_on_paper: restored.raw_text_on_paper,
-      product_name_normalized: restored.raw_text_on_paper.replace(/-\s*\d+.*$/, '').trim(),
-      item_sector: invoice.detected_sector || 'GROCERY',
+      raw_text_on_paper: restored.raw_text_on_paper || restored.raw_text || 'Restored Item',
+      product_name_normalized: (restored.raw_text_on_paper || restored.raw_text || 'Restored Item').replace(/-\s*\d+.*$/, '').trim(),
+      item_sector: invoice.detected_sector || profile.businessCategory || 'GROCERY',
       raw_quantity: '1 piece',
       quantity: 1.0,
       unit_uqc: 'PCS',
-      unit_price: 90.0,
-      written_line_total: 90.0,
-      audited_line_total: 90.0,
+      standard_uqc: 'PCS',
+      unit_price: restored.written_line_total || 100.0,
+      written_line_total: restored.written_line_total || 100.0,
+      audited_line_total: restored.written_line_total || 100.0,
       has_math_error: false,
       math_discrepancy: 0.0,
       hsn_code: '1101',
-      hsn_description: 'Restored from Struck-out Item',
+      category_description: 'Restored Item',
       gst_rate: 5.0,
       cgst_rate: 2.5,
       sgst_rate: 2.5,
-      cgst_amount: 2.25,
-      sgst_amount: 2.25,
-      final_line_total_with_gst: 94.5,
-      confidence_score: 0.88,
+      cgst_amount: Math.round((restored.written_line_total || 100.0) * 0.025 * 100) / 100,
+      sgst_amount: Math.round((restored.written_line_total || 100.0) * 0.025 * 100) / 100,
+      total_with_tax: Math.round((restored.written_line_total || 100.0) * 1.05 * 100) / 100,
+      confidence: 0.95,
     };
 
     const nextInvoice = {
@@ -197,32 +348,37 @@ export default function App() {
     };
 
     await triggerRecalculate(nextInvoice);
+    addToast(`Restored '${restored.raw_text_on_paper || restored.raw_text}' to active ledger`, 'info');
   };
 
-  // 7. Add New Manual Item
+  // 8. Add New Manual Item
   const handleAddItem = async () => {
     const newItem = {
       line_number: (invoice.active_items || []).length + 1,
+      row_id: (invoice.active_items || []).length + 1,
       raw_text_on_paper: 'Manual Item Entry',
+      raw_text: 'Manual Item Entry',
       product_name_normalized: 'New Item',
-      item_sector: invoice.detected_sector || 'GROCERY',
-      raw_quantity: '1 nag',
+      item_sector: invoice.detected_sector || profile.businessCategory || 'GROCERY',
+      raw_quantity: '1 PCS',
       quantity: 1.0,
       unit_uqc: 'PCS',
+      standard_uqc: 'PCS',
       unit_price: 100.0,
       written_line_total: 100.0,
       audited_line_total: 100.0,
       has_math_error: false,
       math_discrepancy: 0.0,
       hsn_code: '9999',
-      hsn_description: 'General Supply',
+      category_description: 'General Supply',
       gst_rate: 5.0,
       cgst_rate: 2.5,
       sgst_rate: 2.5,
       cgst_amount: 2.5,
       sgst_amount: 2.5,
+      total_with_tax: 105.0,
       final_line_total_with_gst: 105.0,
-      confidence_score: 1.0,
+      confidence: 1.0,
     };
 
     const nextInvoice = {
@@ -231,135 +387,263 @@ export default function App() {
     };
 
     await triggerRecalculate(nextInvoice);
+    addToast('Added new line item to ledger', 'info');
   };
 
-  // 8. Delete Line Item
+  // 9. Delete Line Item with Undo Toast
   const handleDeleteItem = async (index) => {
-    const updated = [...(invoice.active_items || [])];
+    if (!invoice?.active_items) return;
+    const deletedItem = invoice.active_items[index];
+    const updated = [...invoice.active_items];
     updated.splice(index, 1);
+    
     const nextInvoice = {
       ...invoice,
       active_items: updated,
     };
+    
     await triggerRecalculate(nextInvoice);
+
+    const itemName = deletedItem.product_name_normalized || deletedItem.raw_text_on_paper || 'Item';
+    addToast(
+      `Removed "${itemName}"`,
+      'info',
+      '',
+      {
+        label: 'Undo',
+        onClick: async () => {
+          const restoredItems = [...(nextInvoice.active_items || [])];
+          restoredItems.splice(index, 0, deletedItem);
+          await triggerRecalculate({
+            ...nextInvoice,
+            active_items: restoredItems,
+          });
+          addToast(`Restored "${itemName}"`, 'success');
+        },
+      }
+    );
   };
 
-  // 9. Open HSN Search Modal
+  // 10. Open HSN Search Modal
   const handleOpenHsnSearch = (rowIndex) => {
     setHsnSearchRowIndex(rowIndex);
     setIsHsnSearchOpen(true);
   };
 
-  // 10. Select HSN from Modal
+  // 11. Select HSN from Modal
   const handleSelectHsn = async (rowIndex, hsnObj) => {
     if (rowIndex === null || !invoice.active_items) return;
     const updated = [...invoice.active_items];
     updated[rowIndex] = {
       ...updated[rowIndex],
       hsn_code: hsnObj.hsn,
+      category_description: hsnObj.description,
       hsn_description: hsnObj.description,
       gst_rate: hsnObj.rate,
     };
     const nextInvoice = { ...invoice, active_items: updated };
     await triggerRecalculate(nextInvoice);
+    addToast(`Assigned HSN ${hsnObj.hsn} (${hsnObj.rate}% GST)`, 'success');
   };
 
-  // 11. Export GSTR-1 Payload
+  // 12. Export GSTR-1 Payload
   const handleExportGstr1 = async () => {
     const { data } = await exportGstr1Api(invoice);
     setGstr1Data(data);
     setIsGstr1ModalOpen(true);
   };
 
+  if (!hasScannedInvoice) {
+    return (
+      <>
+        <LandingPage
+          onScanImage={handleScanImage}
+          isScanning={isScanning}
+          scanStep={scanStep}
+          error={error}
+          scanSuccess={scanSuccess}
+          scannedItemCount={invoice?.active_items?.length || 4}
+          onViewDashboard={() => setHasScannedInvoice(true)}
+          onResetScan={() => {
+            setError(null);
+            setScanSuccess(false);
+          }}
+          darkMode={darkMode}
+          onToggleDarkMode={toggleDarkMode}
+          onOpenProfile={() => setIsProfileModalOpen(true)}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
+          onOpenHistory={() => setIsProfileModalOpen(true)}
+          onLogout={() => addToast('Logged out of TrueTax AI session.', 'info')}
+        />
+
+        {/* Global Modals & Notifications accessible from Landing Page */}
+        <ProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          profile={profile}
+        />
+        <ApiSettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+        />
+        <Toast toasts={toasts} onDismiss={dismissToast} />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] dark:bg-[#0B0E14] text-[#111827] dark:text-[#F3F4F6] transition-colors">
-      {/* Top Command Bar */}
-      <HeaderCommandBar
+      {/* Top Navigation & Command Header with TrueTax AI Branding & Open Bills Switcher */}
+      <Header
         invoice={invoice}
         onLoadPreset={handleLoadPreset}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onOpenHistory={() => {
+          if (!hasScannedInvoice && recentScansRef.current) {
+            recentScansRef.current.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            setHasScannedInvoice(false);
+          }
+        }}
+        onLogout={() => {
+          addToast('Logged out of TrueTax AI session.', 'info');
+        }}
         isRecalculating={isRecalculating}
         backendStatus={backendStatus}
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
+        hasScannedInvoice={hasScannedInvoice}
+        onScanNewBill={() => setHasScannedInvoice(false)}
       />
 
-      {/* Main Workspace Grid — Spacious Layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          
-          {/* Left Column (35% Width): Visual Inspector & Metadata */}
-          <section className="lg:col-span-4 h-full">
-            <ScannerDropzone
-              invoice={invoice}
-              onInvoiceChange={setInvoice}
-              onScanImage={handleScanImage}
-              isScanning={isScanning}
-              error={error}
-            />
-          </section>
+      {/* Main Workspace: Full Split-Screen Audit Dashboard */}
+      <main className="flex-1 w-full flex flex-col justify-start">
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-5 space-y-4 transition-all duration-500 animate-fadeIn">
+            {/* 1. Live Summary KPI Cards (Handwritten Total, Taxable Value, GST Collected, Final Total Hero Card) */}
+            <SummaryCards invoice={invoice} />
 
-          {/* Right Column (65% Width): KPI Cards, Alerts & Ledger */}
-          <section className="lg:col-span-8 space-y-4">
-            
-            {/* KPI Cards & Discrepancy Alerts */}
-            <AuditAlertsCard
+            {/* 2. Review Alert Bar (Math discrepancies, Fix all, Dynamic rules, Struck-out items) */}
+            <AlertBar
               invoice={invoice}
-              onFixAllMathErrors={handleFixAllMathErrors}
+              onFixAll={handleFixAllMathErrors}
               onRestoreStruckItem={handleRestoreStruckItem}
             />
 
-            {/* Interactive Line-Item GST Ledger */}
-            <InvoiceEditorTable
+            {/* 3. Invoice Details Strip (Buyer Name, Buyer GSTIN, POS, Invoice No, Date) */}
+            <InvoiceDetailsStrip
               invoice={invoice}
-              onItemChange={handleItemChange}
-              onFixSingleMathError={handleFixSingleMathError}
-              onOpenHsnSearch={handleOpenHsnSearch}
-              onAddItem={handleAddItem}
-              onDeleteItem={handleDeleteItem}
+              onInvoiceChange={setInvoice}
             />
 
-            {/* Bottom Export Bar */}
-            <div className="bg-white dark:bg-[#12151C] border border-[#E5E0D8] dark:border-zinc-800 rounded-xl p-3.5 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3 transition-colors">
-              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>Deterministic GST Auditor: Compliant with GSTN Portal Schema v3.1</span>
+            {/* 4. Split-Screen Workspace: Visual Inspector + Ledger Table */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+              {/* Left Column (about 35% ~ col-span-5): Visual Inspector (Desktop sticky, Mobile drawer) */}
+              <div className="hidden lg:block lg:col-span-5 sticky top-20">
+                <VisualInspector
+                  invoice={invoice}
+                  hoveredRowIndex={hoveredRowIndex}
+                  onScanImage={handleScanImage}
+                  isScanning={isScanning}
+                />
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={handleExportGstr1}
-                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold shadow-2xs transition-all active:scale-95"
-                >
-                  <Download className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Download GSTR-1 JSON</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsPakkaModalOpen(true)}
-                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold shadow-2xs transition-all active:scale-95"
-                >
-                  <Printer className="h-3.5 w-3.5" />
-                  <span>Pakka Tax Invoice</span>
-                </button>
+              {/* Right Column (about 65% ~ col-span-7): Interactive Line-Item GST Ledger Table */}
+              <div className="col-span-1 lg:col-span-7">
+                <LedgerTable
+                  invoice={invoice}
+                  onItemChange={handleItemChange}
+                  onFixSingleMathError={handleFixSingleMathError}
+                  onOpenHsnSearch={handleOpenHsnSearch}
+                  onAddItem={handleAddItem}
+                  onDeleteItem={handleDeleteItem}
+                  hoveredRowIndex={hoveredRowIndex}
+                  setHoveredRowIndex={setHoveredRowIndex}
+                  isRecalculating={isRecalculating}
+                />
               </div>
             </div>
-
-          </section>
-
-        </div>
+          </div>
       </main>
+
+      {/* Floating Action Button (FAB) for Mobile: Opens Slide-Up Visual Inspector Drawer */}
+      <button
+        type="button"
+        onClick={() => setIsMobileDrawerOpen(true)}
+        className="lg:hidden fixed bottom-20 right-4 z-40 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-full px-4 py-3 shadow-xl flex items-center gap-2 text-xs font-black cursor-pointer border border-emerald-400/40"
+        aria-label="Open Visual Inspector Receipt Drawer"
+      >
+        <Eye className="h-4 w-4" />
+        <span>Inspect Bill (OpenCV)</span>
+      </button>
+
+      {/* Mobile Slide-Up Drawer for Visual Inspector */}
+      {isMobileDrawerOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-end animate-fadeIn"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Visual Inspector Drawer"
+        >
+          <div className="bg-white dark:bg-[#131822] rounded-t-3xl max-h-[90vh] overflow-y-auto p-4 border-t border-[#E7E2DA] dark:border-zinc-800 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#E7E2DA] dark:border-zinc-800">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                  <Eye className="h-4 w-4" />
+                </div>
+                <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+                  Visual Inspector (OpenCV CLAHE)
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileDrawerOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                aria-label="Close drawer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <VisualInspector
+              invoice={invoice}
+              hoveredRowIndex={hoveredRowIndex}
+              onScanImage={handleScanImage}
+              isScanning={isScanning}
+              onCloseDrawer={() => setIsMobileDrawerOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Sticky Bottom Action Bar (Stage 2) */}
+      <ActionBar
+        invoice={invoice}
+        onExportGstr1={handleExportGstr1}
+        onPreviewInvoice={() => setIsPakkaModalOpen(true)}
+        onGenerateInvoice={() => setIsPakkaModalOpen(true)}
+        isRecalculating={isRecalculating}
+      />
 
       {/* Footer */}
       <footer className="border-t border-[#E5E0D8] dark:border-zinc-800/80 bg-white dark:bg-[#12151C] py-3 px-4 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
         <p>
-          <strong>ParchiSetu AI</strong> • Problem #25 Vernacular OCR to Pakka GST Formatter • ClearTax & Razorpay FinTech Architecture
+          <strong>TrueTax AI</strong> • Problem #25 Vernacular OCR to GST Tax Invoice • ClearTax & Razorpay FinTech Architecture
         </p>
       </footer>
 
+      {/* Toast Notification Container */}
+      <Toast toasts={toasts} onDismiss={dismissToast} />
+
       {/* Modals */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onSaved={(newProf) => {
+          setProfile(newProf);
+          addToast('Profile & tax credentials saved successfully!', 'success');
+        }}
+      />
+
       <PakkaInvoiceModal
         isOpen={isPakkaModalOpen}
         onClose={() => setIsPakkaModalOpen(false)}

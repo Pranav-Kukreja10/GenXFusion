@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Search, Tag, AlertCircle } from 'lucide-react';
 import { searchHsnApi } from '../services/api';
 
@@ -13,14 +13,7 @@ export default function HsnSearchModal({
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setQuery('');
-      performSearch('');
-    }
-  }, [isOpen]);
-
-  const performSearch = async (q) => {
+  const performSearch = useCallback(async (q) => {
     setLoading(true);
     try {
       const data = await searchHsnApi(q);
@@ -30,7 +23,15 @@ export default function HsnSearchModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
+      performSearch('');
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [isOpen, performSearch]);
 
   const handleQueryChange = (e) => {
     const val = e.target.value;
@@ -48,91 +49,98 @@ export default function HsnSearchModal({
         <div className="p-4 bg-slate-900 dark:bg-zinc-950 text-white flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-2">
             <Tag className="h-5 w-5 text-emerald-400" />
-            <div>
-              <h3 className="text-sm font-bold tracking-tight">
-                8-Sector PyTorch HSN Master Search
-              </h3>
-              <p className="text-[11px] text-slate-400">
-                Override HSN for Line Item #{rowIndex !== null ? rowIndex + 1 : ''}
-              </p>
-            </div>
+            <h3 className="font-bold text-base">Search HSN Master Directory</h3>
           </div>
           <button
-            type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="p-3 bg-[#FAF8F5] dark:bg-zinc-900/60 border-b border-[#E5E0D8] dark:border-zinc-800">
+        {/* Search input */}
+        <div className="p-4 border-b border-[#E5E0D8] dark:border-zinc-800 bg-[#FAF8F5] dark:bg-zinc-900/40">
           <div className="relative">
-            <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               autoFocus
               value={query}
               onChange={handleQueryChange}
-              placeholder="Search by HSN or product (e.g. Atta, Silk, Paint, Tap)..."
-              className="w-full bg-white dark:bg-zinc-800 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
+              placeholder="Search by product name, category, or 4/6-digit HSN code..."
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-[#D5CEC3] dark:border-zinc-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
             />
           </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
+            Live search across CBIC official GST tariff directory (500+ common Indian retail goods).
+          </p>
         </div>
 
         {/* Results List */}
-        <div className="p-3 flex-1 overflow-y-auto space-y-2">
+        <div className="flex-1 overflow-y-auto p-4 divide-y divide-[#E5E0D8]/60 dark:divide-zinc-800 space-y-2">
           {loading ? (
-            <p className="text-center py-8 text-xs text-slate-400">Searching master database...</p>
+            <div className="py-8 text-center text-slate-400">
+              <div className="h-6 w-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-xs">Searching HSN database...</p>
+            </div>
           ) : results.length === 0 ? (
-            <div className="text-center py-8 text-xs text-slate-500 dark:text-slate-400">
-              <AlertCircle className="h-6 w-6 text-slate-400 mx-auto mb-1" />
-              <p>No matching HSN codes found for &quot;{query}&quot;</p>
+            <div className="py-8 text-center text-slate-500">
+              <AlertCircle className="h-8 w-8 mx-auto text-slate-400 mb-2 opacity-60" />
+              <p className="text-sm font-semibold">No HSN matches found</p>
+              <p className="text-xs mt-1">Try keywords like &apos;atta&apos;, &apos;oil&apos;, &apos;soap&apos;, &apos;cloth&apos;, or enter a 4-digit chapter code.</p>
             </div>
           ) : (
-            results.map((item, idx) => {
-              const isSelected = item.hsn === currentHsn;
-              return (
-                <div
-                  key={idx}
-                  onClick={() => {
-                    onSelectHsn(rowIndex, item);
-                    onClose();
-                  }}
-                  className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
-                    isSelected
-                      ? 'border-emerald-600 bg-emerald-50/80 dark:bg-emerald-950/40 shadow-2xs'
-                      : 'border-slate-200 dark:border-zinc-800 hover:border-emerald-500 hover:bg-[#FAF8F5] dark:hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold bg-slate-900 dark:bg-zinc-800 text-white px-2 py-0.5 rounded text-[11px]">
-                        HSN {item.hsn}
-                      </span>
-                      <span className="text-[10px] font-semibold uppercase bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.2 rounded border border-slate-200 dark:border-zinc-700">
-                        {item.sector}
-                      </span>
-                      <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/70 px-1.5 py-0.2 rounded">
-                        {item.rate}% GST
-                      </span>
-                    </div>
-                    <p className="mt-1 text-slate-800 dark:text-slate-200 font-medium truncate">
+            results.map((item, idx) => (
+              <div
+                key={`${item.hsn}-${idx}`}
+                onClick={() => {
+                  onSelectHsn(rowIndex, item);
+                  onClose();
+                }}
+                className={`p-3 rounded-lg flex items-center justify-between hover:bg-emerald-50/70 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer ${
+                  currentHsn === item.hsn ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800' : ''
+                }`}
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-xs bg-slate-900 dark:bg-zinc-800 text-white px-2 py-0.5 rounded">
+                      HSN {item.hsn}
+                    </span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
                       {item.description}
-                    </p>
+                    </span>
                   </div>
-
-                  <button
-                    type="button"
-                    className="shrink-0 bg-white dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 text-slate-700 dark:text-slate-200 px-2.5 py-1 rounded text-[11px] font-bold transition-colors"
-                  >
-                    Select
-                  </button>
+                  {item.sector && (
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">
+                      Sector: {item.sector}
+                    </span>
+                  )}
                 </div>
-              );
-            })
+
+                <div className="text-right">
+                  <span className="inline-block text-xs font-black px-2 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 rounded font-mono">
+                    {item.rate}% GST
+                  </span>
+                  <div className="text-[9px] text-slate-400 mt-0.5 font-mono">
+                    CGST {(item.rate / 2).toFixed(1)}% + SGST {(item.rate / 2).toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+            ))
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-3 bg-[#FAF8F5] dark:bg-zinc-900/60 border-t border-[#E5E0D8] dark:border-zinc-800 text-right">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
         </div>
 
       </div>
