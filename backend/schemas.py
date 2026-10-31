@@ -33,6 +33,11 @@ class RawVisionBill(BaseModel):
     )
     merchant_name: Optional[str] = Field(None, description="Shop / Merchant name extracted from header")
     raw_date_written: Optional[str] = Field(None, description="Date text as written on the receipt")
+    customer_name: Optional[str] = Field(None, description="Customer / Buyer name written on bill")
+    customer_phone: Optional[str] = Field(None, description="Customer phone / 10-digit mobile number written on bill")
+    customer_address: Optional[str] = Field(None, description="Customer delivery address / colony / city written on bill")
+    extra_charges: Optional[float] = Field(0.0, description="Freight, kiraya, cartage or loading charges added below subtotal")
+    discount_amount: Optional[float] = Field(0.0, description="Cash discount deducted at end")
     written_grand_total: Optional[float] = Field(None, description="Grand total written on paper receipt if present")
     items: List[RawVisionLineItem] = Field(default_factory=list, description="Extracted line items")
 
@@ -112,6 +117,8 @@ class InvoiceSummary(BaseModel):
     written_grand_total: float = 0.0
     audited_taxable_total: float = 0.0
     total_math_saved: float = 0.0
+    extra_charges: float = 0.0
+    discount_amount: float = 0.0
     total_cgst: float = 0.0
     total_sgst: float = 0.0
     final_payable_pakka_total: float = 0.0
@@ -123,6 +130,11 @@ class AuditedInvoiceResponse(BaseModel):
     detected_sector: str = Field(default="GENERAL")
     store_name_guess: Optional[str] = None
     merchant_name: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    extra_charges: Optional[float] = 0.0
+    discount_amount: Optional[float] = 0.0
     raw_date_written: Optional[str] = None
     normalized_date_iso: Optional[str] = None
     model_used: Optional[str] = "gemini-3.5-flash-lite"
@@ -159,6 +171,11 @@ class RecalculateRequest(BaseModel):
     detected_sector: Optional[str] = "GENERAL"
     store_name_guess: Optional[str] = None
     merchant_name: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    extra_charges: Optional[float] = 0.0
+    discount_amount: Optional[float] = 0.0
     raw_date_written: Optional[str] = None
     normalized_date_iso: Optional[str] = None
     raw_image_b64: Optional[str] = None
@@ -169,7 +186,8 @@ class RecalculateRequest(BaseModel):
 
 
 class GSTR1ExportRequest(BaseModel):
-    gstin: Optional[str] = "27AABCU9603R1ZM"
+    gstin: Optional[str] = "03AABCS1429B1Z"
     tax_period: Optional[str] = "102026"
     invoice: Optional[AuditedInvoiceResponse] = None
     raw_payload: Optional[Dict[str, Any]] = None
+

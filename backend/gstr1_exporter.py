@@ -14,9 +14,9 @@ from schemas import AuditedInvoiceResponse
 
 def export_to_gstr1_json(
     invoice_data: Union[AuditedInvoiceResponse, Dict[str, Any]],
-    supplier_gstin: str = "27AABCU9603R1ZM",
+    supplier_gstin: str = "03AABCS1429B1Z",
     tax_period: str = "102026",
-    pos_code: str = "27"
+    pos_code: str = "03"
 ) -> Dict[str, Any]:
     """
     Transforms audited invoice active items into official Indian GST Portal GSTR-1 format.
@@ -118,3 +118,4 @@ def export_to_gstr1_json(
     }
 
     return gstr1_payload
+

@@ -17,6 +17,9 @@ from typing import Optional, Dict, Any, List
 
 from fastapi import FastAPI, File, UploadFile, Query, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment configuration
@@ -45,19 +48,31 @@ from gstr1_exporter import export_to_gstr1_json
 # Dynamic Integration Hooks for Lane 2 (hsn_matcher & math_auditor)
 # ============================================================================
 try:
-    from hsn_matcher import match_hsn_item
+    from hsn_matcher import match_hsn_item, search_hsn_catalog
     EXTERNAL_HSN_AVAILABLE = True
     logger.info("✅ External Teammate 2 'hsn_matcher' found and imported.")
 except ImportError:
-    EXTERNAL_HSN_AVAILABLE = False
-    logger.info("ℹ️ External 'hsn_matcher' not found. Using built-in high-accuracy fallback HSN matcher.")
+    try:
+        from backend.hsn_matcher import match_hsn_item, search_hsn_catalog
+        EXTERNAL_HSN_AVAILABLE = True
+        logger.info("✅ External Teammate 2 'backend.hsn_matcher' found and imported.")
+    except ImportError:
+        EXTERNAL_HSN_AVAILABLE = False
+        search_hsn_catalog = None
+        logger.info("ℹ️ External 'hsn_matcher' not found. Using built-in high-accuracy fallback HSN matcher.")
 
 try:
     from math_auditor import audit_and_calculate_invoice
     EXTERNAL_MATH_AVAILABLE = True
     logger.info("✅ External Teammate 2 'math_auditor' found and imported.")
 except ImportError:
-    EXTERNAL_MATH_AVAILABLE = False
+    try:
+        from backend.math_auditor import audit_and_calculate_invoice
+        EXTERNAL_MATH_AVAILABLE = True
+        logger.info("✅ External Teammate 2 'backend.math_auditor' found and imported.")
+    except ImportError:
+        EXTERNAL_MATH_AVAILABLE = False
+        logger.info("ℹ️ External 'math_auditor' not found. Using built-in deterministic fallback math auditor.")
     logger.info("ℹ️ External 'math_auditor' not found. Using built-in deterministic fallback math auditor.")
 
 
@@ -79,6 +94,25 @@ def fallback_match_hsn(
     raw_lower = raw_text.lower().strip()
     sector_upper = (sector or "GENERAL").upper()
 
+    # Priority Check: Ceramic Tiles, Vitrified, Spenza, Kajaria, Flooring
+    # Must ALWAYS map to HSN 6907 (18% GST), NEVER to 2523 (Cement 28%)
+    is_tile_item = any(k in clean_name or k in raw_lower for k in [
+        "tile", "tiles", "ceramic", "ceramics", "spenza", "vitrified",
+        "onyx", "plano", "marbonite", "kajaria", "somany", "nitco", "honey onyx", "vista plano"
+    ])
+    if is_tile_item:
+        return {
+            "hsn_code": "6907",
+            "category_description": "Ceramic Flags, Paving, Hearth or Wall Tiles, Vitrified Tiles",
+            "gst_rate": 18.0,
+            "tax_rule_note": "Ceramic & Vitrified Tiles (18% GST)",
+            "top_3_alternatives": [
+                {"hsn_code": "6907", "label": "6907 - Ceramic & Vitrified Tiles (18%)", "gst_rate": 18.0},
+                {"hsn_code": "6802", "label": "6802 - Granite & Marble Slabs (18%)", "gst_rate": 18.0},
+                {"hsn_code": "6910", "label": "6910 - Ceramic Sanitaryware (18%)", "gst_rate": 18.0},
+            ],
+        }
+
     # 1. Check Item Keywords: TEXTILES / APPAREL
     is_textile_item = any(k in clean_name for k in ["lehnga", "suit", "saree", "sari", "kurti", "fabric", "cloth", "kapda", "astar", "shirting", "pant", "jeans", "shirt", "t-shirt", "dupatta", "towel", "bedsheet"])
     
@@ -88,8 +122,11 @@ def fallback_match_hsn(
     # 3. Check Item Keywords: GROCERY
     is_groc_item = any(k in clean_name for k in ["atta", "flour", "rice", "chawal", "dal", "daal", "oil", "tel", "ghee", "sugar", "cheeni", "tea", "chai", "salt", "namkeen", "masala", "soap", "biscuit"])
     
-    # 4. Check Item Keywords: HARDWARE
-    is_hard_item = any(k in clean_name for k in ["cement", "paint", "screw", "nut", "bolt", "pipe", "pvc", "plywood"])
+    # 4. Check Item Keywords: HARDWARE, TIMBER, FURNITURE
+    is_hard_item = any(k in clean_name or k in raw_lower for k in [
+        "cement", "paint", "screw", "nut", "bolt", "pipe", "pvc", "plywood",
+        "timber", "wood", "lakkad", "lakdi", "sona timber", "sofa", "chair", "table", "bed", "furniture"
+    ])
     
     # 5. Check Item Keywords: MEDICAL
     is_med_item = any(k in clean_name for k in ["tablet", "paracetamol", "syrup", "capsule", "medicine", "dolo", "bandage", "crocin"])
@@ -197,31 +234,42 @@ def fallback_match_hsn(
             "top_3_alternatives": alternatives,
         }
 
-    if is_hard_item or (not (is_med_item or is_foot_item) and "HARDWARE" in sector_upper):
-        if "cement" in clean_name:
+    if is_hard_item or (not (is_med_item or is_foot_item) and ("HARDWARE" in sector_upper or "TIMBER" in sector_upper)):
+        # Cement (28% GST) ONLY if explicitly contains cement keywords
+        if any(c in clean_name or c in raw_lower for c in ["cement", "सीमेंट", "ultratech", "ambuja", "acc cement", "birla"]):
             hsn = "2523"
             desc = "Portland Cement"
             rate = 28.0
             rule_note = "Cement (Highest 28% GST Slab)"
+        elif any(t in clean_name or t in raw_lower for t in ["timber", "wood", "plywood", "lakkad", "lakdi", "sona timber", "plank", "ply"]):
+            hsn = "4407"
+            desc = "Wood, Timber, Plywood & Veneered Panels"
+            rate = 18.0
+            rule_note = "Timber & Wood Products (18% GST)"
+        elif any(f in clean_name or f in raw_lower for f in ["sofa", "chair", "table", "bed", "furniture", "almirah", "wardrobe"]):
+            hsn = "9403"
+            desc = "Furniture, Sofas, Wooden & Metal Articles"
+            rate = 18.0
+            rule_note = "Furniture Articles (18% GST)"
         elif "paint" in clean_name:
             hsn = "3208"
             desc = "Paints & Varnishes"
             rate = 18.0
             rule_note = "Paints (18% GST)"
         else:
-            hsn = "7318"
-            desc = "Screws, Bolts & Hardware Fasteners"
+            hsn = "4412"
+            desc = "Building Materials, Hardware & Panels"
             rate = 18.0
-            rule_note = "Hardware Fasteners (18% GST)"
+            rule_note = "Standard Hardware/Building Supplies (18% GST)"
         return {
             "hsn_code": hsn,
             "category_description": desc,
             "gst_rate": rate,
             "tax_rule_note": rule_note,
             "top_3_alternatives": [
-                {"hsn_code": "2523", "label": "Portland Cement (28%)", "gst_rate": 28.0},
-                {"hsn_code": "7318", "label": "Hardware Screws/Bolts (18%)", "gst_rate": 18.0},
-                {"hsn_code": "3208", "label": "Paints & Primer (18%)", "gst_rate": 18.0},
+                {"hsn_code": "4407", "label": "4407 - Sawn Timber & Wood (18%)", "gst_rate": 18.0},
+                {"hsn_code": "4412", "label": "4412 - Plywood & Panels (18%)", "gst_rate": 18.0},
+                {"hsn_code": "2523", "label": "2523 - Portland Cement (28%)", "gst_rate": 28.0},
             ],
         }
 
@@ -394,13 +442,18 @@ def fallback_audit_and_calculate_invoice(
         else round(written_taxable_sum, 2)
     )
 
+    extra_charges = float(raw_bill.extra_charges or 0.0)
+    discount_amount = float(raw_bill.discount_amount or 0.0)
+
     total_math_saved = round(max(0.0, written_grand_total - audited_taxable_total), 2)
-    final_payable_pakka = round(audited_taxable_total + total_cgst + total_sgst, 2)
+    final_payable_pakka = round(audited_taxable_total + total_cgst + total_sgst + extra_charges - discount_amount, 2)
 
     summary = InvoiceSummary(
         written_grand_total=round(written_grand_total, 2),
         audited_taxable_total=round(audited_taxable_total, 2),
         total_math_saved=total_math_saved,
+        extra_charges=extra_charges,
+        discount_amount=discount_amount,
         total_cgst=round(total_cgst, 2),
         total_sgst=round(total_sgst, 2),
         final_payable_pakka_total=final_payable_pakka
@@ -412,6 +465,11 @@ def fallback_audit_and_calculate_invoice(
         detected_sector=raw_bill.detected_sector,
         store_name_guess=raw_bill.merchant_name or "Bharat Kacha Dukaan",
         merchant_name=raw_bill.merchant_name or "Bharat Kacha Dukaan",
+        customer_name=raw_bill.customer_name,
+        customer_phone=raw_bill.customer_phone,
+        customer_address=raw_bill.customer_address,
+        extra_charges=extra_charges,
+        discount_amount=discount_amount,
         raw_date_written=raw_bill.raw_date_written or "Today",
         normalized_date_iso="2026-10-31",
         model_used=model_used,
@@ -587,6 +645,11 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
         detected_sector="TEXTILE",
         store_name_guess="Punjab Cloth & Readymade House",
         merchant_name="Punjab Cloth & Readymade House",
+        customer_name="Sandeep Goyal",
+        customer_phone="94653-47478",
+        customer_address="Gali-8, Daba Colony, Ludhiana, Punjab",
+        extra_charges=0.0,
+        discount_amount=0.0,
         raw_date_written="31/10/2026",
         normalized_date_iso="2026-10-31",
         model_used="demo-mock-pipeline",
@@ -620,15 +683,23 @@ app.add_middleware(
 )
 
 
+STATIC_DIR = Path("static") if Path("static").exists() else Path("backend/static")
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
 # ============================================================================
 # 1. Root & Health Check Endpoints
 # ============================================================================
 
 @app.get("/")
 async def root():
-    """Root landing endpoint with quick links to interactive Swagger docs and health."""
+    """Serves the full ParchiSetu AI Command Center dashboard at GET /."""
+    index_file = STATIC_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
     return {
-        "service": "ParchiSetu AI - Bharat GST Vision Engine (Lane 1)",
+        "service": "ParchiSetu AI - Bharat GST Vision Engine (Lane 1 & 2)",
         "status": "online",
         "documentation": "/docs",
         "health_check": "/api/v1/health",
@@ -636,7 +707,25 @@ async def root():
             "parse_invoice": "POST /api/v1/invoice/parse (or /api/scan-bill)",
             "recalculate_invoice": "POST /api/v1/invoice/recalculate (or /api/recalculate)",
             "export_gstr1": "POST /api/v1/invoice/export-gstr1 (or /api/export-gstr1)",
+            "hsn_search": "GET /api/v1/hsn/search?q=...",
         }
+    }
+
+
+@app.get("/api/v1/hsn/search")
+async def search_hsn(
+    q: str = Query(..., min_length=1, description="Keyword, item name, or HSN code"),
+    limit: int = Query(10, ge=1, le=50, description="Max results")
+):
+    """Search HSN Master Catalog across 6 Indian market sectors."""
+    if EXTERNAL_HSN_AVAILABLE and search_hsn_catalog is not None:
+        results = search_hsn_catalog(query=q, limit=limit)
+    else:
+        results = []
+    return {
+        "query": q,
+        "count": len(results),
+        "results": results
     }
 
 
@@ -750,6 +839,11 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
         bill_id = payload.get("bill_id") or payload.get("invoice_id") or f"recalc_{uuid.uuid4().hex[:8]}"
         sector = payload.get("detected_sector", "GENERAL")
         store_name = payload.get("store_name_guess") or payload.get("merchant_name") or "Bharat Store"
+        customer_name = payload.get("customer_name")
+        customer_phone = payload.get("customer_phone")
+        customer_address = payload.get("customer_address")
+        extra_charges = float(payload.get("extra_charges") or 0.0)
+        discount_amount = float(payload.get("discount_amount") or 0.0)
         raw_date = payload.get("raw_date_written", "Today")
         raw_image_b64 = payload.get("raw_image_b64")
         enhanced_image_b64 = payload.get("enhanced_image_b64") or payload.get("enhanced_image_base64")
@@ -869,12 +963,14 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
         # Summaries
         written_grand_total = round(written_taxable_sum, 2)
         total_math_saved = round(max(0.0, written_grand_total - audited_taxable_total), 2)
-        final_payable_pakka = round(audited_taxable_total + total_cgst + total_sgst, 2)
+        final_payable_pakka = round(audited_taxable_total + total_cgst + total_sgst + extra_charges - discount_amount, 2)
 
         summary = InvoiceSummary(
             written_grand_total=written_grand_total,
             audited_taxable_total=round(audited_taxable_total, 2),
             total_math_saved=total_math_saved,
+            extra_charges=extra_charges,
+            discount_amount=discount_amount,
             total_cgst=round(total_cgst, 2),
             total_sgst=round(total_sgst, 2),
             final_payable_pakka_total=final_payable_pakka
@@ -886,6 +982,11 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
             detected_sector=sector,
             store_name_guess=store_name,
             merchant_name=store_name,
+            customer_name=customer_name,
+            customer_phone=customer_phone,
+            customer_address=customer_address,
+            extra_charges=extra_charges,
+            discount_amount=discount_amount,
             raw_date_written=raw_date,
             normalized_date_iso="2026-10-31",
             model_used="deterministic-recalc",

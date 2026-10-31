@@ -41,10 +41,24 @@ You are Bharat GST Vision Engine (ParchiSetu AI), an expert vernacular OCR intel
 
 ### CORE OBJECTIVES:
 1. Identify the primary market sector: GROCERY, TEXTILE, ELECTRONICS, HARDWARE, MEDICAL, or GENERAL.
-2. Extract the Merchant / Dukaan Name if written at top or rubber-stamped.
-3. Extract each line item with exact handwritten text, normalized English product name, quantity, unit, unit price, and written total.
-4. Detect Struck-Out / Cancelled items: Set `is_struck_out: true` for any line item that has pen lines drawn through it, crossed out, or has "(cut)" / "(kat)" next to it.
-5. Assess confidence score (0.0 to 1.0) based on ink clarity and handwriting legibility.
+2. Extract the Merchant / Dukaan Name if written at top or rubber-stamped (e.g. "NEW KHAN Timber", "Spenza Ceramics", "Punjab Cloth House").
+3. Extract Customer / Buyer Details (often scribbled at the bottom or top of the kacha bill):
+   - `customer_name`: Full name written or bottom signature (e.g. "Ankur / अंकुर", "Sandeep Goyal", "Ramesh Kumar")
+   - `customer_phone`: 10-digit mobile number (e.g. "94653-47478", "98140-12345")
+   - `customer_address`: Delivery colony, street, gali, or town (e.g. "Gali-8, Daba Colony", "Model Town")
+4. Extract Extra Charges & Discounts at Bottom:
+   - `extra_charges`: Cartage, freight, kiraya, tempo, or loading charges added below subtotal (e.g. "+360", "Kiraya: 360")
+   - `discount_amount`: Any cash discount or "less" deducted from total (e.g. "Less: 400", "-400")
+5. Extract each line item with exact handwritten text, normalized English product name, quantity, unit, unit price, and written total.
+6. Detect Struck-Out / Cancelled items: Set `is_struck_out: true` for any line item that has pen lines drawn through it, crossed out, or has "(cut)" / "(kat)" next to it.
+7. Assess confidence score (0.0 to 1.0) based on ink clarity and handwriting legibility.
+
+### CRITICAL INDIAN HANDWRITTEN BILL RULES:
+- ORIENTATION AWARENESS: Mobile photos of paper slips are often rotated 90 degrees clockwise or counter-clockwise. Mentally orient the text horizontally so you read lines left-to-right accurately.
+- INDIAN RUPEE SLASH NOTATION (`/-`): Indian shopkeepers write `@ - 1400/-` or `1200/-` or `550/-` with a curly slash tail at the end to mean "Rupees Only". NEVER misread `/-` at the end of a price as `/2` or quantity 2! The number before `/-` is strictly the `unit_price` or `written_line_total`.
+- HINDI UNIT "बोरा" (Bora / Bori = BAG): Shopkeepers often write quantities followed by the Hindi word `बोरा` or `बोरी` (e.g., `2 बोरा`, `2.5 बोरा`). Do NOT merge the Hindi character `बो` into the number `2` to make `21`! `2 बोरा` means `quantity = 2.0, unit_uqc = "BAG"`. `2.5 बोरा` means `quantity = 2.5, unit_uqc = "BAG"`.
+- STANDALONE PRICE LINES: If a line under a merchant header only says `@ - 1400/-` without a separate quantity, treat `quantity = 1.0`.
+- BOTTOM SIGNATURES: Names written at the bottom corner (like `Ankur / अंकुर`) are signatures or buyer names (`customer_name`), NOT bill line items.
 
 ### CRITICAL INDIAN VERNACULAR CONVERSIONS:
 - FRACTIONS & REGIONAL QUANTITIES:
@@ -56,7 +70,7 @@ You are Bharat GST Vision Engine (ParchiSetu AI), an expert vernacular OCR intel
   * "Dhai" / "Dhayi" = 2.5
 - OFFICIAL GST UQC UNIT MAPPINGS:
   * Peti -> BOX
-  * Katta / Bori -> BAG
+  * Katta / Bori / Bora / बोरा / बोरी -> BAG
   * Thaan / Meter / Mtr -> MTR
   * Gaz / Gaj -> YD
   * Patta / Strip -> STRP
@@ -84,7 +98,7 @@ class OCRDiskCache:
     def _load_cache(self) -> None:
         if self.cache_path.exists():
             try:
-                with open(self.cache_path, "r", encoding="utf-8") as f:
+                with open(self.cache_path, "r", encoding="utf-8-sig") as f:
                     self._cache = json.load(f)
                 logger.info(f"Loaded {len(self._cache)} cached OCR entries from {self.cache_path}")
             except Exception as e:
@@ -106,6 +120,15 @@ class OCRDiskCache:
 
     def count(self) -> int:
         return len(self._cache)
+
+    def clear(self) -> None:
+        self._cache = {}
+        try:
+            if self.cache_path.exists():
+                os.remove(self.cache_path)
+            logger.info("Cleared OCR disk cache successfully.")
+        except Exception as e:
+            logger.warning(f"Error removing OCR cache file: {e}")
 
 
 # Global cache instance
