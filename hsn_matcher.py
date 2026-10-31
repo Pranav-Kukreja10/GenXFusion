@@ -48,6 +48,74 @@ SECTOR_DEFAULT_CHAPTERS: Dict[str, Tuple[str, str, float]] = {
     "GENERAL": ("9999", "General Merchandise", 18.0),
 }
 
+# ============================================================================
+# Statutory CBIC GST Schedules & Chapter Grounding Map
+# ============================================================================
+CBIC_SCHEDULES: Dict[float, str] = {
+    0.0: "Exempt Notification No. 2/2017-CT(Rate)",
+    5.0: "Schedule I (2.5% CGST + 2.5% SGST) - CBIC Notification 1/2017-CT(Rate)",
+    12.0: "Schedule II (6% CGST + 6% SGST) - CBIC Notification 1/2017-CT(Rate)",
+    18.0: "Schedule III (9% CGST + 9% SGST) - CBIC Notification 1/2017-CT(Rate)",
+    28.0: "Schedule IV (14% CGST + 14% SGST) - CBIC Notification 1/2017-CT(Rate)",
+}
+
+STATUTORY_CHAPTER_MAP: Dict[str, str] = {
+    "10": "Chapter 10 (Cereals): Rice, wheat, foodgrains",
+    "11": "Chapter 11 (Products of Milling Industry): Wheat flour, atta, maida, suji",
+    "15": "Chapter 15 (Animal/Vegetable Fats & Oils): Edible cooking oil, mustard oil, ghee",
+    "17": "Chapter 17 (Sugars & Sugar Confectionery): Refined sugar, jaggery",
+    "19": "Chapter 19 (Preparations of Cereals/Flour): Biscuits, bakery products",
+    "21": "Chapter 21 (Miscellaneous Edible Preparations): Spices, tea, coffee, sauces",
+    "25": "Chapter 25 (Salt, Sulphur, Earths, Stone, Lime & Cement): Portland cement under Heading 2523",
+    "30": "Chapter 30 (Pharmaceutical Products): Medicaments & formulations under Heading 3004",
+    "31": "Chapter 31 (Fertilizers): Mineral or chemical fertilizers under Heading 3102",
+    "32": "Chapter 32 (Tanning, Dyeing Extracts, Paints & Varnishes): Heading 3208",
+    "34": "Chapter 34 (Soap, Organic Surface-Active Agents, Detergents): Soaps & cleaning agents",
+    "39": "Chapter 39 (Plastics & Articles thereof): PVC pipes, plastic fittings",
+    "44": "Chapter 44 (Wood & Articles of Wood): Sawn timber, plywood & panels under Heading 4407/4412",
+    "52": "Chapter 52 (Cotton): Cotton yarn & woven unstitched fabric under Heading 5208",
+    "61": "Chapter 61 (Articles of Apparel, Knitted or Crocheted): T-shirts, hosiery",
+    "62": "Chapter 62 (Articles of Apparel, Not Knitted): Readymade suits, shirts, trousers under Heading 6203/6204",
+    "63": "Chapter 63 (Other Made Up Textile Articles): Curtains, bedsheets, blankets",
+    "64": "Chapter 64 (Footwear, Gaiters & Parts): Footwear under Heading 6402/6403",
+    "68": "Chapter 68 (Articles of Stone, Plaster, Cement): Granite & marble slabs under Heading 6802",
+    "69": "Chapter 69 (Ceramic Products): Ceramic flags, paving, vitrified & wall tiles under Heading 6907",
+    "72": "Chapter 72 (Iron & Steel): TMT bars, steel rods, sariya",
+    "73": "Chapter 73 (Articles of Iron or Steel): Screws, nuts, bolts, sanitaryware",
+    "84": "Chapter 84 (Nuclear Reactors, Boilers, Machinery): Pumps, mechanical appliances",
+    "85": "Chapter 85 (Electrical Machinery & Equipment): Wires, cables, switches, LED lamps under Heading 8539/8544",
+    "94": "Chapter 94 (Furniture, Bedding, Mattresses): Wooden/metal furniture, sofas under Heading 9403",
+    "99": "Chapter 99 (Services & Sundry Goods): General sundry merchandise",
+}
+
+
+def build_rag_citation(
+    hsn_code: str,
+    category_description: str,
+    gst_rate: float,
+    confidence: float,
+    rule_note: Optional[str] = None
+) -> Dict[str, Any]:
+    """Generates explainable legal citation grounded in official CBIC statutory schedules."""
+    ch_code = str(hsn_code)[:2]
+    ch_desc = STATUTORY_CHAPTER_MAP.get(ch_code, f"Chapter {ch_code} (Statutory Goods Classification)")
+    sched = CBIC_SCHEDULES.get(float(gst_rate), f"CBIC Rate Schedule ({gst_rate}% GST)")
+
+    statutory_note = (
+        f"Matched via Vector RAG [Sim: {confidence:.2f}] -> {ch_desc}, Heading {hsn_code}: "
+        f"{category_description} ({gst_rate}% under {sched})"
+    )
+    if rule_note:
+        statutory_note += f" | Rule: {rule_note}"
+
+    return {
+        "cbic_schedule": sched,
+        "chapter": ch_code,
+        "statutory_chapter_note": statutory_note,
+        "vector_similarity": round(confidence, 2),
+        "legal_grounding": f"Heading {hsn_code} classified under {ch_desc}. Applicable Rate: {gst_rate}% pursuant to {sched}."
+    }
+
 
 class HSNMasterCatalog:
     """Manages HSN database, aliases, vector embeddings, and fallback scoring."""
@@ -195,11 +263,15 @@ class HSNMasterCatalog:
             "onyx", "plano", "marbonite", "kajaria", "somany", "nitco", "honey onyx", "vista plano"
         ])
         if is_tile_query:
+            rag = build_rag_citation("6907", "Ceramic Flags, Paving, Hearth or Wall Tiles, Vitrified Tiles", 18.0, 0.98, "Ceramic & Vitrified Tiles (18% GST)")
             return {
                 "hsn_code": "6907",
                 "category_description": "Ceramic Flags, Paving, Hearth or Wall Tiles, Vitrified Tiles",
                 "gst_rate": 18.0,
                 "tax_rule_note": "Ceramic & Vitrified Tiles (18% GST)",
+                "cbic_schedule": rag["cbic_schedule"],
+                "statutory_chapter_note": rag["statutory_chapter_note"],
+                "rag_citation": rag,
                 "top_3_alternatives": [
                     {"hsn_code": "6907", "label": "6907 - Ceramic & Vitrified Tiles (18%)", "gst_rate": 18.0},
                     {"hsn_code": "6802", "label": "6802 - Granite & Marble Slabs (18%)", "gst_rate": 18.0},
@@ -213,11 +285,15 @@ class HSNMasterCatalog:
             "sofa", "chair", "table", "bed", "almirah", "furniture", "wardrobe", "stool", "cabinet", "dining"
         ])
         if is_furniture_query:
+            rag = build_rag_citation("9403", "Furniture, Sofas, Wooden & Metal Articles", 18.0, 0.95, "Furniture Articles (18% GST)")
             return {
                 "hsn_code": "9403",
                 "category_description": "Furniture, Sofas, Wooden & Metal Articles",
                 "gst_rate": 18.0,
                 "tax_rule_note": "Furniture Articles (18% GST)",
+                "cbic_schedule": rag["cbic_schedule"],
+                "statutory_chapter_note": rag["statutory_chapter_note"],
+                "rag_citation": rag,
                 "top_3_alternatives": [
                     {"hsn_code": "9403", "label": "9403 - Furniture & Sofas (18%)", "gst_rate": 18.0},
                     {"hsn_code": "4412", "label": "4412 - Plywood & Timber Boards (18%)", "gst_rate": 18.0},
@@ -231,11 +307,15 @@ class HSNMasterCatalog:
             "plank", "teak", "sagwan", "sunmica", "board", "blockboard", "ply"
         ]) or ("timber" in sector_upper or "wood" in sector_upper)
         if is_timber_query and not any(c in combined_lower for c in ["cement", "सीमेंट"]):
+            rag = build_rag_citation("4407", "Wood, Timber, Plywood & Veneered Panels", 18.0, 0.96, "Wood & Timber Products (18% GST)")
             return {
                 "hsn_code": "4407",
                 "category_description": "Wood, Timber, Plywood & Veneered Panels",
                 "gst_rate": 18.0,
                 "tax_rule_note": "Wood & Timber Products (18% GST)",
+                "cbic_schedule": rag["cbic_schedule"],
+                "statutory_chapter_note": rag["statutory_chapter_note"],
+                "rag_citation": rag,
                 "top_3_alternatives": [
                     {"hsn_code": "4407", "label": "4407 - Sawn Timber & Wood (18%)", "gst_rate": 18.0},
                     {"hsn_code": "4412", "label": "4412 - Plywood & Veneered Panels (18%)", "gst_rate": 18.0},
@@ -247,11 +327,15 @@ class HSNMasterCatalog:
         # Priority Check 4: Sona / Urea / Fertilizer / Khad (if Agri/Bora)
         is_agri_khad = any(k in combined_lower for k in ["urea", "fertilizer", "khad", "dap", "iffco"])
         if is_agri_khad:
+            rag = build_rag_citation("3102", "Mineral or Chemical Fertilizers, Urea", 5.0, 0.92, "Agricultural Fertilizer / Urea (5% GST)")
             return {
                 "hsn_code": "3102",
                 "category_description": "Mineral or Chemical Fertilizers, Urea",
                 "gst_rate": 5.0,
                 "tax_rule_note": "Agricultural Fertilizer / Urea (5% GST)",
+                "cbic_schedule": rag["cbic_schedule"],
+                "statutory_chapter_note": rag["statutory_chapter_note"],
+                "rag_citation": rag,
                 "top_3_alternatives": [
                     {"hsn_code": "3102", "label": "3102 - Urea & Nitrogenous Fertilizers (5%)", "gst_rate": 5.0},
                 ],
@@ -349,11 +433,22 @@ class HSNMasterCatalog:
             if len(alternatives) >= 3:
                 break
 
+        rag = build_rag_citation(
+            hsn_code=top_rec["hsn_code"],
+            category_description=top_rec["description"],
+            gst_rate=final_gst_rate,
+            confidence=confidence,
+            rule_note=rule_note
+        )
+
         return {
             "hsn_code": top_rec["hsn_code"],
             "category_description": top_rec["description"],
             "gst_rate": final_gst_rate,
             "tax_rule_note": rule_note,
+            "cbic_schedule": rag["cbic_schedule"],
+            "statutory_chapter_note": rag["statutory_chapter_note"],
+            "rag_citation": rag,
             "top_3_alternatives": alternatives,
             "confidence": confidence,
         }

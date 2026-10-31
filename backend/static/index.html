@@ -56,9 +56,9 @@
         <div>
           <div class="flex items-center space-x-2">
             <h1 class="text-xl font-extrabold tracking-tight text-white">ParchiSetu <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">AI</span></h1>
-            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">Lane 1 & 2 Engine</span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">Statutory GST & RAG Engine</span>
           </div>
-          <p class="text-xs text-slate-400">Vernacular Kacha-Parchi OCR • OpenCV CLAHE • PyTorch HSN Matcher • GSTN Auditor</p>
+          <p class="text-xs text-slate-400">Vernacular Kacha-Parchi OCR • Mod-36 GSTIN Validator • Statutory CBIC RAG • GSTR-1 Portal Ready</p>
         </div>
       </div>
 
@@ -66,14 +66,14 @@
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
-          Gemini 3.5 Flash Cascade
+          Mod-36 Checksum Verified
         </span>
         <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-blue-400 mr-1.5"></span>
-          6-Sector PyTorch HSN
+          CBIC Statutory RAG Citations
         </span>
-        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
-          GSTR-1 Portal Ready
+        <span id="supplyBadgeHeader" class="inline-flex items-center px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold">
+          B2CS Retail Small
         </span>
       </div>
     </div>
@@ -188,14 +188,14 @@
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-lg">
           <p class="text-[11px] font-semibold text-slate-400">Paper Written Total</p>
           <p id="kpiWrittenTotal" class="text-xl font-extrabold text-slate-200 mt-1 tabular-nums font-mono">₹0.00</p>
-          <p class="text-[10px] text-slate-500 mt-0.5">As written by shopkeeper</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">As written on paper slip</p>
         </div>
 
         <!-- Audited Taxable Total -->
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-lg">
           <p class="text-[11px] font-semibold text-slate-400">Audited Taxable Base</p>
           <p id="kpiTaxableTotal" class="text-xl font-extrabold text-blue-400 mt-1 tabular-nums font-mono">₹0.00</p>
-          <p class="text-[10px] text-blue-500/80 mt-0.5">Base for CGST + SGST</p>
+          <p class="text-[10px] text-blue-500/80 mt-0.5">Base turnover for GST</p>
         </div>
 
         <!-- Math Error Counter -->
@@ -216,6 +216,95 @@
         </div>
       </div>
 
+      <!-- INVOICE HEADER & STATUTORY GST COMPLIANCE PANEL (NEW) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-2">
+          <div class="flex items-center space-x-2">
+            <h3 class="text-sm font-bold text-white tracking-wide flex items-center">
+              <span class="mr-1.5">📋</span> Invoice Header & Statutory Compliance
+            </h3>
+            <span id="headerComplianceBadge" class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Ready for GSTR-1
+            </span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span id="headerTaxModeBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30">
+              ⚡ Intra-State (CGST + SGST)
+            </span>
+            <span id="headerB2bBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
+              🛒 B2CS Retail
+            </span>
+          </div>
+        </div>
+
+        <!-- EDITABLE HEADER CONTROLS GRID -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 mt-3 text-xs">
+          <!-- Merchant Name -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-300">Merchant / Shop Name</label>
+              <span id="merchantWarningBadge" class="text-[10px] text-emerald-400 font-semibold">✓ Extracted</span>
+            </div>
+            <input id="headerMerchantInput" type="text" onchange="updateHeaderField('merchant_name', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-100 focus:outline-none focus:border-orange-500" placeholder="e.g. Spenza Ceramics" />
+          </div>
+
+          <!-- Supplier GSTIN -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-300">Supplier GSTIN (15-Char)</label>
+              <button onclick="fillDemoSupplierGstin()" class="text-[10px] text-orange-400 hover:text-orange-300 underline font-semibold">Demo Punjab</button>
+            </div>
+            <input id="headerSupplierGstinInput" type="text" maxlength="15" oninput="onSupplierGstinInput(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono text-slate-100 uppercase focus:outline-none focus:border-orange-500" placeholder="03AAEPG1807C1ZM" />
+            <div id="supplierGstinStatus" class="text-[10px] text-emerald-400 font-semibold mt-0.5 truncate">✓ Valid Punjab GSTIN [Mod-36 Checksum Ok]</div>
+          </div>
+
+          <!-- Place of Supply (POS) Dropdown -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-300">Place of Supply (POS State)</label>
+              <span class="text-[10px] text-slate-400 font-mono">Flipped for IGST</span>
+            </div>
+            <select id="headerPosSelect" onchange="onPosSelectChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 font-semibold text-slate-100 focus:outline-none focus:border-orange-500">
+              <option value="03" selected>03 - Punjab (Home State)</option>
+              <option value="04">04 - Chandigarh</option>
+              <option value="06">06 - Haryana (Inter-State IGST)</option>
+              <option value="07">07 - Delhi (Inter-State IGST)</option>
+              <option value="08">08 - Rajasthan (Inter-State IGST)</option>
+              <option value="09">09 - Uttar Pradesh (Inter-State IGST)</option>
+              <option value="19">19 - West Bengal (Inter-State IGST)</option>
+              <option value="24">24 - Gujarat (Inter-State IGST)</option>
+              <option value="27">27 - Maharashtra (Inter-State IGST)</option>
+              <option value="29">29 - Karnataka (Inter-State IGST)</option>
+              <option value="33">33 - Tamil Nadu (Inter-State IGST)</option>
+              <option value="36">36 - Telangana (Inter-State IGST)</option>
+            </select>
+            <div id="posStatusBadge" class="text-[10px] text-blue-400 font-semibold mt-0.5">Intra-State: 03 Punjab -> 03 Punjab</div>
+          </div>
+
+          <!-- Customer Name & Phone -->
+          <div>
+            <label class="font-bold text-slate-300 block mb-1">Billed To (Customer Name)</label>
+            <input id="headerCustomerNameInput" type="text" onchange="updateHeaderField('customer_name', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-100 focus:outline-none focus:border-orange-500" placeholder="e.g. Sandeep Goyal" />
+          </div>
+
+          <!-- Customer Phone -->
+          <div>
+            <label class="font-bold text-slate-300 block mb-1">Customer Mobile No.</label>
+            <input id="headerCustomerPhoneInput" type="text" onchange="updateHeaderField('customer_phone', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono text-slate-100 focus:outline-none focus:border-orange-500" placeholder="e.g. 94653-47478" />
+          </div>
+
+          <!-- Buyer GSTIN (B2B Auto-Switch) -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-300">Buyer GSTIN (Optional B2B)</label>
+              <button onclick="fillDemoBuyerGstin()" class="text-[10px] text-purple-400 hover:text-purple-300 underline font-semibold">Demo Haryana B2B</button>
+            </div>
+            <input id="headerBuyerGstinInput" type="text" maxlength="15" oninput="onBuyerGstinInput(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono text-slate-100 uppercase focus:outline-none focus:border-purple-500" placeholder="Leave empty for B2C Retail..." />
+            <div id="buyerGstinStatus" class="text-[10px] text-slate-400 font-semibold mt-0.5 truncate">🛒 B2CS Mode (Retail Consumer)</div>
+          </div>
+        </div>
+      </div>
+
       <!-- INTERACTIVE ACTIVE ITEMS AUDIT TABLE -->
       <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl flex-1 flex flex-col overflow-hidden">
         <div class="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
@@ -233,12 +322,12 @@
               <tr class="bg-slate-950/70 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                 <th class="py-3 px-3">#</th>
                 <th class="py-3 px-3">Raw Vernacular Text</th>
-                <th class="py-3 px-3">Normalized Item & HSN</th>
+                <th class="py-3 px-3">Normalized Item & Statutory RAG</th>
                 <th class="py-3 px-2 text-right">Qty</th>
                 <th class="py-3 px-2 text-right">Unit Rate (₹)</th>
                 <th class="py-3 px-3 text-right">Paper Total</th>
                 <th class="py-3 px-2 text-center">GST Slab</th>
-                <th class="py-3 px-3 text-right">CGST + SGST</th>
+                <th id="thTaxCol" class="py-3 px-3 text-right">CGST + SGST</th>
                 <th class="py-3 px-3 text-right">Total with Tax</th>
                 <th class="py-3 px-2 text-center">Action</th>
               </tr>
@@ -281,7 +370,7 @@
       <div class="bg-slate-100 px-6 py-4 border-b border-slate-300 flex items-center justify-between no-print">
         <div>
           <h3 class="font-extrabold text-slate-800 text-lg">Official GST Tax Invoice Preview</h3>
-          <p class="text-xs text-slate-500">Government format compliant with CGST/SGST Rules</p>
+          <p class="text-xs text-slate-500">Government format compliant with CGST/SGST & IGST Rules</p>
         </div>
         <div class="flex items-center space-x-2">
           <button onclick="window.print()" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 flex items-center space-x-1 transition">
@@ -301,8 +390,8 @@
           <div>
             <span class="text-[10px] uppercase font-bold tracking-widest text-slate-500">TAX INVOICE</span>
             <h2 id="modalStoreName" class="text-xl font-black text-slate-900">Spenza Ceramics</h2>
-            <p class="text-slate-600 mt-0.5">GSTIN: <span class="font-mono font-bold text-slate-900">03AABCS1429B1Z</span> (State Code: 03 Punjab)</p>
-            <p class="text-slate-500 text-[11px]">Store Address: Ferozepur Road / Mohali, Punjab • B2C Retail Tax Invoice</p>
+            <p class="text-slate-600 mt-0.5">GSTIN: <span id="modalSupplierGstin" class="font-mono font-bold text-slate-900">03AAEPG1807C1ZM</span> (<span id="modalSupplierState">State Code: 03 Punjab</span>)</p>
+            <p class="text-slate-500 text-[11px]">Store Address: Ferozepur Road / Mohali, Punjab • <span id="modalSupplyTypeLabel">B2C Retail Tax Invoice</span></p>
           </div>
           <div class="text-right">
             <p class="font-mono text-slate-600">Invoice No: <span id="modalInvoiceId" class="font-bold text-slate-900">PS-2026-001</span></p>
@@ -316,17 +405,18 @@
           <div>
             <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 block">BILLED TO (BUYER DETAILS)</span>
             <span id="modalCustomerName" class="font-bold text-slate-900 text-sm">Sandeep Goyal</span>
+            <span id="modalCustomerGstin" class="text-purple-700 font-mono font-bold block mt-0.5 hidden">GSTIN: 06AAECG1807C1Z3 (B2B Registered)</span>
             <span id="modalCustomerAddress" class="text-slate-600 block mt-0.5">📍 Gali-8, Daba Colony, Ludhiana, Punjab</span>
           </div>
           <div class="mt-2 md:mt-0 text-left md:text-right">
             <span id="modalCustomerPhone" class="font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 inline-block">📞 94653-47478</span>
-            <span class="text-[11px] text-slate-500 block mt-1">Place of Supply: 03 Punjab (Intra-State)</span>
+            <span id="modalPosText" class="text-[11px] text-slate-600 block mt-1 font-semibold">Place of Supply: 03 Punjab (Intra-State)</span>
           </div>
         </div>
 
         <!-- ITEMS TABLE -->
         <table class="w-full text-left border border-slate-300 text-xs mb-4">
-          <thead class="bg-slate-100 border-b border-slate-300 font-bold text-slate-700">
+          <thead id="modalTableHead" class="bg-slate-100 border-b border-slate-300 font-bold text-slate-700">
             <tr>
               <th class="p-2 border-r border-slate-300">#</th>
               <th class="p-2 border-r border-slate-300">Description of Goods</th>
@@ -334,8 +424,8 @@
               <th class="p-2 border-r border-slate-300 text-right">Qty</th>
               <th class="p-2 border-r border-slate-300 text-right">Rate (₹)</th>
               <th class="p-2 border-r border-slate-300 text-right">Taxable (₹)</th>
-              <th class="p-2 border-r border-slate-300 text-right">CGST (₹)</th>
-              <th class="p-2 border-r border-slate-300 text-right">SGST (₹)</th>
+              <th id="modalThTax1" class="p-2 border-r border-slate-300 text-right">CGST (₹)</th>
+              <th id="modalThTax2" class="p-2 border-r border-slate-300 text-right">SGST (₹)</th>
               <th class="p-2 text-right">Total (₹)</th>
             </tr>
           </thead>
@@ -347,38 +437,43 @@
         <!-- TOTALS & BREAKUPS -->
         <div class="grid grid-cols-2 gap-4 border-t border-slate-300 pt-3">
           <div>
-            <p class="font-bold text-slate-800">Terms & Conditions:</p>
-            <p class="text-[11px] text-slate-500">1. Goods once sold will not be taken back without bill.</p>
-            <p class="text-[11px] text-slate-500">2. Certified that all particulars are true and correct.</p>
+            <p class="font-bold text-slate-800">Statutory Tax & Compliance Note:</p>
+            <p class="text-[10px] text-slate-600 mt-0.5">1. Generated in strict compliance with Section 31 of CGST Act and Rule 46 of CGST Rules, 2017.</p>
+            <p class="text-[10px] text-slate-600">2. All HSN classifications grounded in official CBIC statutory rate notifications.</p>
+            <p class="text-[10px] text-slate-600">3. Electronic ledger entry verified for GSTR-1 & 3B return filing.</p>
             <div class="mt-4 pt-4 border-t border-dashed border-slate-300 text-center w-48">
               <p class="text-[11px] font-bold text-slate-700">Authorised Signatory</p>
-              <p class="text-[9px] text-slate-400">Generated via ParchiSetu AI</p>
+              <p class="text-[9px] text-slate-400">ParchiSetu AI Vision Gateway</p>
             </div>
           </div>
           <div class="space-y-1.5 text-right font-mono">
             <div class="flex justify-between text-slate-600">
-              <span>Taxable Value:</span>
+              <span>Taxable Turnover:</span>
               <span id="modalTaxableVal" class="font-bold">₹0.00</span>
             </div>
-            <div class="flex justify-between text-slate-600">
-              <span>Total CGST (9%):</span>
+            <div id="modalCgstRow" class="flex justify-between text-slate-600">
+              <span>Central GST (CGST):</span>
               <span id="modalCGSTVal">₹0.00</span>
             </div>
-            <div class="flex justify-between text-slate-600">
-              <span>Total SGST (9%):</span>
+            <div id="modalSgstRow" class="flex justify-between text-slate-600">
+              <span>State GST (SGST):</span>
               <span id="modalSGSTVal">₹0.00</span>
             </div>
-            <div id="modalExtraRow" class="flex justify-between text-slate-700 hidden">
-              <span>Freight / Tempo Kiraya:</span>
-              <span id="modalExtraVal" class="font-bold text-slate-900">+₹0.00</span>
+            <div id="modalIgstRow" class="flex justify-between text-purple-700 font-bold hidden">
+              <span>Integrated GST (IGST):</span>
+              <span id="modalIGSTVal">₹0.00</span>
             </div>
-            <div id="modalDiscountRow" class="flex justify-between text-emerald-700 hidden">
+            <div id="modalExtraRow" class="flex justify-between text-slate-600 hidden">
+              <span>Freight / Kiraya:</span>
+              <span id="modalExtraVal">+₹0.00</span>
+            </div>
+            <div id="modalDiscountRow" class="flex justify-between text-emerald-600 hidden">
               <span>Cash Discount:</span>
-              <span id="modalDiscountVal" class="font-bold text-emerald-700">-₹0.00</span>
+              <span id="modalDiscountVal">-₹0.00</span>
             </div>
-            <div class="flex justify-between text-base font-extrabold text-slate-900 border-t-2 border-slate-800 pt-1">
-              <span>Grand Total:</span>
-              <span id="modalGrandTotal" class="text-emerald-700">₹0.00</span>
+            <div class="flex justify-between text-slate-900 font-extrabold text-sm border-t border-slate-300 pt-1.5">
+              <span>Grand Total Payable:</span>
+              <span id="modalGrandTotal">₹0.00</span>
             </div>
           </div>
         </div>
@@ -386,28 +481,31 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT STATE & LOGIC -->
   <script>
-    // State store
+    // State Variables
     let currentInvoice = null;
     let currentRawImage = null;
     let currentEnhancedImage = null;
 
-    // PRESET DEMOS
+    // Rich Built-In Presets
     const PRESETS = {
       spenza: {
-        bill_id: "spenza_punjab_4004",
+        bill_id: "spenza_slip_7788",
         detected_sector: "HARDWARE",
         store_name_guess: "Spenza Ceramics",
         merchant_name: "Spenza Ceramics",
+        supplier_gstin: "03AAEPG1807C1ZM",
+        supplier_state_code: "03",
+        place_of_supply_state_code: "03",
+        is_inter_state: false,
+        supply_type_b2b: "B2CS",
         customer_name: "Sandeep Goyal",
         customer_phone: "94653-47478",
         customer_address: "Gali-8, Daba Colony, Ludhiana, Punjab",
         extra_charges: 360.0,
         discount_amount: 400.0,
         raw_date_written: "31/10/2026",
-        raw_image_b64: null,
-        enhanced_image_b64: null,
+        normalized_date_iso: "2026-10-31",
         active_items: [
           {
             row_id: 1,
@@ -428,10 +526,14 @@
             gst_rate: 18.0,
             cgst_rate: 9.0,
             sgst_rate: 9.0,
+            igst_rate: 0.0,
             cgst_amount: 918.0,
             sgst_amount: 918.0,
+            igst_amount: 0.0,
             total_with_tax: 12036.0,
             tax_rule_note: "Ceramic & Vitrified Tiles (18% GST)",
+            cbic_schedule: "Schedule III (9% CGST + 9% SGST) - CBIC Notification 1/2017-CT(Rate)",
+            statutory_chapter_note: "Matched via Vector RAG [Sim: 0.98] -> Chapter 69 (Ceramic Products), Heading 6907: Vitrified & Ceramic Tiles attract 18% under CBIC Notification 1/2017-CT(Rate)",
             top_3_alternatives: [
               { hsn_code: "6907", label: "6907 - Ceramic & Vitrified Tiles (18%)", gst_rate: 18.0 },
               { hsn_code: "6802", label: "6802 - Granite & Marble Slabs (18%)", gst_rate: 18.0 },
@@ -457,10 +559,14 @@
             gst_rate: 18.0,
             cgst_rate: 9.0,
             sgst_rate: 9.0,
+            igst_rate: 0.0,
             cgst_amount: 388.8,
             sgst_amount: 388.8,
+            igst_amount: 0.0,
             total_with_tax: 5097.6,
             tax_rule_note: "Ceramic & Vitrified Tiles (18% GST)",
+            cbic_schedule: "Schedule III (9% CGST + 9% SGST) - CBIC Notification 1/2017-CT(Rate)",
+            statutory_chapter_note: "Matched via Vector RAG [Sim: 0.98] -> Chapter 69 (Ceramic Products), Heading 6907: Floor Tiles (18%)",
             top_3_alternatives: [
               { hsn_code: "6907", label: "6907 - Ceramic & Vitrified Tiles (18%)", gst_rate: 18.0 },
               { hsn_code: "6802", label: "6802 - Granite & Marble Slabs (18%)", gst_rate: 18.0 }
@@ -485,10 +591,14 @@
             gst_rate: 18.0,
             cgst_rate: 9.0,
             sgst_rate: 9.0,
+            igst_rate: 0.0,
             cgst_amount: 57.6,
             sgst_amount: 57.6,
+            igst_amount: 0.0,
             total_with_tax: 755.2,
             tax_rule_note: "Tile Adhesive (18% GST)",
+            cbic_schedule: "Schedule III (9% CGST + 9% SGST) - CBIC Notification 1/2017-CT(Rate)",
+            statutory_chapter_note: "Matched via Vector RAG [Sim: 0.94] -> Chapter 35 (Albuminoidal Substances; Glues), Heading 3506 (18%)",
             top_3_alternatives: [
               { hsn_code: "3506", label: "3506 - Tile Adhesive (18%)", gst_rate: 18.0 },
               { hsn_code: "2523", label: "2523 - Portland Cement (28%)", gst_rate: 28.0 }
@@ -506,6 +616,7 @@
           discount_amount: 400.0,
           total_cgst: 1364.4,
           total_sgst: 1364.4,
+          total_igst: 0.0,
           final_payable_pakka_total: 17488.8
         }
       },
@@ -514,9 +625,13 @@
         detected_sector: "TEXTILES",
         store_name_guess: "Punjab Cloth & Readymade House",
         merchant_name: "Punjab Cloth & Readymade House",
+        supplier_gstin: "03AAEPG1807C1ZM",
+        supplier_state_code: "03",
+        place_of_supply_state_code: "03",
+        is_inter_state: false,
+        supply_type_b2b: "B2CS",
         raw_date_written: "31/10/2026",
-        raw_image_b64: null,
-        enhanced_image_b64: null,
+        normalized_date_iso: "2026-10-31",
         active_items: [
           {
             row_id: 1,
@@ -537,10 +652,14 @@
             gst_rate: 12.0,
             cgst_rate: 6.0,
             sgst_rate: 6.0,
+            igst_rate: 0.0,
             cgst_amount: 144.0,
             sgst_amount: 144.0,
+            igst_amount: 0.0,
             total_with_tax: 2688.0,
             tax_rule_note: "Garment > ₹1,000: Auto-upgraded from 5% to 12% GST",
+            cbic_schedule: "Schedule II (6% CGST + 6% SGST) - CBIC Notification 1/2017-CT(Rate)",
+            statutory_chapter_note: "Matched via Vector RAG [Sim: 0.94] -> Chapter 62 (Articles of Apparel, Not Knitted), Heading 6204 (12% GST)",
             top_3_alternatives: [
               { hsn_code: "6204", label: "6204 - Readymade Suit/Lehnga (12%)", gst_rate: 12.0 },
               { hsn_code: "5208", label: "5208 - Cotton Fabric (5%)", gst_rate: 5.0 },
@@ -550,52 +669,60 @@
           {
             row_id: 2,
             line_number: 2,
-            raw_text: "2 Men Formal Shirts @ 450",
-            raw_text_on_paper: "2 Men Formal Shirts @ 450",
-            product_name_normalized: "Men Cotton Shirts",
-            quantity: 2.0,
-            raw_unit: "nag",
-            standard_uqc: "PCS",
-            unit_price: 450.0,
-            written_line_total: 900.0,
-            audited_line_total: 900.0,
+            raw_text: "5 mtr Cotton Kapda @ 120",
+            raw_text_on_paper: "5 mtr Cotton Kapda @ 120",
+            product_name_normalized: "Pure Cotton Fabric Thaan",
+            quantity: 5.0,
+            raw_unit: "mtr",
+            standard_uqc: "MTR",
+            unit_price: 120.0,
+            written_line_total: 600.0,
+            audited_line_total: 600.0,
             has_math_error: false,
             math_discrepancy: 0.0,
-            hsn_code: "6203",
-            category_description: "Men Readymade Shirts",
+            hsn_code: "5208",
+            category_description: "Woven Fabrics of Cotton",
             gst_rate: 5.0,
             cgst_rate: 2.5,
             sgst_rate: 2.5,
-            cgst_amount: 22.5,
-            sgst_amount: 22.5,
-            total_with_tax: 945.0,
-            tax_rule_note: "Standard Garment <= ₹1,000: 5% GST applied",
+            igst_rate: 0.0,
+            cgst_amount: 15.0,
+            sgst_amount: 15.0,
+            igst_amount: 0.0,
+            total_with_tax: 630.0,
+            tax_rule_note: "Cotton Fabrics (5% GST)",
+            cbic_schedule: "Schedule I (2.5% CGST + 2.5% SGST) - CBIC Notification 1/2017-CT(Rate)",
+            statutory_chapter_note: "Matched via Vector RAG [Sim: 0.93] -> Chapter 52 (Cotton), Heading 5208: Unstitched Fabric (5%)",
             top_3_alternatives: [
-              { hsn_code: "6203", label: "6203 - Men Shirts (5%)", gst_rate: 5.0 },
-              { hsn_code: "6109", label: "6109 - T-Shirts Knitted (5%)", gst_rate: 5.0 }
+              { hsn_code: "5208", label: "5208 - Cotton Fabric (5%)", gst_rate: 5.0 }
             ]
           }
         ],
         struck_out_items: [
-          { row_id: 3, raw_text: "2 mtr Astar Kapda - 160 (cut)", written_line_total: 160.0, reason: "Crossed out on paper" }
+          { row_id: 3, raw_text: "2 mtr Astar Kapda - 160 (cut)", written_line_total: 160.0, reason: "Cancelled line" }
         ],
         summary: {
-          written_grand_total: 3300.0,
-          audited_taxable_total: 3300.0,
+          written_grand_total: 3000.0,
+          audited_taxable_total: 3000.0,
           total_math_saved: 0.0,
-          total_cgst: 166.5,
-          total_sgst: 166.5,
-          final_payable_pakka_total: 3633.0
+          total_cgst: 159.0,
+          total_sgst: 159.0,
+          total_igst: 0.0,
+          final_payable_pakka_total: 3318.0
         }
       },
       hardware: {
         bill_id: "demo_hardware_2002",
         detected_sector: "HARDWARE",
-        store_name_guess: "Gupta Electricals & Hardware",
-        merchant_name: "Gupta Electricals & Hardware",
+        store_name_guess: "Bajaj Hardware & Electricals",
+        merchant_name: "Bajaj Hardware & Electricals",
+        supplier_gstin: "03AAEPG1807C1ZM",
+        supplier_state_code: "03",
+        place_of_supply_state_code: "03",
+        is_inter_state: false,
+        supply_type_b2b: "B2CS",
         raw_date_written: "31/10/2026",
-        raw_image_b64: null,
-        enhanced_image_b64: null,
+        normalized_date_iso: "2026-10-31",
         active_items: [
           {
             row_id: 1,
@@ -616,13 +743,16 @@
             gst_rate: 18.0,
             cgst_rate: 9.0,
             sgst_rate: 9.0,
+            igst_rate: 0.0,
             cgst_amount: 12.15,
             sgst_amount: 12.15,
+            igst_amount: 0.0,
             total_with_tax: 159.3,
             tax_rule_note: "Standard Electricals (18% GST)",
+            cbic_schedule: "Schedule III (9% CGST + 9% SGST) - CBIC Notification 1/2017-CT(Rate)",
+            statutory_chapter_note: "Matched via Vector RAG [Sim: 0.88] -> Chapter 85, Heading 8539: LED Lamps (18%)",
             top_3_alternatives: [
-              { hsn_code: "8539", label: "8539 - LED Lamps (18%)", gst_rate: 18.0 },
-              { hsn_code: "8544", label: "8544 - Wire & Cable (18%)", gst_rate: 18.0 }
+              { hsn_code: "8539", label: "8539 - LED Lamps (18%)", gst_rate: 18.0 }
             ]
           },
           {
@@ -644,10 +774,14 @@
             gst_rate: 28.0,
             cgst_rate: 14.0,
             sgst_rate: 14.0,
+            igst_rate: 0.0,
             cgst_amount: 54.6,
             sgst_amount: 54.6,
+            igst_amount: 0.0,
             total_with_tax: 499.2,
             tax_rule_note: "Cement (Highest 28% GST Slab)",
+            cbic_schedule: "Schedule IV (14% CGST + 14% SGST) - CBIC Notification 1/2017-CT(Rate)",
+            statutory_chapter_note: "Matched via Vector RAG [Sim: 0.99] -> Chapter 25, Heading 2523: Portland Cement (28% Highest Slab)",
             top_3_alternatives: [
               { hsn_code: "2523", label: "2523 - Portland Cement (28%)", gst_rate: 28.0 }
             ]
@@ -660,6 +794,7 @@
           total_math_saved: 0.0,
           total_cgst: 66.75,
           total_sgst: 66.75,
+          total_igst: 0.0,
           final_payable_pakka_total: 658.5
         }
       },
@@ -668,9 +803,13 @@
         detected_sector: "GROCERY",
         store_name_guess: "Shri Ganesh Kirana Store",
         merchant_name: "Shri Ganesh Kirana Store",
+        supplier_gstin: "03AAEPG1807C1ZM",
+        supplier_state_code: "03",
+        place_of_supply_state_code: "03",
+        is_inter_state: false,
+        supply_type_b2b: "B2CS",
         raw_date_written: "31/10/2026",
-        raw_image_b64: null,
-        enhanced_image_b64: null,
+        normalized_date_iso: "2026-10-31",
         active_items: [
           {
             row_id: 1,
@@ -691,13 +830,16 @@
             gst_rate: 5.0,
             cgst_rate: 2.5,
             sgst_rate: 2.5,
+            igst_rate: 0.0,
             cgst_amount: 13.75,
             sgst_amount: 13.75,
+            igst_amount: 0.0,
             total_with_tax: 577.5,
             tax_rule_note: "Packaged Foodgrains (5% GST)",
+            cbic_schedule: "Schedule I (2.5% CGST + 2.5% SGST) - CBIC Notification 1/2017-CT(Rate)",
+            statutory_chapter_note: "Matched via Vector RAG [Sim: 0.96] -> Chapter 10, Heading 1006: Packaged Rice (5%)",
             top_3_alternatives: [
-              { hsn_code: "1006", label: "1006 - Basmati Rice (5%)", gst_rate: 5.0 },
-              { hsn_code: "1101", label: "1101 - Wheat Flour (5%)", gst_rate: 5.0 }
+              { hsn_code: "1006", label: "1006 - Basmati Rice (5%)", gst_rate: 5.0 }
             ]
           },
           {
@@ -719,10 +861,14 @@
             gst_rate: 0.0,
             cgst_rate: 0.0,
             sgst_rate: 0.0,
+            igst_rate: 0.0,
             cgst_amount: 0.0,
             sgst_amount: 0.0,
+            igst_amount: 0.0,
             total_with_tax: 320.0,
             tax_rule_note: "Loose Unbranded Atta (0% GST)",
+            cbic_schedule: "Exempt Notification No. 2/2017-CT(Rate)",
+            statutory_chapter_note: "Matched via Statutory Grounding -> Chapter 11, Heading 1101: Loose Unbranded Wheat Flour (Exempt 0%)",
             top_3_alternatives: [
               { hsn_code: "1101", label: "1101 - Loose Atta (0%)", gst_rate: 0.0 },
               { hsn_code: "1101", label: "1101 - Packaged Atta (5%)", gst_rate: 5.0 }
@@ -738,6 +884,7 @@
           total_math_saved: 0.0,
           total_cgst: 13.75,
           total_sgst: 13.75,
+          total_igst: 0.0,
           final_payable_pakka_total: 897.5
         }
       }
@@ -759,7 +906,7 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         currentRawImage = e.target.result;
-        currentEnhancedImage = e.target.result; // Default till processed
+        currentEnhancedImage = e.target.result;
         showImagePreview(currentRawImage);
         document.getElementById("imageToggleBar").classList.remove("hidden");
       };
@@ -797,7 +944,6 @@
         if (fileInput.files.length > 0) {
           const formData = new FormData();
           formData.append("file", fileInput.files[0]);
-
           const res = await fetch("/api/v1/invoice/parse", {
             method: "POST",
             body: formData
@@ -823,11 +969,158 @@
       }
     }
 
+    // Header Controls Event Handlers
+    function updateHeaderField(field, val) {
+      if (!currentInvoice) return;
+      currentInvoice[field] = val;
+      recalculateBackend();
+    }
+
+    async function onSupplierGstinInput(val) {
+      if (!currentInvoice) return;
+      const clean = val.trim().toUpperCase();
+      currentInvoice.supplier_gstin = clean;
+      
+      const badge = document.getElementById("supplierGstinStatus");
+      if (clean.length === 15) {
+        try {
+          const res = await fetch(`/api/v1/gst/validate-gstin?gstin=${clean}`);
+          const data = await res.json();
+          if (data.is_valid) {
+            badge.innerText = `✓ Valid ${data.state_name} GSTIN [${data.entity_type} - Mod-36 Ok]`;
+            badge.className = "text-[10px] text-emerald-400 font-semibold mt-0.5 truncate";
+            currentInvoice.supplier_state_code = data.state_code;
+            currentInvoice.supplier_state_name = data.state_name;
+            await recalculateBackend();
+          } else {
+            badge.innerText = `❌ ${data.error_reason}`;
+            badge.className = "text-[10px] text-rose-400 font-semibold mt-0.5 truncate";
+          }
+        } catch (e) {
+          badge.innerText = "Validation error";
+        }
+      } else {
+        badge.innerText = `Requires 15 chars (${clean.length}/15)`;
+        badge.className = "text-[10px] text-slate-500 font-semibold mt-0.5 truncate";
+      }
+    }
+
+    async function fillDemoSupplierGstin() {
+      if (!currentInvoice) return;
+      document.getElementById("headerSupplierGstinInput").value = "03AAEPG1807C1ZM";
+      await onSupplierGstinInput("03AAEPG1807C1ZM");
+    }
+
+    async function onBuyerGstinInput(val) {
+      if (!currentInvoice) return;
+      const clean = val.trim().toUpperCase();
+      currentInvoice.buyer_gstin = clean;
+      const badge = document.getElementById("buyerGstinStatus");
+
+      if (clean.length === 15) {
+        try {
+          const res = await fetch(`/api/v1/gst/validate-gstin?gstin=${clean}`);
+          const data = await res.json();
+          if (data.is_valid) {
+            badge.innerText = `🏢 B2B Mode: ${data.state_name} [${data.entity_type}]`;
+            badge.className = "text-[10px] text-purple-400 font-bold mt-0.5 truncate";
+            currentInvoice.buyer_state_code = data.state_code;
+            currentInvoice.buyer_state_name = data.state_name;
+            currentInvoice.supply_type_b2b = "B2B";
+            await recalculateBackend();
+          } else {
+            badge.innerText = `❌ ${data.error_reason}`;
+            badge.className = "text-[10px] text-rose-400 font-semibold mt-0.5 truncate";
+          }
+        } catch (e) {
+          badge.innerText = "Validation error";
+        }
+      } else {
+        currentInvoice.supply_type_b2b = "B2CS";
+        badge.innerText = "🛒 B2CS Mode (Retail Consumer)";
+        badge.className = "text-[10px] text-slate-400 font-semibold mt-0.5 truncate";
+        if (clean.length === 0) {
+          await recalculateBackend();
+        }
+      }
+    }
+
+    async function fillDemoBuyerGstin() {
+      if (!currentInvoice) return;
+      document.getElementById("headerBuyerGstinInput").value = "06AAECG1807C1Z3";
+      document.getElementById("headerPosSelect").value = "06";
+      currentInvoice.place_of_supply_state_code = "06";
+      await onBuyerGstinInput("06AAECG1807C1Z3");
+    }
+
+    async function onPosSelectChange(val) {
+      if (!currentInvoice) return;
+      currentInvoice.place_of_supply_state_code = val;
+      await recalculateBackend();
+    }
+
     // Render Full Invoice Interface
     function renderInvoiceUI() {
       if (!currentInvoice) return;
 
-      // Meta tags
+      const suppState = currentInvoice.supplier_state_code || "03";
+      const posState = currentInvoice.place_of_supply_state_code || suppState;
+      const isInter = Boolean(currentInvoice.is_inter_state);
+      const isB2B = (currentInvoice.supply_type_b2b === "B2B");
+
+      // Sync Header Inputs
+      const mInput = document.getElementById("headerMerchantInput");
+      const mVal = currentInvoice.merchant_name || currentInvoice.store_name_guess || "";
+      mInput.value = mVal;
+      const mWarn = document.getElementById("merchantWarningBadge");
+      if (!mVal || mVal.toLowerCase().includes("kacha") || mVal.toLowerCase().includes("unknown")) {
+        mWarn.innerText = "⚠️ Missing on paper — please enter";
+        mWarn.className = "text-[10px] text-amber-400 font-bold";
+      } else {
+        mWarn.innerText = "✓ Extracted from Slip";
+        mWarn.className = "text-[10px] text-emerald-400 font-semibold";
+      }
+
+      document.getElementById("headerSupplierGstinInput").value = currentInvoice.supplier_gstin || "03AAEPG1807C1ZM";
+      document.getElementById("headerCustomerNameInput").value = currentInvoice.customer_name || "";
+      document.getElementById("headerCustomerPhoneInput").value = currentInvoice.customer_phone || "";
+      document.getElementById("headerBuyerGstinInput").value = currentInvoice.buyer_gstin || "";
+      document.getElementById("headerPosSelect").value = posState;
+
+      // Badges
+      const taxBadge = document.getElementById("headerTaxModeBadge");
+      const posBadge = document.getElementById("headerPosBadge");
+      const thTaxCol = document.getElementById("thTaxCol");
+
+      if (isInter) {
+        taxBadge.innerText = "⚡ Inter-State Supply (100% IGST)";
+        taxBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40";
+        posBadge.innerText = `Inter-State Supply: Supplier (${suppState}) -> POS (${posState})`;
+        posBadge.className = "text-[10px] text-purple-400 font-bold mt-0.5";
+        thTaxCol.innerText = "IGST (100%)";
+      } else {
+        taxBadge.innerText = "⚡ Intra-State Supply (CGST + SGST)";
+        taxBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30";
+        posBadge.innerText = `Intra-State Supply: Supplier (${suppState}) -> POS (${posState})`;
+        posBadge.className = "text-[10px] text-blue-400 font-semibold mt-0.5";
+        thTaxCol.innerText = "CGST + SGST";
+      }
+
+      const b2bBadge = document.getElementById("headerB2bBadge");
+      const b2bHeader = document.getElementById("supplyBadgeHeader");
+      if (isB2B) {
+        b2bBadge.innerText = "🏢 B2B Registered Business";
+        b2bBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        b2bHeader.innerText = "B2B Invoice Ready";
+        b2bHeader.className = "inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold";
+      } else {
+        b2bBadge.innerText = "🛒 B2CS Retail Consumer";
+        b2bBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30";
+        b2bHeader.innerText = "B2CS Retail Small";
+        b2bHeader.className = "inline-flex items-center px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold";
+      }
+
+      // Meta tags on left panel
       document.getElementById("merchantInfoTag").innerText = `Merchant: ${currentInvoice.store_name_guess || currentInvoice.merchant_name || 'Bharat Dukaan'}`;
       document.getElementById("sectorInfoTag").innerText = `Sector: ${currentInvoice.detected_sector || 'GENERAL'}`;
       document.getElementById("itemCountBadge").innerText = `${currentInvoice.active_items.length} Items`;
@@ -847,7 +1140,12 @@
       document.getElementById("kpiWrittenTotal").innerText = `₹${(sum.written_grand_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
       document.getElementById("kpiTaxableTotal").innerText = `₹${(sum.audited_taxable_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
       document.getElementById("kpiPakkaTotal").innerText = `₹${(sum.final_payable_pakka_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-      document.getElementById("kpiGstSplit").innerText = `CGST: ₹${(sum.total_cgst || 0).toFixed(2)} | SGST: ₹${(sum.total_sgst || 0).toFixed(2)}`;
+
+      if (isInter) {
+        document.getElementById("kpiGstSplit").innerText = `IGST: ₹${(sum.total_igst || 0).toFixed(2)} (Inter-State 100%)`;
+      } else {
+        document.getElementById("kpiGstSplit").innerText = `CGST: ₹${(sum.total_cgst || 0).toFixed(2)} | SGST: ₹${(sum.total_sgst || 0).toFixed(2)}`;
+      }
 
       // Math Errors Counter
       const mathErrors = currentInvoice.active_items.filter(i => i.has_math_error);
@@ -893,6 +1191,17 @@
           <option value="${a.hsn_code}" ${a.hsn_code === item.hsn_code ? 'selected' : ''}>${a.label || a.hsn_code}</option>
         `).join('');
 
+        // Tax display column
+        const taxCellHtml = isInter ? `
+          <span class="font-mono text-purple-400 font-bold">₹${(item.igst_amount || (item.audited_line_total * item.gst_rate / 100.0)).toFixed(2)}</span>
+          <span class="text-[9px] text-purple-500 block font-semibold">(${item.gst_rate}% IGST)</span>
+        ` : `
+          <span class="font-mono text-slate-300">₹${((item.cgst_amount || 0) + (item.sgst_amount || 0)).toFixed(2)}</span>
+          <span class="text-[9px] text-slate-500 block">(C: ₹${(item.cgst_amount || 0).toFixed(2)} | S: ₹${(item.sgst_amount || 0).toFixed(2)})</span>
+        `;
+
+        const totalCellHtml = `₹${(item.total_with_tax || (item.audited_line_total + (isInter ? (item.igst_amount || 0) : ((item.cgst_amount || 0) + (item.sgst_amount || 0))))).toFixed(2)}`;
+
         return `
           <tr class="${rowErrClass} transition text-slate-200">
             <td class="py-3 px-3 font-mono text-slate-400">${item.row_id || idx + 1}</td>
@@ -906,6 +1215,15 @@
                   ${altOptions.length > 0 ? altOptions : `<option value="${item.hsn_code}">${item.hsn_code} - ${item.category_description}</option>`}
                 </select>
               </div>
+              <!-- STATUTORY CBIC RAG BADGE -->
+              <div class="mt-1.5 flex flex-col gap-0.5">
+                <span class="text-[9px] font-bold text-amber-300 bg-amber-950/70 border border-amber-500/30 px-1.5 py-0.5 rounded inline-block truncate max-w-[280px]" title="${item.cbic_schedule || 'Statutory Schedule'}">
+                  🏛️ ${item.cbic_schedule || 'CBIC Statutory Rate'}
+                </span>
+                <span class="text-[9px] text-slate-400 italic leading-tight">
+                  ${item.statutory_chapter_note || ''}
+                </span>
+              </div>
             </td>
             <td class="py-3 px-2 text-right">
               <input type="number" step="0.25" min="0" value="${item.quantity}" onchange="updateItemQuantity(${idx}, this.value)" class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono font-bold text-slate-100 focus:outline-none focus:border-orange-500" />
@@ -916,7 +1234,7 @@
             </td>
             <td class="py-3 px-3 text-right font-mono">
               <span class="${item.has_math_error ? 'text-rose-400 font-bold line-through' : 'text-slate-300'}">₹${item.written_line_total.toFixed(2)}</span>
-              ${item.has_math_error ? `<span class="block text-[10px] text-rose-400 font-extrabold">Paper says ₹${item.written_line_total}</span>` : ''}
+              ${item.has_math_error ? `<span class="block text-[10px] text-rose-400 font-extrabold">Paper: ₹${item.written_line_total}</span>` : ''}
             </td>
             <td class="py-3 px-2 text-center">
               <span class="px-2 py-0.5 rounded text-[11px] font-bold font-mono ${item.gst_rate > 12 ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30' : (item.gst_rate > 0 ? 'bg-blue-900/40 text-blue-300 border border-blue-500/30' : 'bg-slate-800 text-slate-400')}">
@@ -924,18 +1242,17 @@
               </span>
               ${item.tax_rule_note ? `<span class="block text-[9px] text-amber-400 font-semibold mt-0.5 leading-tight">${item.tax_rule_note}</span>` : ''}
             </td>
-            <td class="py-3 px-3 text-right font-mono text-[11px] text-slate-400">
-              ₹${(item.cgst_amount + item.sgst_amount).toFixed(2)}
-              <span class="text-[9px] text-slate-500 block">(C: ₹${item.cgst_amount.toFixed(2)} | S: ₹${item.sgst_amount.toFixed(2)})</span>
+            <td class="py-3 px-3 text-right font-mono text-[11px]">
+              ${taxCellHtml}
             </td>
             <td class="py-3 px-3 text-right font-mono font-bold text-emerald-400">
-              ₹${(item.total_with_tax || (item.audited_line_total + item.cgst_amount + item.sgst_amount)).toFixed(2)}
+              ${totalCellHtml}
             </td>
             <td class="py-3 px-2 text-center">
               ${item.has_math_error ? `
                 <button onclick="fixMathRow(${idx})" class="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold transition flex items-center justify-center space-x-1 mx-auto shadow shadow-rose-600/30">
                   <span>🔧</span>
-                  <span>Fix Math</span>
+                  <span>Fix</span>
                 </button>
               ` : `
                 <span class="text-emerald-500 text-xs">✓ Ok</span>
@@ -1000,9 +1317,10 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            gstin: "03AABCS1429B1Z",
+            supplier_gstin: currentInvoice.supplier_gstin || "03AAEPG1807C1ZM",
+            buyer_gstin: currentInvoice.buyer_gstin,
             tax_period: "102026",
-            pos: "03",
+            pos_code: currentInvoice.place_of_supply_state_code || "03",
             invoice: currentInvoice
           })
         });
@@ -1027,47 +1345,94 @@
       }
 
       const sum = currentInvoice.summary || {};
+      const isInter = Boolean(currentInvoice.is_inter_state);
+      const isB2B = (currentInvoice.supply_type_b2b === "B2B");
+
       document.getElementById("modalStoreName").innerText = currentInvoice.store_name_guess || currentInvoice.merchant_name || 'Spenza Ceramics';
+      document.getElementById("modalSupplierGstin").innerText = currentInvoice.supplier_gstin || "03AAEPG1807C1ZM";
+      document.getElementById("modalSupplierState").innerText = `State Code: ${currentInvoice.supplier_state_code || '03'} ${currentInvoice.supplier_state_name || 'Punjab'}`;
       document.getElementById("modalInvoiceId").innerText = `PS-${(currentInvoice.bill_id || '001').slice(0, 8).toUpperCase()}`;
       document.getElementById("modalSector").innerText = currentInvoice.detected_sector || 'HARDWARE';
       document.getElementById("modalDate").innerText = currentInvoice.raw_date_written || '31-Oct-2026';
+      document.getElementById("modalSupplyTypeLabel").innerText = isB2B ? "B2B Registered Tax Invoice" : "B2CS Retail Small Invoice";
 
       // Customer Details Box
-      const custBox = document.getElementById("modalCustomerBox");
       const cName = currentInvoice.customer_name;
       const cPhone = currentInvoice.customer_phone;
       const cAddr = currentInvoice.customer_address;
+      const bGstin = currentInvoice.buyer_gstin;
 
-      if (cName || cPhone || cAddr) {
-        custBox.classList.remove("hidden");
-        document.getElementById("modalCustomerName").innerText = cName || "Valued Customer";
-        document.getElementById("modalCustomerPhone").innerText = cPhone ? `📞 ${cPhone}` : "📞 Cash Counter Sale";
-        document.getElementById("modalCustomerAddress").innerText = cAddr ? `📍 ${cAddr}` : "📍 Mohali/Ludhiana, Punjab";
+      document.getElementById("modalCustomerName").innerText = cName || (isB2B ? "Registered B2B Buyer" : "Cash Customer / B2C Counter Sale");
+      document.getElementById("modalCustomerPhone").innerText = cPhone ? `📞 ${cPhone}` : (isB2B ? "📞 Registered Corporate" : "📞 Unregistered Buyer");
+      document.getElementById("modalCustomerAddress").innerText = cAddr ? `📍 ${cAddr}` : "📍 Punjab / Regional";
+
+      const bGstinEl = document.getElementById("modalCustomerGstin");
+      if (bGstin && isB2B) {
+        bGstinEl.classList.remove("hidden");
+        bGstinEl.innerText = `Buyer GSTIN: ${bGstin} (${currentInvoice.buyer_state_name || ''} Registered)`;
       } else {
-        custBox.classList.remove("hidden");
-        document.getElementById("modalCustomerName").innerText = "Cash Customer / B2C Counter Sale";
-        document.getElementById("modalCustomerPhone").innerText = "📞 Unregistered Buyer";
-        document.getElementById("modalCustomerAddress").innerText = "📍 Mohali/Ludhiana, Punjab";
+        bGstinEl.classList.add("hidden");
+      }
+
+      const posCode = currentInvoice.place_of_supply_state_code || "03";
+      const posName = currentInvoice.place_of_supply_state_name || "Punjab";
+      document.getElementById("modalPosText").innerText = isInter 
+        ? `Place of Supply: ${posCode} ${posName} (Inter-State IGST)` 
+        : `Place of Supply: ${posCode} ${posName} (Intra-State CGST+SGST)`;
+
+      // Modal Table Header & Rows
+      const thTax1 = document.getElementById("modalThTax1");
+      const thTax2 = document.getElementById("modalThTax2");
+      if (isInter) {
+        thTax1.innerText = "IGST (₹)";
+        thTax2.innerText = "Rate";
+      } else {
+        thTax1.innerText = "CGST (₹)";
+        thTax2.innerText = "SGST (₹)";
       }
 
       const tbody = document.getElementById("modalTableBody");
-      tbody.innerHTML = currentInvoice.active_items.map((item, i) => `
-        <tr>
-          <td class="p-2 border-r border-slate-300">${i + 1}</td>
-          <td class="p-2 border-r border-slate-300 font-sans font-semibold">${item.product_name_normalized}</td>
-          <td class="p-2 border-r border-slate-300 text-center font-bold">${item.hsn_code}</td>
-          <td class="p-2 border-r border-slate-300 text-right">${item.quantity} ${item.standard_uqc || 'PCS'}</td>
-          <td class="p-2 border-r border-slate-300 text-right">₹${item.unit_price.toFixed(2)}</td>
-          <td class="p-2 border-r border-slate-300 text-right font-bold">₹${item.audited_line_total.toFixed(2)}</td>
-          <td class="p-2 border-r border-slate-300 text-right">₹${item.cgst_amount.toFixed(2)} (${item.cgst_rate}%)</td>
-          <td class="p-2 border-r border-slate-300 text-right">₹${item.sgst_amount.toFixed(2)} (${item.sgst_rate}%)</td>
-          <td class="p-2 text-right font-bold text-slate-900">₹${(item.total_with_tax || (item.audited_line_total + item.cgst_amount + item.sgst_amount)).toFixed(2)}</td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = currentInvoice.active_items.map((item, i) => {
+        const tax1 = isInter ? (item.igst_amount || 0).toFixed(2) : (item.cgst_amount || 0).toFixed(2);
+        const tax2 = isInter ? `${item.gst_rate}%` : `${(item.sgst_amount || 0).toFixed(2)} (${item.sgst_rate}%)`;
+        const lineTot = (item.total_with_tax || (item.audited_line_total + (isInter ? (item.igst_amount || 0) : ((item.cgst_amount || 0) + (item.sgst_amount || 0))))).toFixed(2);
+
+        return `
+          <tr>
+            <td class="p-2 border-r border-slate-300">${i + 1}</td>
+            <td class="p-2 border-r border-slate-300 font-sans font-semibold">
+              ${item.product_name_normalized}
+              <span class="block text-[9px] text-slate-500 font-normal italic">${item.cbic_schedule || ''}</span>
+            </td>
+            <td class="p-2 border-r border-slate-300 text-center font-bold">${item.hsn_code}</td>
+            <td class="p-2 border-r border-slate-300 text-right">${item.quantity} ${item.standard_uqc || 'PCS'}</td>
+            <td class="p-2 border-r border-slate-300 text-right">₹${item.unit_price.toFixed(2)}</td>
+            <td class="p-2 border-r border-slate-300 text-right font-bold">₹${item.audited_line_total.toFixed(2)}</td>
+            <td class="p-2 border-r border-slate-300 text-right">₹${tax1}</td>
+            <td class="p-2 border-r border-slate-300 text-right">${isInter ? tax2 : '₹' + tax2}</td>
+            <td class="p-2 text-right font-bold text-slate-900">₹${lineTot}</td>
+          </tr>
+        `;
+      }).join('');
 
       document.getElementById("modalTaxableVal").innerText = `₹${(sum.audited_taxable_total || 0).toFixed(2)}`;
-      document.getElementById("modalCGSTVal").innerText = `₹${(sum.total_cgst || 0).toFixed(2)}`;
-      document.getElementById("modalSGSTVal").innerText = `₹${(sum.total_sgst || 0).toFixed(2)}`;
+
+      const cgstRow = document.getElementById("modalCgstRow");
+      const sgstRow = document.getElementById("modalSgstRow");
+      const igstRow = document.getElementById("modalIgstRow");
+
+      if (isInter) {
+        cgstRow.classList.add("hidden");
+        sgstRow.classList.add("hidden");
+        igstRow.classList.remove("hidden");
+        document.getElementById("modalIGSTVal").innerText = `₹${(sum.total_igst || 0).toFixed(2)}`;
+      } else {
+        cgstRow.classList.remove("hidden");
+        sgstRow.classList.remove("hidden");
+        igstRow.classList.add("hidden");
+        document.getElementById("modalCGSTVal").innerText = `₹${(sum.total_cgst || 0).toFixed(2)}`;
+        document.getElementById("modalSGSTVal").innerText = `₹${(sum.total_sgst || 0).toFixed(2)}`;
+      }
 
       // Extra charges (Freight) & Discount rows
       const extraCharges = sum.extra_charges || currentInvoice.extra_charges || 0.0;
@@ -1105,4 +1470,3 @@
   </script>
 </body>
 </html>
-

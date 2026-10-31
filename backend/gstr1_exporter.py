@@ -1,225 +1,121 @@
 """
-backend/gstr1_exporter.py - Official Indian Government GSTN GSTR-1 JSON Exporter
-Part of ParchiSetu AI / Bharat GST Vision Engine (Teammate 2 Module).
+gstr1_exporter.py - Official Indian Government GSTR-1 JSON Exporter
+Part of ParchiSetu AI / Bharat GST Vision Engine.
 
-Key Function:
-generate_gstr1_json(audited_invoice: dict, supplier_gstin: str = "03AABCU9603R1ZM", fp: str = "102026") -> dict
-- Output official GSTN GSTR-1 JSON schema (v3.1.6).
-- Table 7: b2cs (grouped by rate with sply_ty='INTRA', pos=supplier_gstin[:2], txval, camt, samt).
-- Table 12: hsn (data list with num, hsn_sc, desc, uqc, qty, txval, rt, camt, samt).
-- Table 13: doc_issue (document issuance register).
+Converts an AuditedInvoiceResponse (or dictionary payload) into the official
+Indian GST Portal GSTR-1 offline tool JSON format (supporting B2B, B2CS, and HSN Summary tables).
 """
 
 from __future__ import annotations
-
-import re
-import json
-import logging
 from typing import Dict, Any, List, Union, Optional
 from collections import defaultdict
-
-# Safe import from schemas
-try:
-    from schemas import AuditedInvoiceResponse
-except Exception:
-    AuditedInvoiceResponse = None  # type: ignore
-
-logger = logging.getLogger("gstr1_exporter")
-
-# Official State Code Map for Indian GST
-GST_STATE_CODES: Dict[str, str] = {
-    "01": "Jammu & Kashmir",
-    "02": "Himachal Pradesh",
-    "03": "Punjab",
-    "04": "Chandigarh",
-    "05": "Uttarakhand",
-    "06": "Haryana",
-    "07": "Delhi",
-    "08": "Rajasthan",
-    "09": "Uttar Pradesh",
-    "10": "Bihar",
-    "11": "Sikkim",
-    "12": "Arunachal Pradesh",
-    "13": "Nagaland",
-    "14": "Manipur",
-    "15": "Mizoram",
-    "16": "Tripura",
-    "17": "Meghalaya",
-    "18": "Assam",
-    "19": "West Bengal",
-    "20": "Jharkhand",
-    "21": "Odisha",
-    "22": "Chhattisgarh",
-    "23": "Madhya Pradesh",
-    "24": "Gujarat",
-    "26": "Dadra & Nagar Haveli and Daman & Diu",
-    "27": "Maharashtra",
-    "29": "Karnataka",
-    "30": "Goa",
-    "31": "Lakshadweep",
-    "32": "Kerala",
-    "33": "Tamil Nadu",
-    "34": "Puducherry",
-    "35": "Andaman & Nicobar Islands",
-    "36": "Telangana",
-    "37": "Andhra Pradesh",
-    "38": "Ladakh",
-}
-
-DEFAULT_GSTIN = "03AABCU9603R1ZM"
-DEFAULT_TAX_PERIOD = "102026"
+from schemas import AuditedInvoiceResponse
+from gst_validator import validate_gstin
 
 
-def validate_gstin(gstin: Optional[str]) -> bool:
-    """Validates 15-character Indian GSTIN structure."""
-    if not gstin:
-        return False
-    clean = str(gstin).strip().upper()
-    pattern = r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
-    return bool(re.match(pattern, clean))
-
-
-def get_state_from_gstin(gstin: str) -> str:
-    """Returns state name from first two digits of GSTIN."""
-    clean = (gstin or DEFAULT_GSTIN).strip()[:2]
-    return GST_STATE_CODES.get(clean, "Punjab")
-
-
-def generate_gstr1_json(
-    audited_invoice: Union[Any, Dict[str, Any]],
-    supplier_gstin: str = "03AABCU9603R1ZM",
-    fp: str = "102026",
-    pos_code: Optional[str] = None
+def export_to_gstr1_json(
+    invoice_data: Union[AuditedInvoiceResponse, Dict[str, Any]],
+    supplier_gstin: Optional[str] = None,
+    tax_period: str = "102026",
+    pos_code: Optional[str] = None,
+    buyer_gstin: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Core function specified in Lane 2 requirement:
-    generate_gstr1_json(audited_invoice: dict, supplier_gstin: str = "03AABCU9603R1ZM", fp: str = "102026") -> dict
+    Transforms audited invoice active items into official Indian GST Portal GSTR-1 format.
 
-    Builds official Indian GST Portal GSTR-1 JSON payload (v3.1.6).
+    Sections generated:
+    1. b2b: If buyer has a valid GSTIN (Registered Recipient).
+    2. b2cs: If unregistered retail consumer (B2C Small Supply details).
+    3. hsn: HSN-wise summary of outward supplies including UQC, quantities, and tax breakups.
     """
-    # 1. Normalize input payload (dict or AuditedInvoiceResponse)
-    if AuditedInvoiceResponse is not None and isinstance(audited_invoice, AuditedInvoiceResponse):
-        raw = audited_invoice.model_dump()
-    elif hasattr(audited_invoice, "model_dump"):
-        raw = audited_invoice.model_dump()
-    elif isinstance(audited_invoice, dict):
-        raw = audited_invoice.get("invoice", audited_invoice)
+    if isinstance(invoice_data, AuditedInvoiceResponse):
+        raw = invoice_data.model_dump()
     else:
-        raw = dict(audited_invoice)
-
-    # 2. Sanitize GSTIN & POS
-    gstin = str(supplier_gstin or DEFAULT_GSTIN).strip().upper()
-    if not validate_gstin(gstin):
-        logger.warning(f"Invalid GSTIN '{gstin}'. Falling back to default '{DEFAULT_GSTIN}'.")
-        gstin = DEFAULT_GSTIN
-
-    supplier_state_code = gstin[:2]
-    # Check for buyer state code in payload totals or top-level
-    inferred_buyer_state = (
-        raw.get("totals", {}).get("buyer_state_code")
-        or raw.get("buyer_state_code")
-        or raw.get("pos")
-    )
-    inferred_supply_type = raw.get("totals", {}).get("supply_type")
-
-    pos = str(pos_code or inferred_buyer_state or supplier_state_code).strip()
-    if len(pos) == 1:
-        pos = "0" + pos
-    if pos not in GST_STATE_CODES:
-        pos = supplier_state_code
-
-    is_intra_state = (supplier_state_code == pos and inferred_supply_type != "INTER")
-    supply_type = "INTRA" if is_intra_state else "INTER"
-    tax_period = str(fp or DEFAULT_TAX_PERIOD).strip()
-
-    inv_num = str(raw.get("bill_id") or raw.get("invoice_id") or "INV-001")
-    if len(inv_num) > 16:
-        inv_num = inv_num[:16]
+        raw = dict(invoice_data)
 
     active_items: List[Dict[str, Any]] = raw.get("active_items", [])
+    summary = raw.get("summary", {})
 
-    # 3. Aggregations for B2CS and HSN Summary
-    # B2CS grouped by rate: {rate: {txval, iamt, camt, samt}}
-    b2cs_groups: Dict[float, Dict[str, float]] = defaultdict(
-        lambda: {"txval": 0.0, "iamt": 0.0, "camt": 0.0, "samt": 0.0}
+    # Determine supplier GSTIN
+    eff_supp_gstin = supplier_gstin or raw.get("supplier_gstin") or "03AAECP1807C1Z4"
+    supp_val = validate_gstin(eff_supp_gstin)
+    supp_state = supp_val.get("state_code") or raw.get("supplier_state_code") or "03"
+
+    # Determine buyer GSTIN
+    eff_buyer_gstin = buyer_gstin or raw.get("buyer_gstin")
+    buyer_val = validate_gstin(eff_buyer_gstin)
+    is_b2b = buyer_val["is_valid"]
+
+    # Determine Place of Supply (POS)
+    eff_pos = str(pos_code or raw.get("place_of_supply_state_code") or supp_state).zfill(2)
+    is_inter_state = bool(raw.get("is_inter_state", supp_state != eff_pos))
+
+    # Aggregators by GST rate
+    rate_groups: Dict[float, Dict[str, float]] = defaultdict(
+        lambda: {"txval": 0.0, "camt": 0.0, "samt": 0.0, "iamt": 0.0}
     )
 
-    # HSN groups: {(hsn_code, uqc, rate): {...}}
+    # Aggregators for HSN table (keyed by (hsn_code, uqc, gst_rate))
     hsn_groups: Dict[tuple, Dict[str, Any]] = {}
 
-    gross_taxable_total = 0.0
-    gross_tax_total = 0.0
-
     for item in active_items:
-        gst_rate = round(float(item.get("gst_rate", 18.0)), 2)
-        audited_txval = round(float(item.get("audited_line_total", 0.0)), 2)
-        qty = round(float(item.get("quantity", 1.0)), 3)
+        gst_rate = float(item.get("gst_rate", 18.0))
+        audited_line_total = float(item.get("audited_line_total", 0.0))
+        cgst_amt = float(item.get("cgst_amount", 0.0))
+        sgst_amt = float(item.get("sgst_amount", 0.0))
+        igst_amt = float(item.get("igst_amount", 0.0))
+
+        # Recalculate tax if missing or mismatched
+        if is_inter_state:
+            if igst_amt == 0.0 and gst_rate > 0.0:
+                igst_amt = round(audited_line_total * (gst_rate / 100.0), 2)
+            cgst_amt = 0.0
+            sgst_amt = 0.0
+        else:
+            if cgst_amt == 0.0 and sgst_amt == 0.0 and gst_rate > 0.0:
+                half = round(gst_rate / 2.0, 2)
+                cgst_amt = round(audited_line_total * (half / 100.0), 2)
+                sgst_amt = round(audited_line_total * (half / 100.0), 2)
+            igst_amt = 0.0
+
         hsn_code = str(item.get("hsn_code", "9999")).strip()
         category_desc = item.get("category_description") or item.get("hsn_description") or "Goods"
         uqc = item.get("standard_uqc") or item.get("unit_uqc") or "PCS"
-        item_supply_type = item.get("supply_type") or supply_type
+        qty = float(item.get("quantity", 1.0))
 
-        if item_supply_type == "INTER" or not is_intra_state:
-            camt = 0.0
-            samt = 0.0
-            iamt = round(float(item.get("igst_amount") or (audited_txval * (gst_rate / 100.0))), 2)
-        else:
-            half_rate = round(gst_rate / 2.0, 2)
-            camt = round(float(item.get("cgst_amount") or (audited_txval * (half_rate / 100.0))), 2)
-            samt = round(float(item.get("sgst_amount") or (audited_txval * (half_rate / 100.0))), 2)
-            iamt = 0.0
+        # 1. Aggregate Rate Groups
+        rate_groups[gst_rate]["txval"] += audited_line_total
+        rate_groups[gst_rate]["camt"] += cgst_amt
+        rate_groups[gst_rate]["samt"] += sgst_amt
+        rate_groups[gst_rate]["iamt"] += igst_amt
 
-        gross_taxable_total += audited_txval
-        gross_tax_total += (iamt + camt + samt)
-
-        # Table 7: B2CS
-        b2cs_groups[gst_rate]["txval"] += audited_txval
-        b2cs_groups[gst_rate]["iamt"] += iamt
-        b2cs_groups[gst_rate]["camt"] += camt
-        b2cs_groups[gst_rate]["samt"] += samt
-
-        # Table 12: HSN Summary
+        # 2. Aggregate HSN Summary
         hsn_key = (hsn_code, uqc, gst_rate)
         if hsn_key not in hsn_groups:
             hsn_groups[hsn_key] = {
                 "hsn_sc": hsn_code,
-                "desc": category_desc[:30],
+                "desc": category_desc,
                 "uqc": uqc,
                 "qty": 0.0,
                 "txval": 0.0,
-                "iamt": 0.0,
                 "camt": 0.0,
                 "samt": 0.0,
+                "iamt": 0.0,
                 "rt": gst_rate,
             }
         hsn_groups[hsn_key]["qty"] += qty
-        hsn_groups[hsn_key]["txval"] += audited_txval
-        hsn_groups[hsn_key]["iamt"] += iamt
-        hsn_groups[hsn_key]["camt"] += camt
-        hsn_groups[hsn_key]["samt"] += samt
+        hsn_groups[hsn_key]["txval"] += audited_line_total
+        hsn_groups[hsn_key]["camt"] += cgst_amt
+        hsn_groups[hsn_key]["samt"] += sgst_amt
+        hsn_groups[hsn_key]["iamt"] += igst_amt
 
-    # 4. Table 7: B2CS Records
-    b2cs_list: List[Dict[str, Any]] = []
-    for rate, totals in sorted(b2cs_groups.items(), key=lambda x: x[0]):
-        b2cs_list.append({
-            "sply_ty": supply_type,
-            "pos": pos,
-            "typ": "OE",
-            "rt": round(rate, 2),
-            "txval": round(totals["txval"], 2),
-            "iamt": round(totals["iamt"], 2),
-            "camt": round(totals["camt"], 2),
-            "samt": round(totals["samt"], 2),
-            "csamt": 0.0
-        })
-
-    # 5. Table 12: HSN Records
+    # Build HSN summary data list
     hsn_data: List[Dict[str, Any]] = []
-    for idx, (key, val) in enumerate(sorted(hsn_groups.items(), key=lambda x: (x[0][0], x[0][2])), start=1):
+    for idx, (key, val) in enumerate(hsn_groups.items(), start=1):
         hsn_data.append({
             "num": idx,
             "hsn_sc": val["hsn_sc"],
-            "desc": val["desc"],
+            "desc": val["desc"][:30],
             "uqc": val["uqc"],
             "qty": round(val["qty"], 3),
             "txval": round(val["txval"], 2),
@@ -230,71 +126,87 @@ def generate_gstr1_json(
             "csamt": 0.0
         })
 
-    # 6. Table 13: Document Issue Register
-    doc_issue_table = {
-        "doc_det": [
+    # Invoice metadata
+    invoice_num = str(raw.get("invoice_id") or raw.get("bill_id") or "INV-001")[:16]
+    # Format date as DD-MM-YYYY
+    raw_date = raw.get("normalized_date_iso") or "2026-10-31"
+    if "-" in raw_date and len(raw_date.split("-")) == 3:
+        parts = raw_date.split("-")
+        if len(parts[0]) == 4:
+            inv_date = f"{parts[2]}-{parts[1]}-{parts[0]}"
+        else:
+            inv_date = raw_date
+    else:
+        inv_date = "31-10-2026"
+
+    final_val = float(summary.get("final_payable_pakka_total", 0.0))
+    if final_val <= 0:
+        tot_tx = sum(v["txval"] for v in rate_groups.values())
+        tot_c = sum(v["camt"] for v in rate_groups.values())
+        tot_s = sum(v["samt"] for v in rate_groups.values())
+        tot_i = sum(v["iamt"] for v in rate_groups.values())
+        final_val = round(tot_tx + tot_c + tot_s + tot_i, 2)
+
+    gstr1_payload: Dict[str, Any] = {
+        "gstin": eff_supp_gstin,
+        "fp": tax_period,
+        "version": "GST2.0.1",
+        "hash": "hash",
+    }
+
+    if is_b2b:
+        # B2B Supply Section
+        itms_list: List[Dict[str, Any]] = []
+        for idx, (rate, totals) in enumerate(sorted(rate_groups.items(), key=lambda x: x[0]), start=1):
+            itms_list.append({
+                "num": idx,
+                "itm_det": {
+                    "rt": round(rate, 2),
+                    "txval": round(totals["txval"], 2),
+                    "iamt": round(totals["iamt"], 2),
+                    "camt": round(totals["camt"], 2),
+                    "samt": round(totals["samt"], 2),
+                    "csamt": 0.0
+                }
+            })
+
+        gstr1_payload["b2b"] = [
             {
-                "doc_num": 1,
-                "doc_typ": "Invoices for outward supply",
-                "docs": [
+                "ctin": buyer_val["gstin"],
+                "inv": [
                     {
-                        "num": 1,
-                        "from": inv_num,
-                        "to": inv_num,
-                        "totnum": 1,
-                        "canc": 0,
-                        "net_issue": 1
+                        "inum": invoice_num,
+                        "idt": inv_date,
+                        "val": round(final_val, 2),
+                        "pos": eff_pos,
+                        "rchrg": "N",
+                        "inv_typ": "R",
+                        "itms": itms_list
                     }
                 ]
             }
         ]
-    }
+        gstr1_payload["b2cs"] = []
+    else:
+        # B2C Small Supplies Section
+        b2cs_list: List[Dict[str, Any]] = []
+        for rate, totals in sorted(rate_groups.items(), key=lambda x: x[0]):
+            b2cs_list.append({
+                "sply_ty": "INTER" if is_inter_state else "INTRA",
+                "pos": eff_pos,
+                "typ": "OE",
+                "rt": round(rate, 2),
+                "txval": round(totals["txval"], 2),
+                "iamt": round(totals["iamt"], 2),
+                "camt": round(totals["camt"], 2),
+                "samt": round(totals["samt"], 2),
+                "csamt": 0.0
+            })
+        gstr1_payload["b2cs"] = b2cs_list
+        gstr1_payload["b2b"] = []
 
-    # 7. Assembled GSTN GSTR-1 Payload
-    cur_gt = round(gross_taxable_total + gross_tax_total, 2)
-
-    gstr1_payload = {
-        "gstin": gstin,
-        "fp": tax_period,
-        "version": "GST3.1.6",
-        "hash": "hash",
-        "cur_gt": cur_gt,
-        "b2cs": b2cs_list,
-        "hsn": {
-            "data": hsn_data
-        },
-        "doc_issue": doc_issue_table,
-        "metadata": {
-            "supplier_state": get_state_from_gstin(gstin),
-            "place_of_supply": get_state_from_gstin(pos),
-            "is_intra_state": is_intra_state,
-            "total_taxable_value": round(gross_taxable_total, 2),
-            "total_tax_amount": round(gross_tax_total, 2)
-        }
+    gstr1_payload["hsn"] = {
+        "data": hsn_data
     }
 
     return gstr1_payload
-
-
-def export_to_gstr1_json(
-    invoice_data: Union[Any, Dict[str, Any]],
-    supplier_gstin: str = "27AABCU9603R1ZM",
-    tax_period: str = "102026",
-    pos_code: Optional[str] = None
-) -> Dict[str, Any]:
-    """
-    Backward-compatible alias imported by Lane 1 (main.py).
-    """
-    return generate_gstr1_json(
-        audited_invoice=invoice_data,
-        supplier_gstin=supplier_gstin,
-        fp=tax_period,
-        pos_code=pos_code
-    )
-
-
-def save_gstr1_json_file(payload: Dict[str, Any], file_path: str) -> str:
-    """Writes GSTR-1 payload to disk as formatted JSON."""
-    with open(file_path, mode="w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False)
-    return file_path

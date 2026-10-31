@@ -23,6 +23,7 @@ from schemas import (
     AuditedInvoiceResponse,
 )
 from hsn_matcher import match_hsn_item
+from gst_validator import validate_gstin, validate_invoice_compliance, INDIAN_STATES
 
 logger = logging.getLogger("math_auditor")
 logging.basicConfig(level=logging.INFO)
@@ -77,13 +78,34 @@ def audit_and_calculate_invoice(
     enhanced_image_b64: Optional[str] = None,
     raw_image_b64: Optional[str] = None,
     model_used: str = "gemini-3.5-flash-lite",
-    cache_hit: bool = False
+    cache_hit: bool = False,
+    supplier_gstin: Optional[str] = None,
+    supplier_state_code: Optional[str] = "03",
+    buyer_gstin: Optional[str] = None,
+    place_of_supply_state_code: Optional[str] = "03",
+    is_inter_state: Optional[bool] = None,
 ) -> AuditedInvoiceResponse:
     """
-    Core mathematical audit and GST calculation engine.
+    Core mathematical audit and statutory GST calculation engine.
     Audits every line item, handles discrepancies, checks dynamic thresholds,
-    and returns an AuditedInvoiceResponse.
+    applies Intra-state (CGST+SGST) vs Inter-state (IGST) rules, embeds CBIC RAG citations,
+    and returns an AuditedInvoiceResponse with compliance audit.
     """
+    # 1. State & Interstate tax mode resolution
+    eff_supp_gstin = supplier_gstin
+    supp_val = validate_gstin(eff_supp_gstin)
+    if supp_val["is_valid"]:
+        eff_supp_state = supp_val["state_code"]
+    else:
+        eff_supp_state = str(supplier_state_code or "03").zfill(2)
+
+    eff_pos = str(place_of_supply_state_code or eff_supp_state).zfill(2)
+    # Statutory IGST Rule: Inter-State when Supplier State != Place of Supply State
+    inter_state_flag = (eff_supp_state != eff_pos)
+
+    buyer_val = validate_gstin(buyer_gstin)
+    supply_mode = "B2B" if buyer_val["is_valid"] else "B2CS"
+
     active_items: List[AuditedLineItem] = []
     struck_out_items: List[StruckOutItem] = []
 
@@ -91,6 +113,7 @@ def audit_and_calculate_invoice(
     audited_taxable_total = 0.0
     total_cgst = 0.0
     total_sgst = 0.0
+    total_igst = 0.0
 
     for idx, item in enumerate(raw_bill.items, start=1):
         # 1. Filter out struck-out / cancelled items
@@ -123,7 +146,7 @@ def audit_and_calculate_invoice(
         # 4. Standardize UQC
         standard_uqc = item.unit_uqc or normalize_uqc(item.raw_quantity)
 
-        # 5. HSN Matching with dynamic slab calculation
+        # 5. HSN Matching with dynamic slab calculation & Statutory CBIC RAG
         hsn_info = match_hsn_item(
             product_name_normalized=item.product_name_normalized,
             raw_text=item.raw_text_on_paper,
@@ -132,16 +155,29 @@ def audit_and_calculate_invoice(
         )
 
         gst_rate = float(hsn_info["gst_rate"])
-        cgst_rate = round(gst_rate / 2.0, 2)
-        sgst_rate = round(gst_rate / 2.0, 2)
 
-        cgst_amount = round(audited_line_total * (cgst_rate / 100.0), 2)
-        sgst_amount = round(audited_line_total * (sgst_rate / 100.0), 2)
-        total_with_tax = round(audited_line_total + cgst_amount + sgst_amount, 2)
+        # 6. Intra-State (CGST + SGST) vs Inter-State (IGST) Split
+        if inter_state_flag:
+            cgst_rate = 0.0
+            sgst_rate = 0.0
+            igst_rate = gst_rate
+            cgst_amount = 0.0
+            sgst_amount = 0.0
+            igst_amount = round(audited_line_total * (igst_rate / 100.0), 2)
+            total_with_tax = round(audited_line_total + igst_amount, 2)
+        else:
+            cgst_rate = round(gst_rate / 2.0, 2)
+            sgst_rate = round(gst_rate / 2.0, 2)
+            igst_rate = 0.0
+            cgst_amount = round(audited_line_total * (cgst_rate / 100.0), 2)
+            sgst_amount = round(audited_line_total * (sgst_rate / 100.0), 2)
+            igst_amount = 0.0
+            total_with_tax = round(audited_line_total + cgst_amount + sgst_amount, 2)
 
         audited_taxable_total += audited_line_total
         total_cgst += cgst_amount
         total_sgst += sgst_amount
+        total_igst += igst_amount
 
         active_items.append(
             AuditedLineItem(
@@ -165,19 +201,24 @@ def audit_and_calculate_invoice(
                 gst_rate=gst_rate,
                 cgst_rate=cgst_rate,
                 sgst_rate=sgst_rate,
+                igst_rate=igst_rate,
                 cgst_amount=cgst_amount,
                 sgst_amount=sgst_amount,
+                igst_amount=igst_amount,
                 total_with_tax=total_with_tax,
                 final_line_total_with_gst=total_with_tax,
                 confidence=float(item.confidence_score or hsn_info.get("confidence", 0.90)),
                 confidence_score=float(item.confidence_score or hsn_info.get("confidence", 0.90)),
                 tax_rule_note=hsn_info.get("tax_rule_note"),
+                cbic_schedule=hsn_info.get("cbic_schedule"),
+                statutory_chapter_note=hsn_info.get("statutory_chapter_note"),
+                rag_citation=hsn_info.get("rag_citation"),
                 top_3_alternatives=hsn_info.get("top_3_alternatives", []),
                 hsn_alternatives=hsn_info.get("top_3_alternatives", [])
             )
         )
 
-    # 6. Grand total summaries
+    # 7. Grand total summaries
     written_grand_total = (
         float(raw_bill.written_grand_total)
         if raw_bill.written_grand_total is not None and raw_bill.written_grand_total > 0
@@ -188,7 +229,9 @@ def audit_and_calculate_invoice(
     discount_amount = float(raw_bill.discount_amount or 0.0)
 
     total_math_saved = round(max(0.0, written_grand_total - audited_taxable_total), 2)
-    final_payable_pakka = round(audited_taxable_total + total_cgst + total_sgst + extra_charges - discount_amount, 2)
+    final_payable_pakka = round(
+        audited_taxable_total + total_cgst + total_sgst + total_igst + extra_charges - discount_amount, 2
+    )
 
     summary = InvoiceSummary(
         written_grand_total=round(written_grand_total, 2),
@@ -198,7 +241,24 @@ def audit_and_calculate_invoice(
         discount_amount=discount_amount,
         total_cgst=round(total_cgst, 2),
         total_sgst=round(total_sgst, 2),
+        total_igst=round(total_igst, 2),
         final_payable_pakka_total=final_payable_pakka
+    )
+
+    # 8. Statutory Compliance Audit
+    compliance_audit = validate_invoice_compliance(
+        invoice_data={
+            "merchant_name": raw_bill.merchant_name,
+            "store_name_guess": raw_bill.merchant_name,
+            "raw_date_written": raw_bill.raw_date_written,
+            "normalized_date_iso": "2026-10-31",
+            "active_items": [i.model_dump() for i in active_items],
+            "supplier_state_code": eff_supp_state,
+            "place_of_supply_state_code": eff_pos,
+        },
+        supplier_gstin=eff_supp_gstin,
+        buyer_gstin=buyer_gstin,
+        pos_state_code=eff_pos
     )
 
     return AuditedInvoiceResponse(
@@ -207,6 +267,16 @@ def audit_and_calculate_invoice(
         detected_sector=raw_bill.detected_sector,
         store_name_guess=raw_bill.merchant_name or "Bharat Kacha Dukaan",
         merchant_name=raw_bill.merchant_name or "Bharat Kacha Dukaan",
+        supplier_gstin=eff_supp_gstin,
+        supplier_state_code=eff_supp_state,
+        supplier_state_name=INDIAN_STATES.get(eff_supp_state, "Punjab"),
+        buyer_gstin=buyer_gstin,
+        buyer_state_code=buyer_val.get("state_code"),
+        buyer_state_name=buyer_val.get("state_name"),
+        place_of_supply_state_code=eff_pos,
+        place_of_supply_state_name=INDIAN_STATES.get(eff_pos, "Punjab"),
+        is_inter_state=inter_state_flag,
+        supply_type_b2b=supply_mode,
         customer_name=raw_bill.customer_name,
         customer_phone=raw_bill.customer_phone,
         customer_address=raw_bill.customer_address,
@@ -214,6 +284,7 @@ def audit_and_calculate_invoice(
         discount_amount=discount_amount,
         raw_date_written=raw_bill.raw_date_written or "Today",
         normalized_date_iso="2026-10-31",
+        compliance_audit=compliance_audit,
         model_used=model_used,
         cache_hit=cache_hit,
         raw_image_b64=raw_image_b64,

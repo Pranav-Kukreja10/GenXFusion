@@ -43,6 +43,12 @@ from schemas import (
 from image_preprocessor import preprocess_bill_image, compute_sha256
 from vision_router import parse_bill_with_gemini, ocr_cache, MODEL_FALLBACK_CASCADE
 from gstr1_exporter import export_to_gstr1_json
+from gst_validator import (
+    validate_gstin,
+    validate_invoice_compliance,
+    generate_valid_gstin,
+    INDIAN_STATES
+)
 
 # ============================================================================
 # Dynamic Integration Hooks for Lane 2 (hsn_matcher & math_auditor)
@@ -498,6 +504,8 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
     bill_id = "mock_" + uuid.uuid4().hex[:12]
 
     # Item 1: Normal item
+    item1_sched = "Schedule I (2.5% CGST + 2.5% SGST) - CBIC Notification 1/2017-CT(Rate)"
+    item1_note = "Matched via Vector RAG [Sim: 0.96] -> Chapter 10 (Cereals): Rice, wheat, foodgrains, Heading 1006: Basmati Rice Packaged (5.0% under Schedule I)"
     item1 = AuditedLineItem(
         row_id=1,
         line_number=1,
@@ -519,13 +527,24 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
         gst_rate=5.0,
         cgst_rate=2.5,
         sgst_rate=2.5,
+        igst_rate=0.0,
         cgst_amount=13.75,
         sgst_amount=13.75,
+        igst_amount=0.0,
         total_with_tax=577.50,
         final_line_total_with_gst=577.50,
         confidence=0.96,
         confidence_score=0.96,
         tax_rule_note="Packaged Foodgrains (5% GST)",
+        cbic_schedule=item1_sched,
+        statutory_chapter_note=item1_note,
+        rag_citation={
+            "cbic_schedule": item1_sched,
+            "chapter": "10",
+            "statutory_chapter_note": item1_note,
+            "vector_similarity": 0.96,
+            "legal_grounding": "Heading 1006 classified under Chapter 10. Rate: 5% pursuant to Schedule I."
+        },
         top_3_alternatives=[
             {"hsn_code": "1006", "label": "Packaged Basmati Rice (5%)", "gst_rate": 5.0},
             {"hsn_code": "1101", "label": "Wheat Flour / Atta (5%)", "gst_rate": 5.0},
@@ -538,6 +557,8 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
     )
 
     # Item 2: Math Error item (Shopkeeper undercharged 3 x 45 = 120 instead of 135)
+    item2_sched = "Schedule III (9% CGST + 9% SGST) - CBIC Notification 1/2017-CT(Rate)"
+    item2_note = "Matched via Vector RAG [Sim: 0.88] -> Chapter 85 (Electrical Machinery & Equipment), Heading 8539: LED Lamps & Bulbs (18.0% under Schedule III)"
     item2 = AuditedLineItem(
         row_id=2,
         line_number=2,
@@ -559,13 +580,24 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
         gst_rate=18.0,
         cgst_rate=9.0,
         sgst_rate=9.0,
+        igst_rate=0.0,
         cgst_amount=12.15,
         sgst_amount=12.15,
+        igst_amount=0.0,
         total_with_tax=159.30,
         final_line_total_with_gst=159.30,
         confidence=0.88,
         confidence_score=0.88,
         tax_rule_note="Standard Electricals (18% GST)",
+        cbic_schedule=item2_sched,
+        statutory_chapter_note=item2_note,
+        rag_citation={
+            "cbic_schedule": item2_sched,
+            "chapter": "85",
+            "statutory_chapter_note": item2_note,
+            "vector_similarity": 0.88,
+            "legal_grounding": "Heading 8539 classified under Chapter 85. Rate: 18% pursuant to Schedule III."
+        },
         top_3_alternatives=[
             {"hsn_code": "8539", "label": "LED Lamps & Bulbs (18%)", "gst_rate": 18.0},
             {"hsn_code": "8544", "label": "Electric Wire & Cable (18%)", "gst_rate": 18.0},
@@ -576,6 +608,8 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
     )
 
     # Item 3: Textile threshold item (> ₹1,000 threshold auto-upgraded to 12%)
+    item3_sched = "Schedule II (6% CGST + 6% SGST) - CBIC Notification 1/2017-CT(Rate)"
+    item3_note = "Matched via Vector RAG [Sim: 0.94] -> Chapter 62 (Articles of Apparel, Not Knitted), Heading 6204: Women Suits & Ensembles (12.0% under Schedule II) | Rule: Garment > ₹1,000: Auto-upgraded from 5% to 12% GST"
     item3 = AuditedLineItem(
         row_id=3,
         line_number=3,
@@ -597,13 +631,24 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
         gst_rate=12.0,
         cgst_rate=6.0,
         sgst_rate=6.0,
+        igst_rate=0.0,
         cgst_amount=144.0,
         sgst_amount=144.0,
+        igst_amount=0.0,
         total_with_tax=2688.0,
         final_line_total_with_gst=2688.0,
         confidence=0.94,
         confidence_score=0.94,
         tax_rule_note="Garment > ₹1,000: Auto-upgraded from 5% to 12% GST",
+        cbic_schedule=item3_sched,
+        statutory_chapter_note=item3_note,
+        rag_citation={
+            "cbic_schedule": item3_sched,
+            "chapter": "62",
+            "statutory_chapter_note": item3_note,
+            "vector_similarity": 0.94,
+            "legal_grounding": "Heading 6204 classified under Chapter 62. Rate: 12% pursuant to Schedule II."
+        },
         top_3_alternatives=[
             {"hsn_code": "6204", "label": "Readymade Suit/Lehnga (5%/12%)", "gst_rate": 12.0},
             {"hsn_code": "5208", "label": "Unstitched Cotton Fabric (5%)", "gst_rate": 5.0},
@@ -628,6 +673,7 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
     written_sum = round(item1.written_line_total + item2.written_line_total + item3.written_line_total, 2)
     tot_cgst = round(item1.cgst_amount + item2.cgst_amount + item3.cgst_amount, 2)
     tot_sgst = round(item1.sgst_amount + item2.sgst_amount + item3.sgst_amount, 2)
+    tot_igst = 0.0
     final_pakka = round(taxable_sum + tot_cgst + tot_sgst, 2)
 
     summary = InvoiceSummary(
@@ -636,7 +682,24 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
         total_math_saved=0.0,
         total_cgst=tot_cgst,
         total_sgst=tot_sgst,
+        total_igst=tot_igst,
         final_payable_pakka_total=final_pakka
+    )
+
+    supplier_gstin = "03AAEPG1807C1ZM"
+    compliance_audit = validate_invoice_compliance(
+        invoice_data={
+            "merchant_name": "Punjab Cloth & Readymade House",
+            "store_name_guess": "Punjab Cloth & Readymade House",
+            "raw_date_written": "31/10/2026",
+            "normalized_date_iso": "2026-10-31",
+            "active_items": [item1.model_dump(), item2.model_dump(), item3.model_dump()],
+            "supplier_state_code": "03",
+            "place_of_supply_state_code": "03",
+        },
+        supplier_gstin=supplier_gstin,
+        buyer_gstin=None,
+        pos_state_code="03"
     )
 
     return AuditedInvoiceResponse(
@@ -645,6 +708,16 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
         detected_sector="TEXTILE",
         store_name_guess="Punjab Cloth & Readymade House",
         merchant_name="Punjab Cloth & Readymade House",
+        supplier_gstin=supplier_gstin,
+        supplier_state_code="03",
+        supplier_state_name="Punjab",
+        buyer_gstin=None,
+        buyer_state_code=None,
+        buyer_state_name=None,
+        place_of_supply_state_code="03",
+        place_of_supply_state_name="Punjab",
+        is_inter_state=False,
+        supply_type_b2b="B2CS",
         customer_name="Sandeep Goyal",
         customer_phone="94653-47478",
         customer_address="Gali-8, Daba Colony, Ludhiana, Punjab",
@@ -652,6 +725,7 @@ def create_rich_mock_invoice() -> AuditedInvoiceResponse:
         discount_amount=0.0,
         raw_date_written="31/10/2026",
         normalized_date_iso="2026-10-31",
+        compliance_audit=compliance_audit,
         model_used="demo-mock-pipeline",
         cache_hit=False,
         raw_image_b64="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP...",
@@ -710,6 +784,36 @@ async def root():
             "hsn_search": "GET /api/v1/hsn/search?q=...",
         }
     }
+
+
+@app.get("/api/v1/gst/validate-gstin")
+async def api_validate_gstin(gstin: str = Query(..., description="15-character Indian GSTIN")):
+    """Instant validation of Indian GSTIN with Mod-36 check-digit verification in <2ms."""
+    return validate_gstin(gstin)
+
+
+@app.get("/api/v1/gst/demo-gstin")
+async def api_demo_gstin(
+    state_code: str = Query("03", description="2-digit State Code (e.g. 03 for Punjab)"),
+    entity_type: str = Query("P", description="PAN Entity Type: P=Proprietor, C=Company, F=Firm")
+):
+    """Generates a 100% valid Indian GSTIN with mathematically verified Mod-36 checksum."""
+    valid_gstin = generate_valid_gstin(state_code, entity_type)
+    val = validate_gstin(valid_gstin)
+    return {
+        "gstin": valid_gstin,
+        "state_code": val["state_code"],
+        "state_name": val["state_name"],
+        "pan": val["pan"],
+        "entity_type": val["entity_type"],
+        "checksum_valid": val["checksum_valid"]
+    }
+
+
+@app.get("/api/v1/gst/states")
+async def api_get_states():
+    """Returns official 38 Indian State / Union Territory GST codes and names."""
+    return {"states": INDIAN_STATES}
 
 
 @app.get("/api/v1/hsn/search")
@@ -832,8 +936,8 @@ async def parse_invoice(
 @app.post("/api/recalculate", response_model=AuditedInvoiceResponse)
 async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
     """
-    Accepts edited active_items from Frontend UI and recalculates all lines,
-    CGST/SGST splits, dynamic conditional threshold rules, and grand totals in <5ms without LLM calls.
+    Accepts edited active_items and header fields from Frontend UI and recalculates all lines,
+    CGST/SGST/IGST splits, dynamic conditional threshold rules, CBIC RAG citations, and grand totals in <5ms.
     """
     try:
         bill_id = payload.get("bill_id") or payload.get("invoice_id") or f"recalc_{uuid.uuid4().hex[:8]}"
@@ -848,6 +952,26 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
         raw_image_b64 = payload.get("raw_image_b64")
         enhanced_image_b64 = payload.get("enhanced_image_b64") or payload.get("enhanced_image_base64")
 
+        # Resolve Supplier GSTIN and State
+        supplier_gstin = payload.get("supplier_gstin") or "03AAEPG1807C1ZM"
+        supp_val = validate_gstin(supplier_gstin)
+        supplier_state = supp_val["state_code"] if supp_val["is_valid"] else str(payload.get("supplier_state_code") or "03").zfill(2)
+        supplier_state_name = INDIAN_STATES.get(supplier_state, "Punjab")
+
+        # Resolve Buyer GSTIN and Supply Mode
+        buyer_gstin = payload.get("buyer_gstin")
+        buyer_val = validate_gstin(buyer_gstin)
+        supply_mode = "B2B" if buyer_val["is_valid"] else "B2CS"
+        buyer_state = buyer_val["state_code"] if buyer_val["is_valid"] else payload.get("buyer_state_code")
+        buyer_state_name = INDIAN_STATES.get(buyer_state) if buyer_state else None
+
+        # Resolve Place of Supply (POS) and Inter-State Tax Mode
+        pos_code = str(payload.get("place_of_supply_state_code") or supplier_state).zfill(2)
+        pos_name = INDIAN_STATES.get(pos_code, "Punjab")
+
+        # Statutory IGST Rule: Inter-State when Supplier State != Place of Supply State
+        is_inter_state = (supplier_state != pos_code)
+
         raw_active_items = payload.get("active_items", [])
         raw_struck_items = payload.get("struck_out_items", [])
 
@@ -856,6 +980,7 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
         audited_taxable_total = 0.0
         total_cgst = 0.0
         total_sgst = 0.0
+        total_igst = 0.0
 
         for idx, item in enumerate(raw_active_items, start=1):
             qty = float(item.get("quantity", 1.0))
@@ -871,13 +996,15 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
             math_discrepancy = round(written_total - audited_line_total, 2)
             has_math_error = abs(math_discrepancy) > 0.50
 
-            # Match or recalculate HSN
+            # Match or recalculate HSN using external matcher if available
             product_name = item.get("product_name_normalized") or item.get("raw_text") or "Goods"
             raw_text = item.get("raw_text") or product_name
 
-            hsn_info = fallback_match_hsn(product_name, sector, unit_price, raw_text)
+            if EXTERNAL_HSN_AVAILABLE:
+                hsn_info = match_hsn_item(product_name, raw_text, sector, unit_price)
+            else:
+                hsn_info = fallback_match_hsn(product_name, sector, unit_price, raw_text)
 
-            # Override with explicit user edits if provided
             user_gst_rate = item.get("gst_rate")
             gst_rate = float(user_gst_rate) if user_gst_rate is not None else float(hsn_info["gst_rate"])
 
@@ -902,18 +1029,35 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
                     gst_rate = 12.0
                     tax_rule_note = "Footwear <= ₹1,000: 12% GST"
 
-            cgst_rate = round(gst_rate / 2.0, 2)
-            sgst_rate = round(gst_rate / 2.0, 2)
-
-            cgst_amount = round(audited_line_total * (cgst_rate / 100.0), 2)
-            sgst_amount = round(audited_line_total * (sgst_rate / 100.0), 2)
-            total_with_tax = round(audited_line_total + cgst_amount + sgst_amount, 2)
+            # Inter-State (IGST) vs Intra-State (CGST + SGST) Split
+            if is_inter_state:
+                cgst_rate = 0.0
+                sgst_rate = 0.0
+                igst_rate = gst_rate
+                cgst_amount = 0.0
+                sgst_amount = 0.0
+                igst_amount = round(audited_line_total * (igst_rate / 100.0), 2)
+                total_with_tax = round(audited_line_total + igst_amount, 2)
+            else:
+                cgst_rate = round(gst_rate / 2.0, 2)
+                sgst_rate = round(gst_rate / 2.0, 2)
+                igst_rate = 0.0
+                cgst_amount = round(audited_line_total * (cgst_rate / 100.0), 2)
+                sgst_amount = round(audited_line_total * (sgst_rate / 100.0), 2)
+                igst_amount = 0.0
+                total_with_tax = round(audited_line_total + cgst_amount + sgst_amount, 2)
 
             audited_taxable_total += audited_line_total
             total_cgst += cgst_amount
             total_sgst += sgst_amount
+            total_igst += igst_amount
 
             category_desc = item.get("category_description") or item.get("hsn_description") or hsn_info["category_description"]
+
+            # Statutory RAG Citation
+            cbic_sched = item.get("cbic_schedule") or hsn_info.get("cbic_schedule")
+            stat_note = item.get("statutory_chapter_note") or hsn_info.get("statutory_chapter_note")
+            rag_cit = item.get("rag_citation") or hsn_info.get("rag_citation")
 
             audited_active.append(
                 AuditedLineItem(
@@ -937,13 +1081,18 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
                     gst_rate=gst_rate,
                     cgst_rate=cgst_rate,
                     sgst_rate=sgst_rate,
+                    igst_rate=igst_rate,
                     cgst_amount=cgst_amount,
                     sgst_amount=sgst_amount,
+                    igst_amount=igst_amount,
                     total_with_tax=total_with_tax,
                     final_line_total_with_gst=total_with_tax,
                     confidence=float(item.get("confidence", 0.95)),
                     confidence_score=float(item.get("confidence_score", 0.95)),
                     tax_rule_note=tax_rule_note,
+                    cbic_schedule=cbic_sched,
+                    statutory_chapter_note=stat_note,
+                    rag_citation=rag_cit,
                     top_3_alternatives=item.get("top_3_alternatives", hsn_info.get("top_3_alternatives", [])),
                     hsn_alternatives=item.get("hsn_alternatives", hsn_info.get("top_3_alternatives", []))
                 )
@@ -963,7 +1112,9 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
         # Summaries
         written_grand_total = round(written_taxable_sum, 2)
         total_math_saved = round(max(0.0, written_grand_total - audited_taxable_total), 2)
-        final_payable_pakka = round(audited_taxable_total + total_cgst + total_sgst + extra_charges - discount_amount, 2)
+        final_payable_pakka = round(
+            audited_taxable_total + total_cgst + total_sgst + total_igst + extra_charges - discount_amount, 2
+        )
 
         summary = InvoiceSummary(
             written_grand_total=written_grand_total,
@@ -973,7 +1124,24 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
             discount_amount=discount_amount,
             total_cgst=round(total_cgst, 2),
             total_sgst=round(total_sgst, 2),
+            total_igst=round(total_igst, 2),
             final_payable_pakka_total=final_payable_pakka
+        )
+
+        # Run compliance audit
+        compliance_audit = validate_invoice_compliance(
+            invoice_data={
+                "merchant_name": store_name,
+                "store_name_guess": store_name,
+                "raw_date_written": raw_date,
+                "normalized_date_iso": payload.get("normalized_date_iso") or "2026-10-31",
+                "active_items": [i.model_dump() for i in audited_active],
+                "supplier_state_code": supplier_state,
+                "place_of_supply_state_code": pos_code,
+            },
+            supplier_gstin=supplier_gstin,
+            buyer_gstin=buyer_gstin,
+            pos_state_code=pos_code
         )
 
         return AuditedInvoiceResponse(
@@ -982,13 +1150,24 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
             detected_sector=sector,
             store_name_guess=store_name,
             merchant_name=store_name,
+            supplier_gstin=supplier_gstin,
+            supplier_state_code=supplier_state,
+            supplier_state_name=supplier_state_name,
+            buyer_gstin=buyer_gstin,
+            buyer_state_code=buyer_state,
+            buyer_state_name=buyer_state_name,
+            place_of_supply_state_code=pos_code,
+            place_of_supply_state_name=pos_name,
+            is_inter_state=is_inter_state,
+            supply_type_b2b=supply_mode,
             customer_name=customer_name,
             customer_phone=customer_phone,
             customer_address=customer_address,
             extra_charges=extra_charges,
             discount_amount=discount_amount,
             raw_date_written=raw_date,
-            normalized_date_iso="2026-10-31",
+            normalized_date_iso=payload.get("normalized_date_iso") or "2026-10-31",
+            compliance_audit=compliance_audit,
             model_used="deterministic-recalc",
             cache_hit=True,
             raw_image_b64=raw_image_b64,
@@ -1012,21 +1191,21 @@ async def recalculate_invoice(payload: Dict[str, Any] = Body(...)):
 @app.post("/api/export-gstr1")
 async def export_gstr1(payload: Dict[str, Any] = Body(...)):
     """
-    Exports audited invoice payload into the official Indian GST Portal GSTR-1 JSON format.
+    Exports audited invoice payload into the official Indian GST Portal GSTR-1 JSON format (B2B/B2CS + HSN Summary).
     """
     try:
-        gstin = payload.get("gstin", "27AABCU9603R1ZM")
-        fp = payload.get("fp") or payload.get("tax_period") or "102026"
-        pos = payload.get("pos", "27")
-
-        # Extract invoice items from root or nested 'invoice' key
         invoice_content = payload.get("invoice") or payload
+        gstin = payload.get("supplier_gstin") or payload.get("gstin") or invoice_content.get("supplier_gstin") or "03AAEPG1807C1ZM"
+        fp = payload.get("fp") or payload.get("tax_period") or "102026"
+        pos = payload.get("pos_code") or payload.get("pos") or invoice_content.get("place_of_supply_state_code") or "03"
+        buyer_gstin = payload.get("buyer_gstin") or invoice_content.get("buyer_gstin")
 
         gstr1_json = export_to_gstr1_json(
             invoice_data=invoice_content,
             supplier_gstin=gstin,
             tax_period=fp,
-            pos_code=pos
+            pos_code=pos,
+            buyer_gstin=buyer_gstin
         )
         return gstr1_json
     except Exception as e:

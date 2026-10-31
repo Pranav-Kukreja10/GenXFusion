@@ -73,13 +73,18 @@ class AuditedLineItem(BaseModel):
     gst_rate: float = Field(default=18.0)
     cgst_rate: float = Field(default=9.0)
     sgst_rate: float = Field(default=9.0)
+    igst_rate: float = Field(default=0.0)
     cgst_amount: float = Field(default=0.0)
     sgst_amount: float = Field(default=0.0)
+    igst_amount: float = Field(default=0.0)
     total_with_tax: float = Field(default=0.0)
     final_line_total_with_gst: Optional[float] = None
     confidence: float = Field(default=0.90)
     confidence_score: Optional[float] = None
     tax_rule_note: Optional[str] = None
+    cbic_schedule: Optional[str] = None
+    statutory_chapter_note: Optional[str] = None
+    rag_citation: Optional[Dict[str, Any]] = None
     top_3_alternatives: List[Dict[str, Any]] = Field(default_factory=list)
     hsn_alternatives: Optional[List[Dict[str, Any]]] = None
 
@@ -99,7 +104,7 @@ class AuditedLineItem(BaseModel):
             self.confidence_score = self.confidence
         if self.hsn_alternatives is None:
             self.hsn_alternatives = self.top_3_alternatives
-        if self.cgst_rate == 0.0 and self.sgst_rate == 0.0 and self.gst_rate > 0.0:
+        if self.cgst_rate == 0.0 and self.sgst_rate == 0.0 and self.igst_rate == 0.0 and self.gst_rate > 0.0:
             half = round(self.gst_rate / 2.0, 2)
             self.cgst_rate = half
             self.sgst_rate = half
@@ -121,6 +126,7 @@ class InvoiceSummary(BaseModel):
     discount_amount: float = 0.0
     total_cgst: float = 0.0
     total_sgst: float = 0.0
+    total_igst: float = 0.0
     final_payable_pakka_total: float = 0.0
 
 
@@ -130,6 +136,16 @@ class AuditedInvoiceResponse(BaseModel):
     detected_sector: str = Field(default="GENERAL")
     store_name_guess: Optional[str] = None
     merchant_name: Optional[str] = None
+    supplier_gstin: Optional[str] = None
+    supplier_state_code: str = Field(default="03")
+    supplier_state_name: Optional[str] = "Punjab"
+    buyer_gstin: Optional[str] = None
+    buyer_state_code: Optional[str] = None
+    buyer_state_name: Optional[str] = None
+    place_of_supply_state_code: str = Field(default="03")
+    place_of_supply_state_name: Optional[str] = "Punjab"
+    is_inter_state: bool = Field(default=False)
+    supply_type_b2b: str = Field(default="B2CS")
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
     customer_address: Optional[str] = None
@@ -137,6 +153,7 @@ class AuditedInvoiceResponse(BaseModel):
     discount_amount: Optional[float] = 0.0
     raw_date_written: Optional[str] = None
     normalized_date_iso: Optional[str] = None
+    compliance_audit: Dict[str, Any] = Field(default_factory=dict)
     model_used: Optional[str] = "gemini-3.5-flash-lite"
     cache_hit: bool = False
     raw_image_b64: Optional[str] = None
@@ -171,6 +188,12 @@ class RecalculateRequest(BaseModel):
     detected_sector: Optional[str] = "GENERAL"
     store_name_guess: Optional[str] = None
     merchant_name: Optional[str] = None
+    supplier_gstin: Optional[str] = None
+    supplier_state_code: Optional[str] = "03"
+    buyer_gstin: Optional[str] = None
+    place_of_supply_state_code: Optional[str] = "03"
+    is_inter_state: Optional[bool] = None
+    invoice_date: Optional[str] = None
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
     customer_address: Optional[str] = None
@@ -187,7 +210,10 @@ class RecalculateRequest(BaseModel):
 
 class GSTR1ExportRequest(BaseModel):
     gstin: Optional[str] = "03AABCS1429B1Z"
+    supplier_gstin: Optional[str] = None
+    buyer_gstin: Optional[str] = None
     tax_period: Optional[str] = "102026"
+    pos_code: Optional[str] = "03"
     invoice: Optional[AuditedInvoiceResponse] = None
     raw_payload: Optional[Dict[str, Any]] = None
 
