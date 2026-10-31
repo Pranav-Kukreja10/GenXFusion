@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ShieldCheck, Sun, Moon } from 'lucide-react';
 import ProfileMenu from './ProfileMenu';
 
@@ -14,9 +15,13 @@ export default function TopBar({
   return (
     <header className="w-full bg-[#FAF8F5] dark:bg-[#0B0E14] border-b border-[#E7E2DA] dark:border-[#232B3A] shrink-0 z-20 transition-colors">
       <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between">
-        {/* Left: Brand Lockup */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#059669] dark:bg-emerald-600 flex items-center justify-center text-white shadow-sm ring-2 ring-emerald-500/20 shrink-0">
+        {/* Left: Brand Lockup (Links to '/') */}
+        <Link
+          to="/"
+          className="flex items-center gap-2.5 sm:gap-3 group cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
+          aria-label="TrueTax AI Home"
+        >
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#059669] dark:bg-emerald-600 flex items-center justify-center text-white shadow-sm ring-2 ring-emerald-500/20 shrink-0 group-hover:bg-[#047857] transition-colors">
             <ShieldCheck className="h-5 w-5 stroke-[2.3]" />
           </div>
           <div className="flex items-center gap-2">
@@ -27,7 +32,7 @@ export default function TopBar({
               #25
             </span>
           </div>
-        </div>
+        </Link>
 
         {/* Right: Controls (Dark mode toggle & Circular Avatar with Profile Menu) */}
         <div className="flex items-center gap-2.5 sm:gap-3">
@@ -57,4 +62,3 @@ export default function TopBar({
     </header>
   );
 }
-
