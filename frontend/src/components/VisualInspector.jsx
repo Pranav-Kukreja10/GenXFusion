@@ -3,6 +3,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
+  RotateCw,
   Maximize2,
   Minimize2,
   Download,
@@ -19,11 +20,12 @@ export default function VisualInspector({
   hoveredRowIndex = null,
   onScanImage,
   isScanning = false,
-  onCloseDrawer: _onCloseDrawer = null, // Used if inside mobile slide-up drawer
+  onCloseDrawer: _onCloseDrawer = null,
 }) {
-  const [viewMode, setViewMode] = useState('enhanced'); // 'enhanced' (OpenCV CLAHE) | 'raw' | 'split'
+  const [viewMode, setViewMode] = useState('enhanced'); // 'enhanced' | 'raw' | 'split'
   const [splitSliderPos, setSplitSliderPos] = useState(50);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [rotation, setRotation] = useState(0); // 0, 90, 180, 270 degrees
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
@@ -57,6 +59,11 @@ export default function VisualInspector({
   const handleResetZoom = () => {
     setZoomLevel(1);
     setPanPosition({ x: 0, y: 0 });
+    setRotation(0);
+  };
+
+  const handleRotate90 = () => {
+    setRotation((r) => (r + 90) % 360);
   };
 
   // Pan handlers
@@ -130,11 +137,11 @@ export default function VisualInspector({
   return (
     <div
       ref={containerRef}
-      className={`bg-white dark:bg-[#131822] border border-[#E7E2DA] dark:border-[#232B3A] rounded-2xl shadow-xs overflow-hidden flex flex-col transition-colors ${
+      className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden flex flex-col transition-colors ${
         isFullscreen ? 'p-4 bg-slate-950 dark:bg-black fixed inset-0 z-50 rounded-none' : ''
       }`}
       role="region"
-      aria-label="Visual Inspector Receipt Viewer"
+      aria-label="Receipt Image Viewer"
     >
       {/* Hidden inputs for Re-capture */}
       <input
@@ -154,26 +161,26 @@ export default function VisualInspector({
       />
 
       {/* Top Header Strip: Mode Selector & Action Icons */}
-      <div className="p-3 border-b border-[#E7E2DA] dark:border-zinc-800 bg-[#FAF8F5] dark:bg-zinc-900/60 flex flex-wrap items-center justify-between gap-2">
+      <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <div className="h-6 w-6 rounded-md bg-emerald-600 text-white flex items-center justify-center">
             <Eye className="h-3.5 w-3.5" />
           </div>
-          <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-            Visual Inspector
+          <span className="text-xs font-bold text-slate-900 dark:text-white">
+            Receipt Image
           </span>
           {hoveredRowIndex !== null && (
-            <span className="text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.2 rounded animate-pulse">
+            <span className="text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.5 rounded">
               Row #{hoveredRowIndex + 1}
             </span>
           )}
         </div>
 
-        {/* View Mode Segmented Controls: Raw Photo | OpenCV CLAHE | Split */}
+        {/* View Mode Segmented Controls: Raw Photo | Shadow-Removed | Split */}
         <div
-          className="flex items-center gap-1 bg-[#EBE7DF] dark:bg-zinc-800 p-0.5 rounded-lg text-[10px] font-bold"
+          className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800 p-0.5 rounded-lg text-[10px] font-semibold"
           role="tablist"
-          aria-label="Visual processing mode"
+          aria-label="Image view mode"
         >
           <button
             type="button"
@@ -182,7 +189,7 @@ export default function VisualInspector({
             onClick={() => setViewMode('raw')}
             className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
               viewMode === 'raw'
-                ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs font-extrabold'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
@@ -195,11 +202,11 @@ export default function VisualInspector({
             onClick={() => setViewMode('enhanced')}
             className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
               viewMode === 'enhanced'
-                ? 'bg-emerald-700 text-white shadow-2xs font-extrabold'
+                ? 'bg-emerald-700 text-white shadow-2xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
-            OpenCV CLAHE
+            Shadow-Removed
           </button>
           <button
             type="button"
@@ -208,20 +215,29 @@ export default function VisualInspector({
             onClick={() => setViewMode('split')}
             className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
               viewMode === 'split'
-                ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs font-extrabold'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
-            Split
+            Split View
           </button>
         </div>
 
-        {/* Image Tools: Zoom In, Out, Reset, Fullscreen, Download */}
+        {/* Image Tools: Rotate 90, Zoom In, Out, Reset, Fullscreen, Download */}
         <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
           <button
             type="button"
+            onClick={handleRotate90}
+            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Rotate 90° clockwise"
+            aria-label="Rotate image 90 degrees"
+          >
+            <RotateCw className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
             onClick={handleZoomIn}
-            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Zoom In"
             aria-label="Zoom In"
           >
@@ -230,19 +246,19 @@ export default function VisualInspector({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Zoom Out"
             aria-label="Zoom Out"
           >
             <ZoomOut className="h-3.5 w-3.5" />
           </button>
-          {zoomLevel !== 1 && (
+          {(zoomLevel !== 1 || rotation !== 0) && (
             <button
               type="button"
               onClick={handleResetZoom}
-              className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer text-emerald-600 font-bold"
-              title="Reset Zoom"
-              aria-label="Reset Zoom"
+              className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer text-emerald-600 font-bold"
+              title="Reset Zoom & Rotation"
+              aria-label="Reset Zoom and Rotation"
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
@@ -250,7 +266,7 @@ export default function VisualInspector({
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             aria-label="Toggle Fullscreen"
           >
@@ -259,7 +275,7 @@ export default function VisualInspector({
           <button
             type="button"
             onClick={handleDownloadImage}
-            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Download Image"
             aria-label="Download Image"
           >
@@ -270,7 +286,7 @@ export default function VisualInspector({
 
       {/* Main Image Viewport Area */}
       <div
-        className={`relative min-h-[380px] max-h-[580px] bg-slate-950 flex items-center justify-center overflow-hidden select-none border-b border-[#E7E2DA] dark:border-zinc-800 ${
+        className={`relative min-h-[380px] max-h-[580px] bg-slate-950 flex items-center justify-center overflow-hidden select-none border-b border-slate-200 dark:border-slate-800 ${
           zoomLevel > 1 ? 'cursor-grab active:cursor-grabbing' : ''
         }`}
         onMouseDown={handleMouseDown}
@@ -278,24 +294,24 @@ export default function VisualInspector({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-        {/* 1. Loading Skeleton */}
+        {/* Loading Indicator */}
         {(isScanning || !imageLoaded) && currentImageSrc && !imageError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 z-20 space-y-3">
-            <div className="h-10 w-10 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-            <span className="text-xs font-mono text-emerald-400">Processing OpenCV CLAHE filter...</span>
+            <div className="h-8 w-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+            <span className="text-xs font-mono text-emerald-400">Loading receipt preview...</span>
           </div>
         )}
 
-        {/* 2. Error Fallback State: Couldn't load image + Re-capture */}
+        {/* Error Fallback State */}
         {(imageError || !currentImageSrc) && (
           <div className="p-6 text-center space-y-3 max-w-sm">
             <div className="h-12 w-12 rounded-2xl bg-red-950/60 border border-red-800/80 text-red-400 flex items-center justify-center mx-auto shadow-inner">
               <AlertCircle className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-extrabold text-white">Couldn&apos;t load image</p>
+              <p className="text-sm font-bold text-white">Receipt Image Unavailable</p>
               <p className="text-xs text-slate-400 mt-1">
-                The receipt image preview could not be rendered or was not provided.
+                Upload or capture a bill photo to view side-by-side with audited line items.
               </p>
             </div>
             <div className="flex items-center justify-center gap-2 pt-2">
@@ -312,7 +328,7 @@ export default function VisualInspector({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isScanning}
-                className="inline-flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border border-zinc-700 cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border border-slate-700 cursor-pointer"
               >
                 <UploadCloud className="h-3.5 w-3.5 text-slate-400" />
                 <span>Browse</span>
@@ -321,20 +337,20 @@ export default function VisualInspector({
           </div>
         )}
 
-        {/* 3. Image Display Modes */}
+        {/* Image Display Modes */}
         {!imageError && currentImageSrc && (
           <>
-            {/* RAW or CLAHE Standard View */}
+            {/* RAW or Shadow-Removed Standard View */}
             {viewMode !== 'split' && (
               <div
                 className="w-full h-full p-2 flex items-center justify-center transition-transform duration-75 ease-out"
                 style={{
-                  transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
+                  transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px) rotate(${rotation}deg)`,
                 }}
               >
                 <img
                   src={currentImageSrc}
-                  alt={viewMode === 'raw' ? 'Raw Receipt' : 'OpenCV CLAHE Enhanced'}
+                  alt={viewMode === 'raw' ? 'Raw Receipt' : 'Shadow-Removed Receipt'}
                   onLoad={() => setImageLoaded(true)}
                   onError={() => setImageError(true)}
                   className="max-h-[520px] w-auto max-w-full object-contain rounded shadow-lg pointer-events-none"
@@ -348,7 +364,7 @@ export default function VisualInspector({
                     </span>
                   ) : (
                     <span className="bg-emerald-950/90 text-emerald-300 text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/40 shadow-xs">
-                      OPENCV CLAHE FILTERED
+                      SHADOW-REMOVED
                     </span>
                   )}
                 </div>
@@ -357,7 +373,12 @@ export default function VisualInspector({
 
             {/* SPLIT SLIDER VIEW */}
             {viewMode === 'split' && (
-              <div className="relative w-full h-[460px] select-none overflow-hidden flex items-center justify-center bg-black">
+              <div
+                className="relative w-full h-[460px] select-none overflow-hidden flex items-center justify-center bg-black"
+                style={{
+                  transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px) rotate(${rotation}deg)`,
+                }}
+              >
                 {/* Background Raw Image */}
                 <img
                   src={rawImage || enhancedImage}
@@ -365,24 +386,24 @@ export default function VisualInspector({
                   className="absolute inset-0 w-full h-full object-contain pointer-events-none"
                 />
 
-                {/* Foreground CLAHE Image Clipped by Slider */}
+                {/* Foreground Shadow-Removed Image Clipped by Slider */}
                 <div
                   className="absolute inset-0 overflow-hidden"
                   style={{ width: `${splitSliderPos}%` }}
                 >
                   <img
                     src={enhancedImage || rawImage}
-                    alt="CLAHE"
+                    alt="Enhanced"
                     className="absolute inset-0 w-full h-full object-contain pointer-events-none"
                     style={{ width: '100%', maxWidth: 'none' }}
                   />
                   <div className="absolute top-3 left-3 bg-emerald-950/95 text-emerald-300 text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/50">
-                    CLAHE ENHANCED
+                    SHADOW-REMOVED
                   </div>
                 </div>
 
                 <div className="absolute top-3 right-3 bg-slate-900/95 text-amber-300 text-[10px] font-mono px-2 py-0.5 rounded border border-amber-500/50">
-                  RAW UNPROCESSED
+                  RAW PHOTO
                 </div>
 
                 {/* Vertical Divider Line with handle */}
@@ -408,20 +429,20 @@ export default function VisualInspector({
               </div>
             )}
 
-            {/* 4. Table Row Hover Highlight Overlay */}
+            {/* Table Row Hover Highlight Overlay */}
             {hoveredRowIndex !== null && overlayTopPercent !== null && (
               <div
-                className="absolute left-6 right-6 border-2 border-emerald-400 bg-emerald-400/20 rounded pointer-events-none transition-all duration-200 z-10 flex items-center justify-between px-3 py-1 shadow-md animate-pulse"
+                className="absolute left-6 right-6 border-2 border-emerald-400 bg-emerald-400/20 rounded pointer-events-none transition-all duration-200 z-10 flex items-center justify-between px-3 py-1 shadow-md"
                 style={{
                   top: `${overlayTopPercent}%`,
                   height: '42px',
                 }}
               >
                 <span className="text-[10px] font-mono font-bold text-white bg-slate-900/90 px-1.5 py-0.5 rounded shadow">
-                  OCR Bounding Box #{hoveredRowIndex + 1}
+                  Row #{hoveredRowIndex + 1}
                 </span>
                 <span className="text-[10px] font-mono text-emerald-200 bg-emerald-950/80 px-1.5 py-0.5 rounded">
-                  Matched
+                  Active Line
                 </span>
               </div>
             )}
@@ -430,14 +451,21 @@ export default function VisualInspector({
       </div>
 
       {/* Footer Instructions */}
-      <div className="p-2.5 bg-[#FAF8F5] dark:bg-zinc-900/40 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+      <div className="p-2.5 bg-slate-50 dark:bg-slate-900/40 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
         <div className="flex items-center gap-1">
           <Move className="h-3 w-3 text-slate-400" />
-          <span>Pan: drag when zoomed • Hover ledger row to trace</span>
+          <span>Pan: drag when zoomed • Click Rotate to orient</span>
         </div>
-        <span className="font-mono text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">
-          {Math.round(zoomLevel * 100)}% Zoom
-        </span>
+        <div className="flex items-center gap-2 font-mono text-[10px]">
+          {rotation > 0 && (
+            <span className="text-slate-600 dark:text-slate-300 font-bold">
+              {rotation}°
+            </span>
+          )}
+          <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+            {Math.round(zoomLevel * 100)}% Zoom
+          </span>
+        </div>
       </div>
     </div>
   );

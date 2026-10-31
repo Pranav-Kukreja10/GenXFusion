@@ -6,7 +6,7 @@ import {
   Search,
   Trash2,
   AlertTriangle,
-  Sparkles,
+  FileBadge,
   Check,
   FileQuestion,
 } from 'lucide-react';
@@ -24,6 +24,7 @@ export default function LedgerTable({
   onOpenHsnSearch,
   onAddItem,
   onDeleteItem,
+  onToggleStrikeOut,
   hoveredRowIndex,
   setHoveredRowIndex,
   isRecalculating: _isRecalculating = false,
@@ -122,6 +123,7 @@ export default function LedgerTable({
                     index={index}
                     onItemChange={onItemChange}
                     onFixError={onFixSingleMathError}
+                    onToggleStrikeOut={onToggleStrikeOut}
                     onDelete={onDeleteItem}
                     onOpenHsnSearch={onOpenHsnSearch}
                     isHovered={hoveredRowIndex === index}
@@ -346,7 +348,7 @@ export default function LedgerTable({
 
                   {item.tax_rule_note && (
                     <div className="inline-flex items-center gap-1 bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded text-[10px] font-semibold">
-                      <Sparkles className="h-2.5 w-2.5 text-amber-600 shrink-0" />
+                      <FileBadge className="h-2.5 w-2.5 text-amber-600 shrink-0" />
                       <span>{item.tax_rule_note}</span>
                     </div>
                   )}

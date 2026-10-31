@@ -47,7 +47,10 @@ from gst_validator import (
     validate_gstin,
     validate_invoice_compliance,
     generate_valid_gstin,
-    INDIAN_STATES
+    INDIAN_STATES,
+    check_and_register_invoice_number,
+    generate_next_sequential_invoice_number,
+    get_indian_financial_year,
 )
 
 # ============================================================================
@@ -962,6 +965,33 @@ async def api_demo_gstin(
 async def api_get_states():
     """Returns official 38 Indian State / Union Territory GST codes and names."""
     return {"states": INDIAN_STATES}
+
+
+@app.post("/api/v1/invoice/register-number")
+async def api_register_invoice_number(payload: Dict[str, Any] = Body(...)):
+    """Validates and checks invoice number uniqueness within FY under CGST Rule 46(b)."""
+    supplier_key = payload.get("supplier_key") or payload.get("supplier_gstin") or "DEFAULT"
+    financial_year = payload.get("financial_year") or get_indian_financial_year(payload.get("invoice_date"))
+    invoice_number = payload.get("invoice_number", "")
+    auto_register = bool(payload.get("auto_register", False))
+
+    return check_and_register_invoice_number(
+        supplier_key=supplier_key,
+        financial_year=financial_year,
+        invoice_number=invoice_number,
+        auto_register=auto_register
+    )
+
+
+@app.get("/api/v1/invoice/next-number")
+async def api_next_invoice_number(
+    supplier_key: str = Query("DEFAULT", description="Supplier GSTIN or identifier"),
+    financial_year: Optional[str] = Query(None, description="Financial Year (e.g. 2026-27)")
+):
+    """Generates the next sequential invoice number for a supplier and FY."""
+    fy = financial_year or get_indian_financial_year()
+    next_num = generate_next_sequential_invoice_number(supplier_key, fy)
+    return {"financial_year": fy, "next_invoice_number": next_num}
 
 
 @app.get("/api/v1/hsn/search")

@@ -5,7 +5,7 @@ import {
   AlertCircle,
   Layers,
   FileSearch,
-  Sparkles,
+  FileCheck,
   Calculator,
 } from 'lucide-react';
 
@@ -28,7 +28,7 @@ const STEPS = [
     id: 3,
     title: 'HSN Matching',
     subtitle: 'PyTorch Vectors',
-    icon: Sparkles,
+    icon: FileCheck,
     description: 'Sub-2.5ms cosine vector ranking across 6 sectors',
   },
   {
@@ -45,7 +45,7 @@ export default function ScanStepper({ currentStep = 1, failedStep = null }) {
     <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 sm:p-5 space-y-4 animate-fadeIn transition-colors">
       <div className="flex items-center justify-between pb-2 border-b border-emerald-200/60 dark:border-emerald-800/40 text-xs">
         <span className="font-extrabold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-          <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400 animate-spin" />
+          <FileCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 animate-spin" />
           <span>Processing Kacha Bill Pipeline</span>
         </span>
         <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-400">
@@ -76,7 +76,7 @@ export default function ScanStepper({ currentStep = 1, failedStep = null }) {
                   isDone
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : isActive
-                    ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-600 animate-pulse'
+                    ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-600'
                     : isFailed
                     ? 'bg-red-600 text-white'
                     : 'bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-600'

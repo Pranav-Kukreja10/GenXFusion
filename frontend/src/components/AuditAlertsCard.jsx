@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   AlertOctagon,
   Wrench,
-  Sparkles,
+  FileCheck,
   Scissors,
   ChevronDown,
   ChevronUp,
@@ -75,7 +75,7 @@ export default function AuditAlertsCard({
         <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 rounded-xl p-3.5 shadow-2xs ring-1 ring-emerald-500/20 transition-colors">
           <div className="text-[10px] font-bold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider flex items-center justify-between">
             <span>Pakka Total</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="font-mono-numbers text-base sm:text-lg font-extrabold text-emerald-900 dark:text-emerald-200">
@@ -124,7 +124,7 @@ export default function AuditAlertsCard({
             <div className="flex flex-wrap items-center gap-2">
               {thresholdTriggeredItems.length > 0 && (
                 <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-300 px-2 py-0.5 rounded text-[11px] font-medium">
-                  <Sparkles className="h-3 w-3 text-amber-600 shrink-0" />
+                  <FileCheck className="h-3 w-3 text-amber-600 shrink-0" />
                   <span>
                     Dynamic Rule: <strong>{thresholdTriggeredItems[0].tax_rule_note}</strong>
                   </span>

@@ -8,7 +8,7 @@ import {
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
-  Sparkles,
+  FileCheck,
 } from 'lucide-react';
 import {
   validateGstin,
@@ -122,7 +122,7 @@ export default function MetadataForm({
 
         {isAutoFilled && (
           <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold">
-            <Sparkles className="h-3 w-3" /> Auto-filled by Vision
+            <FileCheck className="h-3 w-3" /> Auto-filled by Vision
           </span>
         )}
       </div>

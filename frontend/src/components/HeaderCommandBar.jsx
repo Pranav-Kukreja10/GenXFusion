@@ -4,7 +4,7 @@ import {
   Sun,
   Moon,
   Settings,
-  Sparkles,
+  FileCheck,
   RefreshCw,
   ArrowLeft,
   Printer,
@@ -71,7 +71,7 @@ export default function HeaderCommandBar({
           {hasScannedInvoice && (
             <div className="hidden lg:flex items-center bg-[#F3EFEA] dark:bg-zinc-800/80 p-1 rounded-xl border border-[#E5E0D8] dark:border-zinc-700/60 text-xs">
               <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-amber-500" /> Switch Slip:
+                <FileCheck className="h-3 w-3 text-amber-500" /> Switch Slip:
               </span>
               {DEMO_PRESETS.map((preset) => {
                 const isActive = invoice?.invoice_id === preset.data.invoice_id;
@@ -106,7 +106,7 @@ export default function HeaderCommandBar({
             
             {/* Recalculating indicator */}
             {isRecalculating && (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium animate-pulse">
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                 <RefreshCw className="h-3 w-3 animate-spin" /> Recalculating...
               </span>
             )}

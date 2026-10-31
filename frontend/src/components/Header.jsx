@@ -91,7 +91,7 @@ export default function Header({
             
             {/* Recalculating indicator */}
             {isRecalculating && (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium animate-pulse">
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                 <RefreshCw className="h-3 w-3 animate-spin" /> Recalculating...
               </span>
             )}

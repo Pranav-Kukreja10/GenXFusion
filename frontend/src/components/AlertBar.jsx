@@ -3,7 +3,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Wand2,
-  Sparkles,
+  FileBadge,
   Scissors,
   RotateCcw,
   Eye,
@@ -138,7 +138,7 @@ export default function AlertBar({
             key={idx}
             className="inline-flex items-center gap-1.5 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60 text-blue-800 dark:text-blue-300 px-2.5 py-1 rounded-lg text-[10px] font-medium"
           >
-            <Sparkles className="h-3 w-3 text-blue-600 dark:text-blue-400 shrink-0" />
+            <FileBadge className="h-3 w-3 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>{rule.note.startsWith('Dynamic Rule:') ? rule.note : `Dynamic Rule: ${rule.note}`}</span>
           </div>
         ))}

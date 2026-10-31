@@ -5,7 +5,7 @@ import {
   Plus,
   Trash2,
   AlertTriangle,
-  Sparkles,
+  FileCheck,
   Check,
 } from 'lucide-react';
 import { formatINR } from '../utils/numberToWords';
@@ -249,7 +249,7 @@ export default function InvoiceEditorTable({
                       {/* Dynamic Rule Note */}
                       {item.tax_rule_note && (
                         <div className="inline-flex items-center gap-1 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-900 text-amber-900 dark:text-amber-300 px-1.5 py-0.5 rounded text-[9px] font-semibold">
-                          <Sparkles className="h-2.5 w-2.5 text-amber-600 shrink-0" />
+                          <FileCheck className="h-2.5 w-2.5 text-amber-600 shrink-0" />
                           <span className="truncate max-w-[200px]">{item.tax_rule_note}</span>
                         </div>
                       )}

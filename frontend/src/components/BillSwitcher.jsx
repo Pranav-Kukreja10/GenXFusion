@@ -54,7 +54,7 @@ export default function BillSwitcher({ currentInvoiceId }) {
               {/* Status dot: green = audited / amber = needs review */}
               <span
                 className={`h-2 w-2 rounded-full shrink-0 ${
-                  isAudited ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'
+                  isAudited ? 'bg-emerald-500' : 'bg-amber-500'
                 }`}
               />
 

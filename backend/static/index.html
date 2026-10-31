@@ -1011,10 +1011,10 @@
     async function triggerScan() {
       const fileInput = document.getElementById("billUploadInput");
       const btnText = document.getElementById("scanBtnText");
-      btnText.innerText = "Analyzing Receipt...";
+      if (btnText) btnText.innerText = "Analyzing Receipt...";
 
       try {
-        if (fileInput.files.length > 0) {
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
           const formData = new FormData();
           formData.append("file", fileInput.files[0]);
           const res = await fetch("/api/v1/invoice/parse", {
@@ -1030,7 +1030,8 @@
           if (data.raw_image_b64) currentRawImage = data.raw_image_b64;
           if (data.enhanced_image_b64) currentEnhancedImage = data.enhanced_image_b64;
           if (currentEnhancedImage) showImagePreview(currentEnhancedImage);
-          document.getElementById("imageToggleBar").classList.remove("hidden");
+          const toggleBar = document.getElementById("imageToggleBar");
+          if (toggleBar) toggleBar.classList.remove("hidden");
         } else {
           // Fallback to rich mock
           const res = await fetch("/api/v1/invoice/parse?mock=True", { method: "POST" });
@@ -1040,9 +1041,9 @@
         renderInvoiceUI();
       } catch (err) {
         console.error("Scan failed:", err);
-        alert("Scan failed for your uploaded bill (no fake demo data shown):\n" + err.message);
+        alert("Scan failed for your uploaded bill (no fake demo data shown):\n" + (err.message || err));
       } finally {
-        btnText.innerText = "Run AI OCR & Tax Audit";
+        if (btnText) btnText.innerText = "Run AI OCR & Tax Audit";
       }
     }
 
@@ -1055,7 +1056,7 @@
 
     async function onSupplierGstinInput(val) {
       if (!currentInvoice) return;
-      const clean = val.trim().toUpperCase();
+      const clean = (val || "").trim().toUpperCase();
       currentInvoice.supplier_gstin = clean;
       
       const badge = document.getElementById("supplierGstinStatus");
@@ -1064,33 +1065,40 @@
           const res = await fetch(`/api/v1/gst/validate-gstin?gstin=${clean}`);
           const data = await res.json();
           if (data.is_valid) {
-            badge.innerText = `✓ Valid ${data.state_name} GSTIN [${data.entity_type} - Mod-36 Ok]`;
-            badge.className = "text-[10px] text-emerald-400 font-semibold mt-0.5 truncate";
+            if (badge) {
+              badge.innerText = `✓ Valid ${data.state_name} GSTIN [${data.entity_type} - Mod-36 Ok]`;
+              badge.className = "text-[10px] text-emerald-400 font-semibold mt-0.5 truncate";
+            }
             currentInvoice.supplier_state_code = data.state_code;
             currentInvoice.supplier_state_name = data.state_name;
             await recalculateBackend();
           } else {
-            badge.innerText = `❌ ${data.error_reason}`;
-            badge.className = "text-[10px] text-rose-400 font-semibold mt-0.5 truncate";
+            if (badge) {
+              badge.innerText = `❌ ${data.error_reason}`;
+              badge.className = "text-[10px] text-rose-400 font-semibold mt-0.5 truncate";
+            }
           }
         } catch (e) {
-          badge.innerText = "Validation error";
+          if (badge) badge.innerText = "Validation error";
         }
       } else {
-        badge.innerText = `Requires 15 chars (${clean.length}/15)`;
-        badge.className = "text-[10px] text-slate-500 font-semibold mt-0.5 truncate";
+        if (badge) {
+          badge.innerText = `Requires 15 chars (${clean.length}/15)`;
+          badge.className = "text-[10px] text-slate-500 font-semibold mt-0.5 truncate";
+        }
       }
     }
 
     async function fillDemoSupplierGstin() {
       if (!currentInvoice) return;
-      document.getElementById("headerSupplierGstinInput").value = "03AAEPG1807C1ZM";
+      const input = document.getElementById("headerSupplierGstinInput");
+      if (input) input.value = "03AAEPG1807C1ZM";
       await onSupplierGstinInput("03AAEPG1807C1ZM");
     }
 
     async function onBuyerGstinInput(val) {
       if (!currentInvoice) return;
-      const clean = val.trim().toUpperCase();
+      const clean = (val || "").trim().toUpperCase();
       currentInvoice.buyer_gstin = clean;
       const badge = document.getElementById("buyerGstinStatus");
 
@@ -1099,27 +1107,34 @@
           const res = await fetch(`/api/v1/gst/validate-gstin?gstin=${clean}`);
           const data = await res.json();
           if (data.is_valid) {
-            badge.innerText = `🏢 B2B Mode: ${data.state_name} [${data.entity_type}]`;
-            badge.className = "text-[10px] text-purple-400 font-bold mt-0.5 truncate";
+            if (badge) {
+              badge.innerText = `🏢 B2B Mode: ${data.state_name} [${data.entity_type}]`;
+              badge.className = "text-[10px] text-purple-400 font-bold mt-0.5 truncate";
+            }
             currentInvoice.buyer_state_code = data.state_code;
             currentInvoice.buyer_state_name = data.state_name;
             currentInvoice.supply_type_b2b = "B2B";
             await recalculateBackend();
           } else {
-            badge.innerText = `❌ ${data.error_reason}`;
-            badge.className = "text-[10px] text-rose-400 font-semibold mt-0.5 truncate";
+            if (badge) {
+              badge.innerText = `❌ ${data.error_reason}`;
+              badge.className = "text-[10px] text-rose-400 font-semibold mt-0.5 truncate";
+            }
           }
         } catch (e) {
-          badge.innerText = "Validation error";
+          if (badge) badge.innerText = "Validation error";
         }
       } else {
         currentInvoice.supply_type_b2b = "B2CS";
-        badge.innerText = "🛒 B2CS Mode (Retail Consumer)";
-        badge.className = "text-[10px] text-slate-400 font-semibold mt-0.5 truncate";
+        if (badge) {
+          badge.innerText = "🛒 B2CS Mode (Retail Consumer)";
+          badge.className = "text-[10px] text-slate-400 font-semibold mt-0.5 truncate";
+        }
         if (clean.length === 0) {
           await recalculateBackend();
         }
       }
+    }
     }
 
     async function fillDemoBuyerGstin() {

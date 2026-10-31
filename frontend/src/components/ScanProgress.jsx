@@ -1,10 +1,10 @@
 import React from 'react';
-import { Layers, FileSearch, Sparkles, Calculator, CheckCircle2, Loader2 } from 'lucide-react';
+import { Layers, FileSearch, FileCheck, Calculator, CheckCircle2, Loader2 } from 'lucide-react';
 
 const STEPS = [
   { id: 1, label: 'Shadow removal', desc: 'OpenCV CLAHE', icon: Layers },
   { id: 2, label: 'OCR', desc: 'Vernacular Vision', icon: FileSearch },
-  { id: 3, label: 'HSN match', desc: 'PyTorch Vectors', icon: Sparkles },
+  { id: 3, label: 'HSN match', desc: 'PyTorch Vectors', icon: FileCheck },
   { id: 4, label: 'GST audit', desc: 'Math & Tax Engine', icon: Calculator },
 ];
 
@@ -36,7 +36,7 @@ export default function ScanProgress({ scanStep = 1, previewUrl = null }) {
       <div className="w-full max-w-md space-y-1.5">
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold text-[#0F172A] dark:text-[#E5E7EB] flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
             <span>Scanning receipt...</span>
           </span>
           <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">
@@ -74,7 +74,7 @@ export default function ScanProgress({ scanStep = 1, previewUrl = null }) {
                   isDone
                     ? 'bg-emerald-600 text-white'
                     : isCurrent
-                    ? 'bg-emerald-500 text-white animate-pulse'
+                    ? 'bg-emerald-500 text-white font-bold'
                     : 'bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-slate-500'
                 }`}
               >

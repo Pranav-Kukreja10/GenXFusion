@@ -13,6 +13,7 @@ import ApiSettingsModal from './ApiSettingsModal';
 import HsnSearchModal from './HsnSearchModal';
 import ProfileModal from './ProfileModal';
 import Toast from './Toast';
+import VerificationQueue from './VerificationQueue';
 import { useBills } from '../context/BillsContext';
 import { useTheme } from '../context/ThemeContext';
 import { loadProfile, addRecentScan } from '../utils/profileStorage';
@@ -21,6 +22,7 @@ import {
   recalculateInvoiceApi,
   exportGstr1Api,
   testConnection,
+  getNextInvoiceNumberApi,
 } from '../services/api';
 import { Eye, X } from 'lucide-react';
 
@@ -350,6 +352,89 @@ export default function DashboardPage() {
   // Invoice Details Strip change
   const handleInvoiceChange = (newDetails) => {
     updateBill(newDetails);
+    triggerRecalculate(newDetails);
+  };
+
+  // Toggle Line Item Strike-Out (pen scratch / cancelled line)
+  const handleToggleStrikeOut = async (index) => {
+    if (!currentInvoice?.active_items) return;
+    const updated = [...currentInvoice.active_items];
+    const item = updated[index];
+    const isStruck = !Boolean(item.is_struck_out || item.struck_out);
+    updated[index] = {
+      ...item,
+      is_struck_out: isStruck,
+      struck_out: isStruck,
+    };
+    const nextInv = {
+      ...currentInvoice,
+      active_items: updated,
+    };
+    await triggerRecalculate(nextInv);
+    addToast(isStruck ? 'Line item struck out and excluded from tax.' : 'Line item restored.', 'info');
+  };
+
+  // 1-Click Verification Queue Doubt Resolvers
+  const handleAllocateLumpsum = async (doubt) => {
+    if (!currentInvoice) return;
+    const items = currentInvoice.active_items || [];
+    const unpriced = items.filter((it) => !it.unit_price || it.unit_price === 0);
+    const targetAmt = doubt?.target_amount || currentInvoice.summary?.written_grand_total || 0;
+    if (unpriced.length > 0 && targetAmt > 0) {
+      const share = targetAmt / unpriced.length;
+      const updated = items.map((it) => {
+        if (!it.unit_price || it.unit_price === 0) {
+          const q = it.quantity || 1;
+          return {
+            ...it,
+            unit_price: parseFloat((share / q).toFixed(2)),
+            written_line_total: parseFloat(share.toFixed(2)),
+          };
+        }
+        return it;
+      });
+      const nextInv = {
+        ...currentInvoice,
+        active_items: updated,
+        pending_doubts: (currentInvoice.pending_doubts || []).filter(
+          (d) => d.code !== 'UNALLOCATED_LUMPSUM_TOTAL'
+        ),
+      };
+      await triggerRecalculate(nextInv);
+      addToast(`Allocated ₹${targetAmt.toFixed(2)} evenly across unpriced lines.`, 'success');
+    }
+  };
+
+  const handleAssignNextInvoiceNumber = async () => {
+    if (!currentInvoice) return;
+    try {
+      const suppKey = currentInvoice.supplier_gstin || 'DEFAULT';
+      const { data } = await getNextInvoiceNumberApi(suppKey, currentInvoice.financial_year);
+      if (data?.next_invoice_number) {
+        const nextInv = {
+          ...currentInvoice,
+          invoice_id: data.next_invoice_number,
+          bill_number: data.next_invoice_number,
+          financial_year: data.financial_year || currentInvoice.financial_year,
+          pending_doubts: (currentInvoice.pending_doubts || []).filter(
+            (d) => d.code !== 'DUPLICATE_FY_INVOICE_NUMBER' && d.code !== 'MISSING_INVOICE_NUMBER'
+          ),
+        };
+        await triggerRecalculate(nextInv);
+        addToast(`Assigned next invoice #${data.next_invoice_number}`, 'success');
+      }
+    } catch (err) {
+      console.error('Failed to get next invoice number:', err);
+    }
+  };
+
+  const handleDismissDoubt = (code) => {
+    if (!currentInvoice) return;
+    const nextInv = {
+      ...currentInvoice,
+      pending_doubts: (currentInvoice.pending_doubts || []).filter((d) => d.code !== code),
+    };
+    updateBill(nextInv);
   };
 
   // Open HSN Search Modal
@@ -416,6 +501,15 @@ export default function DashboardPage() {
             onRestoreStruckItem={handleRestoreStruckItem}
           />
 
+          {/* 2.5 Structured Verification Queue for Pending Doubts */}
+          <VerificationQueue
+            doubts={currentInvoice?.pending_doubts || []}
+            onAllocateLumpsum={handleAllocateLumpsum}
+            onAcceptAuditedTotal={handleFixAllMathErrors}
+            onAssignNextInvoiceNumber={handleAssignNextInvoiceNumber}
+            onDismissDoubt={handleDismissDoubt}
+          />
+
           {/* 3. Invoice Details Strip */}
           <InvoiceDetailsStrip
             invoice={currentInvoice}
@@ -443,6 +537,7 @@ export default function DashboardPage() {
                 onOpenHsnSearch={handleOpenHsnSearch}
                 onAddItem={handleAddItem}
                 onDeleteItem={handleDeleteItem}
+                onToggleStrikeOut={handleToggleStrikeOut}
                 hoveredRowIndex={hoveredRowIndex}
                 setHoveredRowIndex={setHoveredRowIndex}
                 isRecalculating={isRecalculating}
