@@ -16,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Header({
   invoice,
-  onLoadPreset: _onLoadPreset,
+  onLoadPreset,
   onOpenSettings: _onOpenSettings,
   onOpenAuth,
   onQuickFillHeader,
@@ -73,7 +73,7 @@ export default function Header({
           <button
             type="button"
             onClick={handleScanClick}
-            className="h-8 px-3 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 hover:border-zinc-300 transition-all duration-200 active:scale-[0.98] cursor-pointer inline-flex items-center gap-1.5"
+            className="h-8 px-3 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 hover:border-zinc-300 transition-all duration-200 active:scale-[0.98] cursor-pointer inline-flex items-center gap-1.5 btn-tactile"
           >
             <ArrowLeft className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
             <span>Scan Bill</span>
@@ -166,7 +166,7 @@ export default function Header({
             <button
               type="button"
               onClick={onQuickFillHeader}
-              className="h-8 px-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 text-xs font-medium transition-all duration-200 cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+              className="h-8 px-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 text-xs font-medium transition-all duration-200 cursor-pointer shadow-xs inline-flex items-center gap-1.5 btn-tactile"
               title="Fill store name & GSTIN from active profile"
             >
               <FileCheck2 className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-300" />

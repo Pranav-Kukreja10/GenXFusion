@@ -1,0 +1,410 @@
+/**
+ * motion.css - Central Motion & Micro-interactions Specification for TrueTax AI (#25)
+ * 
+ * Shared durations, easings, keyframe animations, and reduced-motion fallbacks.
+ * Animate only transform, opacity, and filter.
+ */
+
+:root {
+  /* Shared Durations */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-entrance: 600ms;
+
+  /* Shared Easings */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ========================================================================= */
+/* 1. AMBIENT BACKGROUND DRIFT (Slow 20-30s loops, opacity < 0.15)            */
+/* ========================================================================= */
+
+@keyframes ambientDrift1 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.08);
+  }
+  66% {
+    transform: translate(-20px, 25px) scale(0.94);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes ambientDrift2 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-35px, 20px) scale(1.06);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes ambientDrift3 {
+  0% {
+    transform: translate(0px, 0px) scale(0.96);
+  }
+  50% {
+    transform: translate(25px, -30px) scale(1.05);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(0.96);
+  }
+}
+
+.animate-blob-drift-1 {
+  animation: ambientDrift1 26s var(--ease-smooth) infinite;
+  will-change: transform;
+}
+
+.animate-blob-drift-2 {
+  animation: ambientDrift2 22s var(--ease-smooth) infinite;
+  will-change: transform;
+}
+
+.animate-blob-drift-3 {
+  animation: ambientDrift3 28s var(--ease-smooth) infinite;
+  will-change: transform;
+}
+
+/* ========================================================================= */
+/* 2. LANDING ENTRANCES & MICRO-INTERACTIONS                                  */
+/* ========================================================================= */
+
+@keyframes wordFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-word-fade-up {
+  animation: wordFadeUp var(--duration-slow) var(--ease-spring) both;
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-float-gentle {
+  animation: floatGentle 3s ease-in-out infinite;
+}
+
+@keyframes dashedMarch {
+  0% {
+    background-position: 0 0, 0 100%, 0 0, 100% 0;
+  }
+  100% {
+    background-position: 40px 0, -40px 100%, 0 -40px, 100% 40px;
+  }
+}
+
+.animate-dashed-march {
+  background-image: repeating-linear-gradient(0deg, #059669, #059669 8px, transparent 8px, transparent 16px),
+                    repeating-linear-gradient(90deg, #059669, #059669 8px, transparent 8px, transparent 16px),
+                    repeating-linear-gradient(180deg, #059669, #059669 8px, transparent 8px, transparent 16px),
+                    repeating-linear-gradient(270deg, #059669, #059669 8px, transparent 8px, transparent 16px);
+  background-size: 2px 100%, 100% 2px, 2px 100%, 100% 2px;
+  background-position: 0 0, 0 0, 100% 0, 0 100%;
+  background-repeat: no-repeat;
+  animation: dashedMarch 12s linear infinite;
+}
+
+/* ========================================================================= */
+/* 3. DASHBOARD KEYFRAMES (Shimmer sweep, Total pulse, Row flash)            */
+/* ========================================================================= */
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-150%);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(150%);
+    opacity: 0;
+  }
+}
+
+.animate-shimmer-sweep {
+  animation: shimmerSweep 1.2s var(--ease-smooth) 1;
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-skeleton-shimmer {
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+/* Skeleton Loaders with Soft Gradient Shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(226, 232, 240, 0.6);
+  border-radius: 0.5rem;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.4) 20%,
+    rgba(255, 255, 255, 0.8) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.dark .skeleton {
+  background-color: rgba(30, 41, 59, 0.5);
+}
+
+.dark .skeleton::after {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0.12) 60%,
+    rgba(255, 255, 255, 0)
+  );
+}
+
+@keyframes emeraldTotalPulse {
+  0% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: rgba(5, 150, 105, 0.22);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-emerald-total-pulse {
+  animation: emeraldTotalPulse 600ms var(--ease-smooth) 1;
+}
+
+@keyframes rowFlashGreen {
+  0% {
+    background-color: transparent;
+  }
+  25% {
+    background-color: rgba(5, 150, 105, 0.28);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-row-flash-green {
+  animation: rowFlashGreen 700ms var(--ease-spring) 1;
+}
+
+@keyframes rowSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-row-slide-in {
+  animation: rowSlideIn var(--duration-normal) var(--ease-spring) both;
+}
+
+/* Self-drawing SVG checkmark */
+@keyframes checkmarkDraw {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-checkmark-draw {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: checkmarkDraw 400ms var(--ease-spring) forwards;
+}
+
+/* Animated outline stroke on receipt bounding box */
+@keyframes strokeMarch {
+  0% {
+    stroke-dashoffset: 40;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-stroke-march {
+  stroke-dasharray: 8 4;
+  animation: strokeMarch 1s linear infinite;
+}
+
+/* ========================================================================= */
+/* 4. NAVIGATION, ROUTE TRANSITION & TOASTS                                  */
+/* ========================================================================= */
+
+@keyframes routeRise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-route-rise {
+  animation: routeRise 200ms var(--ease-spring) both;
+}
+
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-slide-in {
+  animation: toastSlideIn 250ms var(--ease-spring) both;
+}
+
+@keyframes toastProgressBar {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+.animate-toast-progress {
+  animation: toastProgressBar linear forwards;
+}
+
+/* Button Press Tactile Scale */
+.btn-tactile {
+  transition: transform var(--duration-fast) var(--ease-spring), opacity var(--duration-fast) ease;
+}
+
+.btn-tactile:active {
+  transform: scale(0.96);
+}
+
+/* Receipt Scan Line for Empty States */
+@keyframes receiptScanLine {
+  0% {
+    top: 15%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 85%;
+    opacity: 1;
+  }
+  100% {
+    top: 15%;
+    opacity: 0.8;
+  }
+}
+
+.animate-receipt-scan {
+  animation: receiptScanLine 2.4s ease-in-out infinite;
+}
+
+/* ========================================================================= */
+/* 5. VISIBILITY & PREFERS-REDUCED-MOTION GUARDS                             */
+/* ========================================================================= */
+
+/* Pause ambient background animations when tab is hidden */
+html.tab-hidden .animate-blob-drift-1,
+html.tab-hidden .animate-blob-drift-2,
+html.tab-hidden .animate-blob-drift-3,
+html.tab-hidden .animate-float-gentle,
+html.tab-hidden .animate-dashed-march,
+html.tab-hidden .animate-receipt-scan,
+html.tab-hidden .skeleton::after,
+html.tab-hidden .animate-skeleton-shimmer {
+  animation-play-state: paused !important;
+}
+
+/* Strict prefers-reduced-motion fallback */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-blob-drift-1,
+  .animate-blob-drift-2,
+  .animate-blob-drift-3,
+  .animate-float-gentle,
+  .animate-dashed-march,
+  .animate-shimmer-sweep,
+  .animate-skeleton-shimmer,
+  .animate-receipt-scan,
+  .animate-stroke-march {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .animate-word-fade-up,
+  .animate-row-slide-in,
+  .animate-route-rise,
+  .animate-toast-slide-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .btn-tactile:active {
+    transform: none !important;
+    opacity: 0.9;
+  }
+}

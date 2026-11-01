@@ -20,6 +20,7 @@ import { computeRowGST, roundToPaise } from '../utils/gstCalculations';
  * - Crisp monochrome monospace chips for HSN and Tax Slabs.
  * - Row strike-out / restore toggle for handwritten crossed-out items.
  * - Single-click "Apply" button for rate arithmetic discrepancies.
+ * - Smooth row collapse on delete (220ms) and green flash on fix.
  */
 export default function LineItemRow({
   item,
@@ -33,8 +34,11 @@ export default function LineItemRow({
   onHover,
   onLeaveHover,
   isInterState = false,
+  style = {},
 }) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [justFixed, setJustFixed] = useState(false);
 
   const isStruck = Boolean(item.is_struck_out || item.struck_out);
 
@@ -74,12 +78,32 @@ export default function LineItemRow({
   // Alternatives list
   const alternatives = item.top_3_alternatives || item.hsn_alternatives || [];
 
+  // Smooth delete collapse handler
+  const handleDelete = () => {
+    setIsDeleting(true);
+    setTimeout(() => {
+      onDelete(index);
+    }, 220);
+  };
+
+  // Fix handler with green flash animation
+  const handleFix = () => {
+    setJustFixed(true);
+    onFixError(index);
+    setTimeout(() => setJustFixed(false), 700);
+  };
+
   return (
     <tr
+      style={style}
       onMouseEnter={() => onHover && onHover(index)}
       onMouseLeave={() => onLeaveHover && onLeaveHover()}
-      className={`group transition-all duration-150 border-b border-zinc-100 dark:border-zinc-800 ${
-        isStruck
+      className={`group transition-all duration-200 border-b border-zinc-100 dark:border-zinc-800 ${
+        isDeleting
+          ? 'opacity-0 scale-y-0 max-h-0 pointer-events-none'
+          : justFixed
+          ? 'animate-row-flash-green border-l-4 border-l-emerald-500'
+          : isStruck
           ? 'bg-zinc-100/50 dark:bg-zinc-900/40 opacity-60'
           : isMismatch
           ? 'border-l-2 border-l-red-500 bg-red-50/20 dark:bg-red-950/10'
@@ -95,47 +119,48 @@ export default function LineItemRow({
         </span>
       </td>
 
-      {/* 2. Vernacular OCR Text & Normalized Product Name */}
-      <td className="py-2.5 px-2 align-top space-y-1">
-        {/* Vernacular OCR chip with ScanText icon */}
-        {(item.raw_text || item.raw_text_on_paper) && (
-          <div className="flex items-center gap-1">
-            <span
-              className={`inline-flex items-center gap-1 text-[11px] font-mono px-1.5 py-0.5 rounded border max-w-full truncate ${
-                isStruck
-                  ? 'line-through text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-700'
-                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
-              }`}
-            >
-              <ScanText className="h-3 w-3 text-zinc-400 shrink-0" />
-              <span className="truncate">&quot;{item.raw_text || item.raw_text_on_paper}&quot;</span>
-            </span>
-          </div>
-        )}
+      {/* 2. Item Name & Raw Text Badge */}
+      <td className="py-2.5 px-2 align-top min-w-[220px]">
+        <div className="space-y-1.5">
+          {/* Raw Text Pill */}
+          {(item.raw_text || item.raw_text_on_paper) && (
+            <div className="inline-flex items-center gap-1.5 max-w-full">
+              <span
+                className={`inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded border ${
+                  isStruck
+                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border-zinc-200 dark:border-zinc-700 line-through'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
+                }`}
+              >
+                <ScanText className="h-3 w-3 text-zinc-400 shrink-0" />
+                <span className="truncate">&quot;{item.raw_text || item.raw_text_on_paper}&quot;</span>
+              </span>
+            </div>
+          )}
 
-        {/* Normalized Editable Product Name */}
+        {/* Normalized Goods Input */}
         <div>
           <input
             type="text"
-            value={item.product_name_normalized ?? item.product_name ?? ''}
-            onChange={(e) => onItemChange(index, 'product_name_normalized', e.target.value)}
-            placeholder="Product / Item Description"
+            value={item.product_name_normalized || ''}
             disabled={isStruck}
+            onChange={(e) => onItemChange(index, 'product_name_normalized', e.target.value)}
             className={`w-full h-8 px-2.5 text-xs font-medium rounded-lg border transition-all outline-none ${
               isStruck
                 ? 'line-through text-zinc-400 bg-transparent border-transparent cursor-not-allowed'
-                : 'text-zinc-900 dark:text-zinc-100 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5'
+                : 'text-zinc-900 dark:text-zinc-100 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 focus:bg-white dark:focus:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-1 focus:ring-zinc-900/10'
             }`}
-            aria-label="Product Name"
+            placeholder="Commodity / Item description"
+            aria-label="Normalized Product Description"
           />
         </div>
-
         {/* Category Description or Statutory Note */}
         {(item.category_description || item.hsn_description || item.item_sector) && (
           <div className="text-[11px] text-zinc-400 dark:text-zinc-500 px-0.5 truncate max-w-full">
             {item.category_description || item.hsn_description || item.item_sector}
           </div>
         )}
+        </div>
       </td>
 
       {/* 3. Quantity & Standard UQC */}
@@ -144,7 +169,7 @@ export default function LineItemRow({
           <input
             type="number"
             step="any"
-            min="0.01"
+            min="0"
             value={item.quantity ?? 1}
             disabled={isStruck}
             onChange={(e) => onItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
@@ -154,15 +179,15 @@ export default function LineItemRow({
 
           <div className="w-18">
             <CustomDropdown
-              value={item.standard_uqc || item.unit_uqc || 'PCS'}
+              value={item.unit_uqc || item.standard_uqc || 'PCS'}
               options={UQC_OPTIONS}
               disabled={isStruck}
               buttonClassName="h-8 px-1.5 text-xs"
               onChange={(val) => {
-                onItemChange(index, 'standard_uqc', val);
                 onItemChange(index, 'unit_uqc', val);
+                onItemChange(index, 'standard_uqc', val);
               }}
-              ariaLabel="Select Unit of Quantity (UQC)"
+              ariaLabel="Select Statutory UQC Unit"
             />
           </div>
         </div>
@@ -201,8 +226,8 @@ export default function LineItemRow({
             </div>
             <button
               type="button"
-              onClick={() => onFixError(index)}
-              className="bg-zinc-900 hover:bg-zinc-800 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 rounded px-1.5 py-0.5 text-[10px] font-medium transition-all cursor-pointer shadow-xs active:scale-[0.98] shrink-0"
+              onClick={handleFix}
+              className="bg-zinc-900 hover:bg-zinc-800 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 rounded px-1.5 py-0.5 text-[10px] font-medium transition-all cursor-pointer shadow-xs active:scale-[0.98] shrink-0 btn-tactile"
               title={`Apply audited rate ₹${auditedTaxable.toFixed(2)}`}
             >
               Fix
@@ -226,7 +251,7 @@ export default function LineItemRow({
             type="button"
             disabled={isStruck}
             onClick={() => onOpenHsnSearch(index)}
-            className="h-8 px-2 inline-flex items-center gap-1 font-mono text-[11px] bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-lg hover:border-zinc-400 dark:hover:border-zinc-500 transition-all cursor-pointer disabled:opacity-50 shrink-0"
+            className="h-8 px-2 inline-flex items-center gap-1 font-mono text-[11px] bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-lg hover:border-zinc-400 dark:hover:border-zinc-500 transition-all cursor-pointer disabled:opacity-50 shrink-0 btn-tactile"
             title="Search HSN Master Directory"
             aria-label={`HSN ${item.hsn_code || '1101'}`}
           >
@@ -306,7 +331,7 @@ export default function LineItemRow({
           <button
             type="button"
             onClick={() => onToggleStrikeOut && onToggleStrikeOut(index)}
-            className={`p-1 rounded-md transition-colors cursor-pointer ${
+            className={`btn-tactile p-1 rounded-md transition-colors cursor-pointer ${
               isStruck
                 ? 'text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -320,8 +345,8 @@ export default function LineItemRow({
           {/* Delete Row Button */}
           <button
             type="button"
-            onClick={() => onDelete(index)}
-            className="text-zinc-400 hover:text-red-600 dark:hover:text-red-400 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
+            onClick={handleDelete}
+            className="btn-tactile text-zinc-400 hover:text-red-600 dark:hover:text-red-400 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
             title="Delete line item"
             aria-label={`Delete ${item.product_name_normalized || 'item'}`}
           >

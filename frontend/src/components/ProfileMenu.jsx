@@ -86,7 +86,7 @@ export default function ProfileMenu({
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-label="User profile menu"
-        className="h-8 w-8 rounded-lg flex items-center justify-center transition-all active:scale-[0.98] cursor-pointer bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold text-xs shadow-xs"
+          className="h-8 w-8 rounded-lg flex items-center justify-center transition-all active:scale-[0.98] cursor-pointer bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold text-xs shadow-xs btn-tactile"
         title={isAuthenticated ? `${displayName} (${displayBusiness})` : 'Account (Sign In)'}
       >
         {isAuthenticated && initials ? (

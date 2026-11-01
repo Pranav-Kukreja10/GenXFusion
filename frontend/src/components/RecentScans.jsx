@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Clock,
   ArrowRight,
-  Receipt,
   CheckCircle2,
   AlertTriangle,
 } from 'lucide-react';
 import { loadRecentScans } from '../utils/profileStorage';
+import ReceiptEmptyState from './ReceiptEmptyState';
 
 export default function RecentScans({ onSelectScan, onViewAll }) {
   const [scans, setScans] = useState(loadRecentScans());
@@ -59,15 +59,11 @@ export default function RecentScans({ onSelectScan, onViewAll }) {
 
       {/* Scans List */}
       {scans.length === 0 ? (
-        <div className="py-8 text-center space-y-2">
-          <Receipt className="h-8 w-8 text-zinc-300 dark:text-zinc-600 mx-auto stroke-1" />
-          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            No previous scans logged yet.
-          </p>
-          <p className="text-[11px] text-zinc-400">
-            Upload or capture a paper bill above to start auditing.
-          </p>
-        </div>
+          <ReceiptEmptyState
+            title="No recent scans yet"
+            subtitle="Upload or capture a paper bill above to start auditing."
+            className="py-6"
+          />
       ) : (
         <div className="space-y-2">
           {scans.slice(0, 5).map((scan) => {

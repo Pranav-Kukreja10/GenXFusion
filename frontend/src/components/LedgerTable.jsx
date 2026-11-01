@@ -2,9 +2,10 @@ import React from 'react';
 import {
   Plus,
   ListOrdered,
-  FileQuestion,
-} from 'lucide-react';
-import LineItemRow from './LineItemRow';
+    FileQuestion,
+  } from 'lucide-react';
+  import LineItemRow from './LineItemRow';
+  import ReceiptEmptyState from './ReceiptEmptyState';
 
 export default function LedgerTable({
   invoice,
@@ -53,8 +54,8 @@ export default function LedgerTable({
         <button
           type="button"
           onClick={onAddItem}
-          className="h-8 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 text-xs font-medium transition-all shadow-xs active:scale-[0.98] cursor-pointer inline-flex items-center gap-1.5"
-          aria-label="Add new line item to bill"
+            className="btn-tactile h-8 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 text-xs font-medium transition-all shadow-xs active:scale-[0.98] cursor-pointer inline-flex items-center gap-1.5"
+            aria-label="Add new line item to bill"
         >
           <Plus className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-600" />
           <span>Add Item</span>
@@ -62,29 +63,24 @@ export default function LedgerTable({
       </div>
 
       {/* =================================================================== */}
-      {/* 2. Empty State View                                                 */}
+      {/* 2. Empty State View with Animated Scanning Receipt Illustration     */}
       {/* =================================================================== */}
       {activeItems.length === 0 ? (
-        <div className="py-14 px-4 text-center space-y-3">
-          <div className="h-10 w-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center mx-auto border border-zinc-200 dark:border-zinc-700">
-            <FileQuestion className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="font-medium text-sm text-zinc-800 dark:text-zinc-200">
-              No items in bill
-            </p>
-            <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
-              Scan a receipt photo or click below to add line items by hand.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onAddItem}
-            className="inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 px-3.5 py-2 rounded-lg text-xs font-medium shadow-xs transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Add First Item</span>
-          </button>
+        <div className="py-8 px-4">
+          <ReceiptEmptyState
+            title="No items found"
+            subtitle="Scan a physical receipt photo or click below to add line items by hand."
+            action={
+              <button
+                type="button"
+                onClick={onAddItem}
+                className="btn-tactile inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 px-3.5 py-2 rounded-lg text-xs font-medium shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add First Item</span>
+              </button>
+            }
+          />
         </div>
       ) : (
         /* =================================================================== */

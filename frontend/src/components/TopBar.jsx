@@ -60,7 +60,7 @@ export default function TopBar({
             type="button"
             onClick={onToggleDarkMode}
             aria-label="Toggle dark mode"
-            className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-750 flex items-center justify-center transition-all duration-200 active:scale-[0.98] shadow-xs cursor-pointer"
+              className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-750 flex items-center justify-center transition-all duration-200 active:scale-[0.98] shadow-xs cursor-pointer btn-tactile"
           >
             {darkMode ? (
               <Sun className="h-3.5 w-3.5 text-zinc-200" />

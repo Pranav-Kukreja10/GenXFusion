@@ -8,56 +8,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { computeLiveTotals } from '../utils/gstCalculations';
-
-/**
- * Animated count-up component for tabular mono numeric values.
- */
-function CountUpNumber({ value, prefix = '₹', decimals = 2 }) {
-  const [displayVal, setDisplayVal] = useState(() => Number(value) || 0);
-  const prevValRef = useRef(Number(value) || 0);
-
-  useEffect(() => {
-    const startVal = prevValRef.current;
-    const endVal = Number(value) || 0;
-
-    if (Math.abs(startVal - endVal) < 0.001) {
-      return;
-    }
-
-    const duration = 400; // ms
-    const startTime = performance.now();
-    let animId;
-
-    const tick = (now) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // easeOutCubic
-      const ease = 1 - Math.pow(1 - progress, 3);
-      const current = startVal + (endVal - startVal) * ease;
-      setDisplayVal(current);
-
-      if (progress < 1) {
-        animId = requestAnimationFrame(tick);
-      } else {
-        setDisplayVal(endVal);
-        prevValRef.current = endVal;
-      }
-    };
-
-    animId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animId);
-  }, [value]);
-
-  return (
-    <span className="font-mono tabular-nums">
-      {prefix}
-      {displayVal.toLocaleString('en-IN', {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      })}
-    </span>
-  );
-}
+import CountUpNumber from './CountUpNumber';
 
 export default function SummaryCards({ invoice }) {
   const activeItems = invoice?.active_items || [];
@@ -66,6 +17,54 @@ export default function SummaryCards({ invoice }) {
   const sellerState = invoice?.seller_state_code || '07';
 
   const totals = computeLiveTotals(activeItems, struckOutItems, buyerState, sellerState);
+
+  // Detect total changes for brief 600ms emerald pulse highlight
+  const [pulseHero, setPulseHero] = useState(false);
+  const [pulseTaxable, setPulseTaxable] = useState(false);
+  const [pulseGst, setPulseGst] = useState(false);
+
+  const prevTotalsRef = useRef({
+    final: totals.finalInvoiceTotal,
+    taxable: totals.taxableValue,
+    gst: totals.gstCollected,
+  });
+
+  useEffect(() => {
+    const prev = prevTotalsRef.current;
+    if (Math.abs(prev.final - totals.finalInvoiceTotal) > 0.01) {
+      setPulseHero(true);
+      const timer = setTimeout(() => setPulseHero(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [totals.finalInvoiceTotal]);
+
+  useEffect(() => {
+    const prev = prevTotalsRef.current;
+    if (Math.abs(prev.taxable - totals.taxableValue) > 0.01) {
+      setPulseTaxable(true);
+      const timer = setTimeout(() => setPulseTaxable(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [totals.taxableValue]);
+
+  useEffect(() => {
+    const prev = prevTotalsRef.current;
+    if (Math.abs(prev.gst - totals.gstCollected) > 0.01) {
+      setPulseGst(true);
+      const timer = setTimeout(() => setPulseGst(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [totals.gstCollected]);
+
+  useEffect(() => {
+    prevTotalsRef.current = {
+      final: totals.finalInvoiceTotal,
+      taxable: totals.taxableValue,
+      gst: totals.gstCollected,
+    };
+  }, [totals.finalInvoiceTotal, totals.taxableValue, totals.gstCollected]);
+
+  const billKey = invoice?.invoice_id || 'bill-initial';
 
   return (
     <div
@@ -90,9 +89,13 @@ export default function SummaryCards({ invoice }) {
           </span>
         </div>
 
-        <div className="my-3">
-          <div className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
-            <CountUpNumber value={totals.handwrittenTotal} />
+          <div className="my-3">
+            <div className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
+              <CountUpNumber
+                key={`count-hw-${billKey}`}
+                value={totals.handwrittenTotal}
+                startFromZeroOnMount={true}
+              />
           </div>
         </div>
 
@@ -106,7 +109,7 @@ export default function SummaryCards({ invoice }) {
       {/* 2. Taxable Value                                                    */}
       {/* =================================================================== */}
       <div
-        className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700"
+          className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700"
         tabIndex={0}
         aria-label={`Taxable Value: ₹${totals.taxableValue.toFixed(2)}`}
       >
@@ -127,9 +130,13 @@ export default function SummaryCards({ invoice }) {
           )}
         </div>
 
-        <div className="my-3">
-          <div className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
-            <CountUpNumber value={totals.taxableValue} />
+          <div className="my-3">
+            <div className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
+              <CountUpNumber
+                key={`count-taxable-${billKey}`}
+                value={totals.taxableValue}
+                startFromZeroOnMount={true}
+              />
           </div>
         </div>
 
@@ -143,7 +150,7 @@ export default function SummaryCards({ invoice }) {
       {/* 3. GST Collected (CGST + SGST)                                      */}
       {/* =================================================================== */}
       <div
-        className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700"
+          className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700"
         tabIndex={0}
         aria-label={`GST Collected: ₹${totals.gstCollected.toFixed(2)}`}
       >
@@ -156,9 +163,13 @@ export default function SummaryCards({ invoice }) {
           </span>
         </div>
 
-        <div className="my-3">
-          <div className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
-            <CountUpNumber value={totals.gstCollected} />
+          <div className="my-3">
+            <div className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
+              <CountUpNumber
+                key={`count-gst-${billKey}`}
+                value={totals.gstCollected}
+                startFromZeroOnMount={true}
+              />
           </div>
         </div>
 
