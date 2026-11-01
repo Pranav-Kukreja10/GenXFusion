@@ -42,7 +42,7 @@ export default function HsnSearchModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+    <div className="fixed inset-0 z-[100] bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl max-w-xl w-full max-h-[85vh] flex flex-col border border-zinc-200 dark:border-zinc-800 overflow-hidden transition-colors">
         
         {/* Header */}

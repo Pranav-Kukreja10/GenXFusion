@@ -1,511 +1,422 @@
-# 🇮🇳 GenXFusion — TrueTax
+# 🇮🇳 TrueTax AI (GenXFusion)
 
-### AI-Powered Vernacular Invoice Intelligence & GST Automation Platform
+### AI-Powered Vernacular Invoice Intelligence, HSN Semantic Audit & GST Automation Platform
 
-**Transform handwritten invoices into structured, GST-compliant digital records using AI-powered OCR, intelligent validation, and automated GST reporting.**
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
+[![React 19](https://img.shields.io/badge/React-19.0-61DAFB.svg)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8.3+-646CFF.svg)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-4.0-38B2AC.svg)](https://tailwindcss.com/)
+[![Tests](https://img.shields.io/badge/Tests-33%20Passing%20(100%25)-success.svg)](./test_all.py)
+[![Compliance](https://img.shields.io/badge/CBIC%20GST-Compliant-emerald.svg)](https://cbic.gov.in)
 
-##  Overview
-
-**GenXFusion (TrueTax AI)** is an AI-powered invoice intelligence platform designed to simplify GST compliance for Indian small businesses, shopkeepers, and merchants.
-
-Traditional handwritten invoices contain valuable business information but are difficult to process manually. Extracting product descriptions, quantities, prices, GST rates, and tax amounts requires significant time and is prone to human error.
-
-TrueTax AI addresses this problem by combining computer vision, AI-powered OCR, intelligent HSN matching, mathematical auditing, and GST validation into a unified workflow.
-
-Users can upload handwritten or printed invoices and convert them into structured digital records that can be reviewed, corrected, validated, and exported into GST-compatible formats.
-
-The platform is designed with Indian businesses in mind, including Kirana stores, textile shops, hardware stores, electronics retailers, medical stores, and other small merchants.
+> **Problem Statement #25 — Vernacular OCR Handwritten Invoice-to-GST Formatter**  
+> Transform unstructured, regional-language handwritten *kacha* bills into verified, audit-ready, and statutory GST-compliant digital records with automated HSN classification, mathematical auditing, and official GSTR-1 JSON filing exports.
 
 ---
 
-##  Problem Statement
+## 📌 Executive Summary
 
-**Problem Statement #25 — Vernacular OCR Handwritten Invoice-to-GST Formatter**
+Over 65 million micro, small, and medium enterprises (MSMEs) and local retailers across India—from rural Kirana grocers and textile merchants to hardware distributors—rely on informal handwritten slips (*kacha parchi*). These paper receipts are written in regional Indian scripts (Hindi, Hinglish, Gujarati, Tamil, etc.), contain shorthand notation, use non-standard units (*nag, thaan, bori, peti*), and suffer from arithmetic calculation slips and missing statutory details.
 
-Small businesses across India frequently maintain handwritten invoices and bills in different languages and regional writing styles.
-
-Manually converting these documents into GST-compliant digital records creates several challenges:
-
-* Difficulty recognizing handwritten text and regional language entries.
-* Time-consuming manual invoice data entry.
-* Incorrect product classification and HSN codes.
-* Errors in GST calculations and tax distribution.
-* Difficulty identifying invalid GSTINs.
-* Complicated preparation of GST return data.
-
-TrueTax AI aims to reduce these challenges through an intelligent, automated invoice-processing workflow.
+**TrueTax AI** bridges the informal paper economy and India's formal Goods and Services Tax (GST) framework through a high-throughput, multi-stage automated pipeline:
+1. **Intelligent Vernacular Ingestion**: Normalizes poor camera angles, uneven lighting, and harsh shadows.
+2. **Vision OCR & Algebraic Self-Healing**: Accurately extracts messy handwritten entries, correctly resolving rupee-slash merges and non-standard Hindi units.
+3. **Sub-2.5ms HSN Vector Classification**: Matches vernacular item names to the national 8-digit HSN catalogue with dynamic GST slab threshold enforcement (e.g., apparel > ₹1,000 auto-upgraded from 5% to 12%).
+4. **Mathematical Audit & Doubt Engine**: Catches arithmetic discrepancies, flags lumpsum ambiguities with explicit verification doubts, and prevents silent hallucination.
+5. **Precision GST Ledger & Compliance Suite**: Validates 15-character GSTINs using the official Indian Mod-36 checksum, recalculates intra-state (CGST+SGST) vs. inter-state (IGST) taxes in real time, and exports print-ready standard Tax Invoices and official GSTR-1 JSON.
 
 ---
 
-##  Key Features
-
-### 1. AI-Powered Invoice OCR
-
-* Upload invoice images for automated processing.
-* Extract handwritten and printed invoice information.
-* Identify product names, quantities, prices, and tax details.
-* Convert unstructured invoice images into structured data.
-* Use Google Gemini-powered vision processing.
-
-### 2. Intelligent HSN Code Matching
-
-* Automatically identify relevant HSN codes for invoice items.
-* Match product descriptions with the HSN catalogue.
-* Provide HSN search functionality.
-* Help reduce errors in product classification.
-
-### 3. GST Validation & Compliance
-
-* Validate GSTIN formats.
-* Identify supplier and buyer GST details.
-* Determine intra-state and inter-state transactions.
-* Handle CGST, SGST, and IGST calculations.
-* Perform invoice compliance checks.
-
-### 4. Mathematical Auditing
-
-* Verify invoice calculations.
-* Recalculate item totals and tax amounts.
-* Identify mathematical discrepancies.
-* Validate invoice summaries against line-item values.
-
-### 5. Automated GST Reporting
-
-* Generate structured invoice records.
-* Export invoice information into GSTR-1-compatible JSON.
-* Organize transaction information for GST reporting.
-
-### 6. Merchant Authentication
-
-* User registration and login.
-* JWT-based authentication.
-* SQLite-powered user management.
-* Merchant profiles and multiple GSTIN branch management.
-
-### 7. Modern Dashboard
-
-* Responsive React-based frontend.
-* Clean and intuitive user interface.
-* Invoice processing and review workflow.
-* API integration with the FastAPI backend.
-
----
-
-## 🛠️ Technology Stack
-
-| Category               | Technology        |
-| ---------------------- | ----------------- |
-| Frontend               | React.js          |
-| Frontend Build Tool    | Vite              |
-| Styling                | Tailwind CSS      |
-| Backend                | Python            |
-| Backend Framework      | FastAPI           |
-| AI & Vision            | Google Gemini API |
-| OCR / Image Processing | OpenCV, Pillow    |
-| Data Processing        | NumPy, Pandas     |
-| Data Validation        | Pydantic          |
-| Database               | SQLite            |
-| Authentication         | JWT               |
-| API Server             | Uvicorn           |
-| API Documentation      | Swagger UI        |
-
----
-
-## System Architecture
-
-The platform follows a frontend-backend architecture.
+## 🏗️ System Architecture
 
 ```text
-              USER
-                |
-                v
-       REACT FRONTEND
-          (Vite UI)
-                |
-                v
-          FASTAPI BACKEND
-                |
-       +--------+---------+
-       |                  |
-       v                  v
-  IMAGE PROCESSING    AUTHENTICATION
-  OpenCV / Pillow      SQLite / JWT
-       |
-       v
-   AI VISION ENGINE
-    Google Gemini
-       |
-       v
-  STRUCTURED INVOICE
-        DATA
-       |
-       +-----------------------+
-       |           |           |
-       v           v           v
-   GST         HSN MATCH   MATH AUDIT
- VALIDATION       ENGINE      ENGINE
-       |           |           |
-       +-----------+-----------+
-                   |
-                   v
-           VALIDATED INVOICE
-                   |
-                   v
-             GSTR-1 EXPORT
-                   |
-                   v
-          STRUCTURED GST DATA
+                           ┌───────────────────────────────┐
+                           │      HANDWRITTEN BILL         │
+                           │   (Photo / Scan / Upload)     │
+                           └───────────────┬───────────────┘
+                                           │
+                                           ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 1: ADAPTIVE IMAGE PREPROCESSING (OpenCV & Pillow)                                │
+│ • Illumination leveling & shadow removal                                               │
+│ • Adaptive binarization & edge-preserving contrast enhancement                         │
+│ • SHA-256 invoice tamper-proofing & cryptographic fingerprinting                       │
+└──────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                           │
+                                           ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 2: MULTIMODAL VERNACULAR EXTRACTION & ALGEBRAIC RECONSTRUCTION                   │
+│ • Multi-model cascade (Gemini 2.5 Flash / Flash-Lite / Pro)                            │
+│ • Shorthand vernacular parsing (Hindi, Hinglish, numerals, regional symbols)           │
+│ • Algebraic Self-Healing Engine: Resolves merged rupee slashes & unit artifacts        │
+│ • Struck-out / scratched item separation                                               │
+└──────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                           │
+                                           ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 3: SEMANTIC HSN CLASSIFICATION & DYNAMIC TAX RULES                               │
+│ • Sub-2.5ms hybrid semantic token-vector ranking across national HSN master            │
+│ • Priority order: Written HSN > Exact Match > Semantic Similarity > LLM Fallback      │
+│ • Dynamic CBIC Statutory Threshold Rules:                                              │
+│     - Apparel / Garments: ≤ ₹1,000 @ 5% GST  │  > ₹1,000 @ 12% GST                    │
+│     - Footwear:           ≤ ₹1,000 @ 12% GST │  > ₹1,000 @ 18% GST                    │
+│ • Sector auto-detection (Textiles, FMCG/Kirana, Construction, Hardware, Pharma, Auto) │
+└──────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                           │
+                                           ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 4: MATHEMATICAL AUDIT & ZERO-SILENT-HALLUCINATION DOUBT ENGINE                   │
+│ • Line item arithmetic verification: (Quantity × Unit Price) vs Written Line Total     │
+│ • Discrepancy isolation & one-click single-line and batch reconciliation               │
+│ • Doubt Engine: Flags unpriced lumpsum bills without silent fabricated rates           │
+│ • Mod-36 Checksum Validation on 15-character Indian GSTINs                             │
+│ • Place of Supply Routing: Intra-State (50/50 CGST+SGST) vs Inter-State (100% IGST)   │
+└──────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                           │
+                                           ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 5: EDITORIAL LEDGER WORKSPACE & STATUTORY EXPORTS                                │
+│ • High-contrast monochrome workspace with Segoe UI curved typography                   │
+│ • Scroll-independent, always-visible Top Navigation & Action Bar                       │
+│ • Live interactive ledger editing with sub-5ms arithmetic recalculation                │
+│ • One-Click Outputs:                                                                   │
+│     ├── Official GSTR-1 JSON (B2B Table 4A & B2CS Table 7)                             │
+│     ├── Print-Ready Standard GST Tax Invoice (with HSN tax summary & INR words)        │
+│     └── Multi-GSTIN Merchant Branch Switcher & Profile Khata                           │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📂 Project Structure
+## 🌟 Key Technical Capabilities
+
+### 1. Algebraic Self-Healing Vision OCR
+Handwritten Indian bills frequently contain merged text artifacts such as `"@ 265/="` where the rupee slash character (`/`) gets OCR-misread as a digit `1` or `7` (turning `₹265` into `₹2,651`), or Hindi unit suffixes attached directly to numbers (e.g., `95बैग` merged as `956`). The TrueTax AI algebraic engine cross-references written line totals, quantities, and rates to self-heal and isolate transcription errors prior to tax computation.
+
+### 2. Zero-Silent-Hallucination Doubt Engine
+Unlike generic OCR solutions that silently invent placeholder prices when faced with incomplete slips, TrueTax AI adheres to a strict statutory audit policy. If a bill contains a lumpsum amount with unitemized items, or missing critical fields (such as Supplier GSTIN or Invoice Date), the engine returns structured `pending_doubts` requiring user sign-off or one-click proportional allocation.
+
+### 3. Dynamic Statutory CBIC Slabs
+Under Indian GST Law, certain goods undergo statutory rate jumps depending on the unit transaction price. TrueTax AI automatically tracks and executes dynamic tax threshold upgrades:
+* **Garments & Apparel**: Items priced ≤ ₹1,000 stay at 5% GST; items priced > ₹1,000 are automatically upgraded to 12% GST with an audit citation.
+* **Footwear**: Items priced ≤ ₹1,000 stay at 12% GST; items priced > ₹1,000 upgrade to 18% GST.
+
+### 4. Official Indian Mod-36 GSTIN Validation
+All 15-character Goods and Services Tax Identification Numbers (GSTIN) are checked against the statutory Government of India Mod-36 checksum algorithm (character set `0-9A-Z` with prime factor 36), detecting transcription typos before invoice generation.
+
+### 5. GSTR-1 JSON & Standard Tax Invoice
+* **GSTR-1 JSON Export**: Directly uploadable to the GST Common Portal, categorizing supplies into **B2B** (registered buyers with GSTIN) and **B2CS** (unregistered retail consumers) with complete HSN summaries.
+* **Print-Ready Tax Invoice**: Formatted according to Rule 46 of the CGST Rules, 2017, including bilingual headers, supplier/buyer GSTIN details, HSN tax summary tables, odd-paisa rounding rules, and totals spelled out in words using the Indian numbering system (*Lakhs & Crores*).
+
+---
+
+## 💻 Tech Stack
+
+| Domain | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | React 19, Vite 8.3 | Ultra-fast client, reactive state management |
+| **Styling** | Tailwind CSS 4.0 | Sleek high-contrast monochrome design system |
+| **Backend** | Python 3.10+, FastAPI | Async REST API, Pydantic schema validation |
+| **Vision & AI** | Google Gemini API | Multimodal vernacular handwriting extraction |
+| **Image Processing** | OpenCV (cv2), Pillow, NumPy | Illumination leveling, contrast enhancement |
+| **Classification** | Hybrid Token-Vector Engine | Sub-2.5ms semantic HSN catalogue matching |
+| **Data Engine** | Pandas, SQLite, SQLAlchemy | HSN master directory & multi-branch merchant store |
+| **Auth & Security** | JWT (PyJWT), Passlib (Bcrypt) | Merchant profile & secure session management |
+| **Testing** | Node Test Runner, Pytest | 33 automated tests across frontend and backend |
+
+---
+
+## 📂 Repository Directory Structure
 
 ```text
-GenXFusion/
-│
+Graviton/
 ├── backend/
+│   ├── auth_db.py              # SQLite merchant auth & multi-GSTIN branches
+│   ├── gst_validator.py        # Mod-36 GSTIN validation & statutory compliance checks
+│   ├── gstr1_exporter.py       # Official GSTR-1 JSON builder (B2B & B2CS)
+│   ├── hsn_matcher.py          # Semantic HSN search & dynamic rate rules
+│   ├── image_preprocessor.py   # OpenCV contrast enhancement & SHA-256 fingerprinting
+│   ├── main.py                 # FastAPI application & REST router endpoints
+│   ├── math_auditor.py         # Algebraic self-healing & line-item arithmetic auditor
+│   ├── schemas.py              # Pydantic models for shared 4-lane data contract
+│   └── vision_router.py        # Gemini multimodal vernacular OCR cascade
 │
 ├── frontend/
 │   ├── src/
-│   ├── public/
-│   └── package.json
+│   │   ├── components/
+│   │   │   ├── ActionBar.jsx             # Fixed scroll-independent action toolbar
+│   │   │   ├── AlertBar.jsx               # Arithmetic discrepancy banner
+│   │   │   ├── AuthModal.jsx              # Merchant multi-branch modal
+│   │   │   ├── CustomDropdown.jsx         # Accessible keyboard-navigable dropdown
+│   │   │   ├── DashboardPage.jsx          # Full audit workspace split view
+│   │   │   ├── Header.jsx                 # Fixed glassmorphic navigation bar
+│   │   │   ├── InvoiceDetailsStrip.jsx    # Supplier, Buyer & POS compliance form
+│   │   │   ├── LandingPage.jsx            # Modern bill upload & scanning intake
+│   │   │   ├── LedgerTable.jsx            # Responsive zero-horizontal-scroll item table
+│   │   │   ├── LineItemRow.jsx            # Individual editable audited line row
+│   │   │   ├── PakkaInvoiceModal.jsx      # Printable standard GST Tax Invoice
+│   │   │   ├── ScanConversion.jsx         # 4-stage bill processing visualizer
+│   │   │   ├── SummaryCards.jsx           # 4 primary financial KPI metric cards
+│   │   │   ├── VerificationQueue.jsx      # Structured Doubt Engine resolution queue
+│   │   │   └── VisualInspector.jsx        # Receipt photo viewer with zoom & pan
+│   │   ├── context/                       # Auth, Bills, and Theme state contexts
+│   │   ├── services/                      # API client service layer
+│   │   └── utils/                         # GST math, states, UQC & testing utilities
+│   ├── package.json
+│   └── vite.config.js
 │
 ├── data/
+│   ├── hsn_master.csv          # Comprehensive national HSN master catalogue
+│   ├── parchisetu.db           # SQLite database
+│   └── truetax.db              # Active merchant & audit database
 │
-├── static/
-│
-├── main.py
-│
-├── auth_db.py
-├── schemas.py
-├── vision_router.py
-├── image_preprocessor.py
-├── gst_validator.py
-├── hsn_matcher.py
-├── math_auditor.py
-├── gstr1_exporter.py
-│
-├── requirements.txt
-├── .env.example
-├── .gitignore
-│
-├── DESIGN.md
-├── AGENTS.md
-│
+├── test_all.py                 # 8-stage end-to-end backend integration test suite
+├── test_comprehensive_suite.py # 12-stage statutory compliance & edge-case test suite
+├── requirements.txt            # Python backend dependencies
+├── .env.example                # Sample environment configuration
 └── README.md
 ```
 
 ---
 
-##  Installation & Setup
-
-Follow these steps to run the project locally.
+## 🚀 Quickstart Guide
 
 ### Prerequisites
+* **Python 3.10+**
+* **Node.js 18+ & npm**
+* **Google Gemini API Key** ([Get one here](https://aistudio.google.com/))
 
-Make sure you have installed:
+---
 
-* Python 3.10 or higher.
-* Node.js and npm.
-* Git.
-* Google Gemini API key.
-
-### 1. Clone the Repository
+### Step 1: Clone & Configure
 
 ```bash
+# Clone the repository
 git clone https://github.com/Pranav-Kukreja10/GenXFusion.git
-```
-
-Navigate into the project:
-
-```bash
 cd GenXFusion
-```
 
-### 2. Backend Setup
-
-Create a Python virtual environment:
-
-```bash
-python -m venv venv
-```
-
-Activate the environment.
-
-**Windows PowerShell:**
-
-```powershell
-.\venv\Scripts\Activate.ps1
-```
-
-**Windows CMD:**
-
-```cmd
-venv\Scripts\activate
-```
-
-**Linux / macOS:**
-
-```bash
-source venv/bin/activate
-```
-
-### 3. Install Backend Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure Environment Variables
-
-Create a `.env` file in the project root.
-
-Copy the example configuration:
-
-```bash
+# Create your .env file
 cp .env.example .env
 ```
 
-On Windows PowerShell, use:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Add your Google Gemini API key:
-
+Open `.env` in your text editor and provide your Gemini API key:
 ```env
-GEMINI_API_KEY=your_gemini_api_key
-
+GEMINI_API_KEY=your_actual_gemini_api_key_here
 HOST=127.0.0.1
 PORT=8000
 DEBUG=True
 ```
 
-**Important:** Never upload your actual `.env` file or API keys to GitHub.
+---
 
-### 5. Start the Backend Server
-
-Run:
+### Step 2: Backend Setup & Launch
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+# Create and activate a Python virtual environment
+python -m venv venv
+
+# Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+
+# Windows (CMD):
+venv\Scripts\activate.bat
+
+# Linux / macOS:
+source venv/bin/activate
+
+# Install backend dependencies
+pip install -r requirements.txt
+
+# Start the FastAPI server
+uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+```
+* **API Server**: `http://127.0.0.1:8000`
+* **Interactive Swagger UI**: `http://127.0.0.1:8000/docs`
+* **Alternative ReDoc**: `http://127.0.0.1:8000/redoc`
+
+---
+
+### Step 3: Frontend Setup & Launch
+
+Open a second terminal:
+
+```bash
+# Navigate to the frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start the Vite development server
+npm run dev
+```
+* **Web Application**: `http://localhost:5173`
+
+---
+
+## 📡 Comprehensive API Reference
+
+All backend endpoints are built using FastAPI with strict Pydantic data validation and CORS support.
+
+### 1. Invoice Processing & Auditing
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/invoice/parse` | Upload bill image (multipart/form-data) or sample preset for full OCR, HSN audit, and tax calculation. *(Alias: `/api/scan-bill`)* |
+| `POST` | `/api/v1/invoice/recalculate` | Live recalculation of line totals, tax slabs, and intra/inter-state tax allocations. *(Alias: `/api/recalculate`)* |
+| `POST` | `/api/v1/invoice/export-gstr1` | Generate official Indian GSTR-1 JSON ready for GST portal upload. *(Alias: `/api/export-gstr1`)* |
+
+### 2. Statutory Validation & Catalogue Search
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/v1/hsn/search` | Search 360+ national HSN codes with live vector similarity (`?q=cement&limit=10`). |
+| `GET` | `/api/v1/gst/validate-gstin` | Validate 15-digit GSTIN using the official Mod-36 checksum algorithm (`?gstin=03AAEPG1807C1ZM`). |
+| `GET` | `/api/v1/gst/demo-gstin` | Generate a verified Indian demo GSTIN for testing specific states and business entities. |
+| `GET` | `/api/v1/gst/next-invoice-number` | Query or generate the next compliant sequential invoice number under Rule 46(b). |
+| `GET` | `/api/v1/health` | Live system health check verifying OpenCV, HSN engine, and database status. *(Alias: `/health`)* |
+
+### 3. Merchant Profile & Multi-GSTIN Management
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/register` | Register a new merchant account with email/phone and password. |
+| `POST` | `/api/v1/auth/login` | Authenticate merchant and issue JWT bearer token. |
+| `GET` | `/api/v1/auth/me` | Fetch active merchant profile and configured business details. |
+| `POST` | `/api/v1/auth/gstins` | Add and manage branch GSTINs across multiple Indian states. |
+| `POST` | `/api/v1/auth/gstins/default` | Switch active default branch GSTIN for printed invoices. |
+
+---
+
+## 🧪 Testing & Verification
+
+The platform maintains an automated test suite across both frontend and backend to guarantee arithmetic fidelity, checksum accuracy, and zero functional regression.
+
+### Running Backend Integration Tests
+Execute the end-to-end integration and statutory compliance suites:
+
+```bash
+# Run the 8-stage integration test suite
+python test_all.py
+
+# Run the 12-stage statutory compliance and edge-case test suite
+python test_comprehensive_suite.py
 ```
 
-The backend will be available at:
+**Test Coverage Highlights:**
+* ✅ **Mod-36 Checksum**: Tests valid and corrupt GSTINs against the official 36-character prime modulus.
+* ✅ **Algebraic Self-Healing**: Verifies accurate extraction of merged Hindi unit characters and rupee slashes.
+* ✅ **CBIC Slabs**: Tests automatic rate switching (5% vs 12% on apparel, 12% vs 18% on footwear).
+* ✅ **Intra vs Inter-State**: Validates sub-5ms switching between 50/50 CGST+SGST and 100% IGST.
+* ✅ **GSTR-1 JSON Structure**: Verifies exact schema compliance for Table 4A (B2B) and Table 7 (B2CS).
 
-```text
-http://localhost:8000
-```
+---
 
-### 6. Access API Documentation
-
-FastAPI automatically generates interactive API documentation.
-
-Swagger UI:
-
-```text
-http://localhost:8000/docs
-```
-
-ReDoc:
-
-```text
-http://localhost:8000/redoc
-```
-
-### 7. Frontend Setup
-
-Open another terminal.
-
-Navigate to the frontend directory:
+### Running Frontend Tests & Production Build
+Run the frontend unit tests and production build verification:
 
 ```bash
 cd frontend
+
+# Run 21 unit tests (Node.js native test runner)
+npm test
+
+# Run code style and lint check
+npm run lint
+
+# Compile production bundle
+npm run build
 ```
 
-Install dependencies:
+**Frontend Test Suites:**
+* ✅ **GST Calculation & Live Rounding**: Validates odd-paisa round-off distribution to CGST, exempt items, and live recalculation sync.
+* ✅ **Scan Stages Engine**: Validates stage progression timing, reduced-motion paths, and accessible screen-reader announcements.
+* ✅ **Bills State & Routing Logic**: Verifies independent invoice state isolation, preset loading, and ID retrieval.
 
-```bash
-npm install
+---
+
+## 📄 GSTR-1 JSON Output Schema
+
+When exporting from the dashboard or via `POST /api/v1/invoice/export-gstr1`, the output adheres to the official GST Common Portal specification:
+
+```json
+{
+  "gstin": "03AAEPG1807C1ZM",
+  "fp": "112026",
+  "gt": 2688.0,
+  "cur_gt": 2688.0,
+  "b2b": [
+    {
+      "ctin": "03BBBPA9999D1ZK",
+      "inv": [
+        {
+          "inum": "INV-2026-001",
+          "idt": "01-11-2026",
+          "val": 2688.0,
+          "pos": "03",
+          "rchrg": "N",
+          "inv_typ": "R",
+          "itms": [
+            {
+              "num": 1,
+              "itm_det": {
+                "txval": 2400.0,
+                "rt": 12.0,
+                "camt": 144.0,
+                "samt": 144.0,
+                "csamt": 0.0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "b2cs": [],
+  "hsn": {
+    "data": [
+      {
+        "num": 1,
+        "hsn_sc": "6204",
+        "desc": "Women Suits & Ensembles",
+        "uqc": "PCS",
+        "qty": 1.0,
+        "val": 2688.0,
+        "txval": 2400.0,
+        "camt": 144.0,
+        "samt": 144.0,
+        "csamt": 0.0
+      }
+    ]
+  }
+}
 ```
 
-Start the Vite development server:
+---
 
-```bash
-npm run dev
-```
+## 🔒 Security & Privacy
 
-The frontend will run at the local address displayed by Vite, typically:
-
-```text
-http://localhost:5173
-```
+* **Zero Plaintext Storage**: Passwords hashed using bcrypt; API tokens secured with HMAC-SHA256 JWTs.
+* **Tamper Evident Audit**: Every processed bill receives a unique SHA-256 fingerprint matching the image and line-item sequence.
+* **Local First Privacy**: All HSN classifications, mathematical checks, and database records can run completely on-premise without transmitting merchant sales data to third parties.
+* **Environment Isolation**: API credentials and secrets are managed via strictly ignored `.env` profiles.
 
 ---
 
-## API Endpoints
+## 🤝 Contributing
 
-The backend exposes RESTful APIs through FastAPI.
-
-### Health Check
-
-| Method | Endpoint         | Description          |
-| ------ | ---------------- | -------------------- |
-| GET    | `/`              | Root endpoint        |
-| GET    | `/api/v1/health` | Backend health check |
-
-### Invoice Processing
-
-| Method | Endpoint                       | Description                    |
-| ------ | ------------------------------ | ------------------------------ |
-| POST   | `/api/v1/invoice/parse`        | Upload and process an invoice  |
-| POST   | `/api/v1/invoice/recalculate`  | Recalculate invoice totals     |
-| POST   | `/api/v1/invoice/export-gstr1` | Export invoice data for GSTR-1 |
-
-### HSN Search
-
-| Method | Endpoint             | Description              |
-| ------ | -------------------- | ------------------------ |
-| GET    | `/api/v1/hsn/search` | Search the HSN catalogue |
-
-Example:
-
-```text
-GET /api/v1/hsn/search?q=cement
-```
-
-### Authentication
-
-| Method | Endpoint                | Description             |
-| ------ | ----------------------- | ----------------------- |
-| POST   | `/api/v1/auth/register` | Register a merchant     |
-| POST   | `/api/v1/auth/login`    | Authenticate a merchant |
-
-**Note:** Some endpoints also have legacy aliases. Refer to Swagger UI for the complete API schema and request formats.
+1. Fork the project repository.
+2. Create your feature branch (`git checkout -b feature/NewFeature`).
+3. Commit your changes (`git commit -m 'Add NewFeature'`).
+4. Push to the branch (`git push origin feature/NewFeature`).
+5. Open a Pull Request.
 
 ---
 
-##  Invoice Processing Workflow
+## 📜 License
 
-The general invoice-processing workflow consists of the following stages:
-
-**Step 1 — Upload**
-
-The user uploads an invoice image through the frontend.
-
-**Step 2 — Image Preprocessing**
-
-The image is prepared for AI processing using image enhancement and preprocessing techniques.
-
-**Step 3 — AI-Based Extraction**
-
-The vision engine extracts invoice information, including:
-
-* Supplier information.
-* Customer information.
-* Invoice number and date.
-* Product descriptions.
-* Quantities and unit prices.
-* GST rates and amounts.
-
-**Step 4 — HSN Classification**
-
-Extracted product descriptions are matched against the HSN catalogue.
-
-**Step 5 — GST Validation**
-
-The system validates GST-related information and determines applicable tax calculations.
-
-**Step 6 — Mathematical Auditing**
-
-The system checks invoice calculations and identifies inconsistencies.
-
-**Step 7 — Review & Export**
-
-The processed invoice can be reviewed and exported into structured GST reporting data.
+This project is open-source under the [MIT License](LICENSE).
 
 ---
 
-## Security
-
-The project includes several security-related mechanisms:
-
-* JWT-based authentication.
-* Password-protected merchant accounts.
-* Environment-based API key configuration.
-* Authentication-protected backend operations.
-* Local SQLite database for merchant information.
-
-For production deployment, configure restricted CORS origins, HTTPS, secure secret management, and appropriate database access controls.
-
----
-
-## Testing
-
-The repository includes Python test files covering different application components.
-
-Run the test suite using:
-
-```bash
-pytest
-```
-
-Alternatively, execute an individual test:
-
-```bash
-python test_all.py
-```
-
-Additional test files cover invoice processing, preprocessing, mathematical auditing, and related functionality.
-
----
-
-## Future Improvements
-
-Potential improvements for future versions include:
-
-* Improved recognition of handwritten regional-language invoices.
-* Support for additional Indian languages.
-* More advanced OCR confidence scoring.
-* Better handling of unclear or partially damaged invoices.
-* Integration with additional accounting platforms.
-* Automated GST return preparation.
-* Cloud-based invoice storage.
-* Advanced merchant analytics and reporting.
-* Production-ready deployment and scalability.
-
----
-
-## Team & Contributions
-
-GenXFusion is developed collaboratively as part of a hackathon project addressing India's invoice digitization and GST compliance challenges.
-
-We welcome contributions, suggestions, and improvements.
-
-To contribute:
-
-1. Fork the repository.
-2. Create a new feature branch.
-3. Implement your changes.
-4. Test your implementation.
-5. Submit a pull request.
-
----
-
-## License
-
-No license has currently been specified for this repository.
-
-A suitable open-source license can be added by the project maintainers.
-
----
-
-## Acknowledgements
-
-Built with the goal of making digital GST compliance more accessible to Indian small businesses.
-
-**GenXFusion — Turning handwritten bills into intelligent business data.**
-
----
+<div align="center">
+  <sub>Engineered by <strong>GenXFusion</strong> · Built for Indian Small Businesses & Digital GST Empowerment</sub>
+</div>

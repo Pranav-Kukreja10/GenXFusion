@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ShieldCheck,
   Download,
-  AlertTriangle,
-  FileCheck2,
   Eye,
 } from 'lucide-react';
 import { computeLiveTotals } from '../utils/gstCalculations';
@@ -15,8 +13,6 @@ export default function ActionBar({
   onPreviewInvoice,
   isRecalculating = false,
 }) {
-  const [showTooltip, setShowTooltip] = useState(false);
-
   const activeItems = invoice?.active_items || [];
   const struckOutItems = invoice?.struck_out_items || [];
   const buyerState = invoice?.pos || invoice?.buyer_state_code || '07';
@@ -93,8 +89,7 @@ export default function ActionBar({
           <button
             type="button"
             onClick={handlePreview}
-            disabled={isRecalculating}
-            className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-750 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+            className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-750 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-xs transition-all active:scale-[0.98] cursor-pointer"
             title="Preview standard Tax Invoice modal"
             aria-label="Preview Invoice"
           >
@@ -102,40 +97,20 @@ export default function ActionBar({
             <span>Preview Invoice</span>
           </button>
 
-          {/* High-Contrast Primary CTA: Create Tax Invoice */}
-          <div
-            className="relative flex-1 md:flex-initial"
-            onMouseEnter={() => hasErrors && setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
+          {/* High-Contrast Primary CTA: Download Tax Invoice */}
+          <button
+            type="button"
+            onClick={onGenerateInvoice || handlePreview}
+            className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-xs transition-all active:scale-[0.98] cursor-pointer bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            title="Preview & Download Tax Invoice"
+            aria-label="Download Tax Invoice"
           >
-            <button
-              type="button"
-              onClick={onGenerateInvoice}
-              disabled={hasErrors || isRecalculating}
-              className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-xs transition-all active:scale-[0.98] cursor-pointer ${
-                hasErrors
-                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed border border-zinc-200 dark:border-zinc-700'
-                  : 'bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200'
-              }`}
-              aria-label={hasErrors ? `Create Invoice disabled: Resolve ${issueCount} calculation check first` : 'Create Tax Invoice'}
-            >
-              <FileCheck2 className="h-4 w-4" />
-              <span>Create Tax Invoice</span>
-            </button>
-
-            {/* Tooltip when disabled due to errors */}
-            {hasErrors && showTooltip && (
-              <div
-                className="absolute right-0 bottom-full mb-2 z-50 w-64 bg-zinc-900 text-white text-[11px] p-2.5 rounded-lg shadow-lg border border-zinc-800 flex items-start gap-2 animate-fadeIn pointer-events-none"
-                role="tooltip"
-              >
-                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                <p>
-                  Resolve <strong>{issueCount} {issueCount === 1 ? 'issue' : 'issues'}</strong> first before generating the finalized Tax Invoice.
-                </p>
-              </div>
+            <Download className="h-4 w-4" />
+            <span>Download Tax Invoice</span>
+            {hasErrors && (
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title={`${issueCount} items flagged`} />
             )}
-          </div>
+          </button>
         </div>
 
       </div>

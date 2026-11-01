@@ -11,6 +11,8 @@ import {
   RefreshCw,
   ArrowLeft,
   FileCheck2,
+  Eye,
+  Download,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,6 +22,8 @@ export default function Header({
   onOpenSettings: _onOpenSettings,
   onOpenAuth,
   onQuickFillHeader,
+  onPreviewInvoice,
+  onGenerateInvoice,
   isRecalculating,
   darkMode,
   onToggleDarkMode,
@@ -175,13 +179,41 @@ export default function Header({
           )}
         </div>
 
-        {/* Right: Uniform Actions: Recalculating, Theme Toggle, Account */}
+        {/* Right: Uniform Actions: Preview, Download, Recalculating, Theme Toggle, Account */}
         <div className="flex items-center gap-2">
           {isRecalculating && (
             <span className="hidden sm:inline-flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
               <RefreshCw className="h-3 w-3 animate-spin text-zinc-600 dark:text-zinc-300" />
               <span>Calculating...</span>
             </span>
+          )}
+
+          {/* Always Visible in Navbar: Preview Invoice */}
+          {onPreviewInvoice && (
+            <button
+              type="button"
+              onClick={onPreviewInvoice}
+              className="h-8 px-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-750 transition-all duration-200 text-xs font-medium cursor-pointer shadow-xs inline-flex items-center gap-1.5 active:scale-[0.98]"
+              title="Preview standard Tax Invoice"
+              aria-label="Preview Tax Invoice"
+            >
+              <Eye className="h-3.5 w-3.5 text-zinc-400" />
+              <span className="hidden sm:inline">Preview</span>
+            </button>
+          )}
+
+          {/* Always Visible in Navbar: Download Tax Invoice */}
+          {(onGenerateInvoice || onPreviewInvoice) && (
+            <button
+              type="button"
+              onClick={onGenerateInvoice || onPreviewInvoice}
+              className="h-8 px-3 rounded-lg bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-all duration-200 text-xs font-medium cursor-pointer inline-flex items-center gap-1.5 shadow-xs active:scale-[0.98]"
+              title="Preview & Download Tax Invoice"
+              aria-label="Download Tax Invoice"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>Download Invoice</span>
+            </button>
           )}
 
           {/* Theme Toggle Button */}

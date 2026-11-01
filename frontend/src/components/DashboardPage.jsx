@@ -492,6 +492,8 @@ export default function DashboardPage() {
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onQuickFillHeader={handleQuickFillHeader}
+        onPreviewInvoice={() => setIsPakkaModalOpen(true)}
+        onGenerateInvoice={() => setIsPakkaModalOpen(true)}
         onOpenHistory={() => setIsProfileModalOpen(true)}
         onLogout={() => addToast('Logged out of TrueTax AI session.', 'info')}
         isRecalculating={isRecalculating}

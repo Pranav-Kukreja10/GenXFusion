@@ -47,7 +47,7 @@ export default function PakkaInvoiceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+    <div className="fixed inset-0 z-[100] bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-zinc-200 overflow-hidden">
         
         {/* Modal Action Header (Hidden in Print) */}
